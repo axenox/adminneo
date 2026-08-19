@@ -127,6 +127,19 @@ class Config
 		return $this->params["sqlAutocompletion"] ?? true;
 	}
 
+	/**
+	 * Whether mid-render output flushing (ob_flush()/flush()) is allowed.
+	 *
+	 * Streaming progress feedback (e.g. the running query or the query kill-timeout script) to the
+	 * browser requires flushing. When AdminNeo is embedded and its output is captured by a host
+	 * application, an explicit flush() prematurely commits the HTTP headers (mod_php sends them on
+	 * every flush()), which breaks the host's own response. Set to false to buffer the whole page.
+	 */
+	public function isOutputFlushingEnabled(): bool
+	{
+		return $this->params["outputFlushing"] ?? true;
+	}
+
 	public function getHiddenDatabases(): array
 	{
 		return $this->parseList($this->params["hiddenDatabases"] ?? []);

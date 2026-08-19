@@ -154,8 +154,7 @@ if ($_POST) {
 						} else {
 							if (!$_POST["only_errors"]) {
 								echo $print;
-								ob_flush();
-								flush(); // can take a long time - show the running query
+								flush_output(); // can take a long time - show the running query
 							}
 							$start = microtime(true);
 							//! don't allow changing of character_set_results, convert encoding of displayed query

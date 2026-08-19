@@ -1206,6 +1206,23 @@ function count_rows($table, $where, $is_group, $group) {
 	);
 }
 
+/** Flush the output buffer to the browser, unless flushing is disabled by configuration
+*
+* Mid-render flushing streams progress feedback (e.g. the running query or the query
+* kill-timeout script) to the browser. When AdminNeo is embedded and its output is captured
+* by the host application, an explicit flush() would prematurely commit the HTTP headers
+* (mod_php sends them on every flush()), breaking the host's own response. Set the "outputFlushing"
+* config option to false (see Config::isOutputFlushingEnabled()) to buffer the whole page instead.
+* @return void
+*/
+function flush_output() {
+	if (!Admin::get()->getConfig()->isOutputFlushingEnabled()) {
+		return;
+	}
+	ob_flush();
+	flush();
+}
+
 /** Run query which can be killed by AJAX call after timing out
 * @param string
 * @return string[]
@@ -1229,13 +1246,11 @@ function slow_query($query) {
 <?php
 		}
 	}
-	ob_flush();
-	flush();
+	flush_output();
 	$return = @get_key_vals(($slow_query ?: $query), $connection, false); // @ - may be killed
 	if ($connection) {
 		echo script("clearTimeout(timeout);");
-		ob_flush();
-		flush();
+		flush_output();
 	}
 	return $return;
 }
