@@ -1,14 +1,14 @@
 {
-    "name": "adminneo-org/adminneo",
-    "description": "Database management in a single PHP file.",
-    "homepage": "https://github.com/adminneo-org/adminneo",
+    "name": "axenox/adminneo",
+    "description": "Database management in a single PHP file. Optimized for the ExFace no-code platform.",
+    "homepage": "https://github.com/axenox/adminneo",
     "keywords": [
         "database"
     ],
     "support": {
-        "issues": "https://github.com/adminneo-org/adminneo/issues",
-        "forum": "https://github.com/adminneo-org/adminneo/discussions",
-        "source": "https://github.com/adminneo-org/adminneo"
+        "issues": "https://github.com/axenox/adminneo/issues",
+        "forum": "https://github.com/axenox/adminneo/discussions",
+        "source": "https://github.com/axenox/adminneo"
     },
     "authors": [
         {
