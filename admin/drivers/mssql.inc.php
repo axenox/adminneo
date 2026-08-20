@@ -638,11 +638,13 @@ WHERE OBJECT_NAME(i.object_id) = " . q($table)
 		$alter = [];
 		$comments = [];
 		$orig_fields = fields($table);
+		$drop_columns = [];
 		foreach ($fields as $field) {
 			$column = idf_escape($field[0]);
 			$val = $field[1];
 			if (!$val) {
-				$alter["DROP"][] = " COLUMN $column";
+				// Dropped separately so dependent constraints/indexes can be removed first.
+				$drop_columns[] = $field[0];
 			} else {
 				$val[1] = preg_replace("~( COLLATE )'(\\w+)'~", '\1\2', $val[1]);
 				$comments[$field[0]] = $val[5];
@@ -683,6 +685,46 @@ WHERE OBJECT_NAME(i.object_id) = " . q($table)
 		}
 		foreach ($alter as $key => $val) {
 			if (!queries("ALTER TABLE " . table($name) . " $key" . implode(",", $val))) {
+				return false;
+			}
+		}
+		// MS SQL cannot drop a column that still has a default constraint, a foreign key or an index.
+		// Drop those dependents (of this column only) inside a transaction before dropping the column.
+		$ns = get_schema();
+		foreach ($drop_columns as $col) {
+			$qualified = idf_escape($ns) . "." . idf_escape($name);
+			$sql = "SET XACT_ABORT ON;
+BEGIN TRANSACTION;
+DECLARE @sql NVARCHAR(MAX);
+DECLARE @objectId INT = OBJECT_ID(" . q($ns . "." . $name) . ");
+DECLARE @column SYSNAME = " . q($col) . ";
+
+SELECT @sql = STRING_AGG('ALTER TABLE $qualified DROP CONSTRAINT ' + QUOTENAME(name), '; ')
+FROM sys.default_constraints
+WHERE parent_object_id = @objectId AND COL_NAME(parent_object_id, parent_column_id) = @column;
+IF @sql IS NOT NULL EXEC sp_executesql @sql;
+
+SELECT @sql = STRING_AGG('ALTER TABLE $qualified DROP CONSTRAINT ' + QUOTENAME(name), '; ')
+FROM (
+	SELECT DISTINCT fk.name
+	FROM sys.foreign_keys fk
+	JOIN sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
+	WHERE fk.parent_object_id = @objectId AND COL_NAME(fkc.parent_object_id, fkc.parent_column_id) = @column
+) x;
+IF @sql IS NOT NULL EXEC sp_executesql @sql;
+
+SELECT @sql = STRING_AGG('DROP INDEX ' + QUOTENAME(name) + ' ON $qualified', '; ')
+FROM (
+	SELECT DISTINCT i.name
+	FROM sys.indexes i
+	JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+	WHERE i.object_id = @objectId AND i.name IS NOT NULL AND COL_NAME(ic.object_id, ic.column_id) = @column
+) x;
+IF @sql IS NOT NULL EXEC sp_executesql @sql;
+
+ALTER TABLE $qualified DROP COLUMN " . idf_escape($col) . ";
+COMMIT TRANSACTION;";
+			if (!queries($sql)) {
 				return false;
 			}
 		}
@@ -767,7 +809,26 @@ ORDER BY table_schema, table_name";
 
 	function drop_tables($tables): bool
 	{
-		return (bool)queries("DROP TABLE " . implode(", ", array_map('AdminNeo\table', $tables)));
+		// A table cannot be dropped while it is referenced by foreign keys from other tables. Drop
+		// those incoming foreign keys first; the table's own constraints/indexes go with DROP TABLE.
+		foreach ($tables as $table) {
+			$sql = "SET XACT_ABORT ON;
+BEGIN TRANSACTION;
+DECLARE @sql NVARCHAR(MAX);
+DECLARE @objectId INT = OBJECT_ID(" . q((get_schema() ? get_schema() . "." : "") . $table) . ");
+
+SELECT @sql = STRING_AGG('ALTER TABLE ' + QUOTENAME(OBJECT_SCHEMA_NAME(parent_object_id)) + '.' + QUOTENAME(OBJECT_NAME(parent_object_id)) + ' DROP CONSTRAINT ' + QUOTENAME(name), '; ')
+FROM sys.foreign_keys
+WHERE referenced_object_id = @objectId;
+IF @sql IS NOT NULL EXEC sp_executesql @sql;
+
+DROP TABLE " . table($table) . ";
+COMMIT TRANSACTION;";
+			if (!queries($sql)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	function move_tables($tables, $views, $target): bool
