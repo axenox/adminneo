@@ -359,11 +359,11 @@ if (isset($_GET["mssql"])) {
 					"datetimeoffset" => 10,
 				],
 				lang('Strings') => [
-					"char" => 8000, "varchar" => 8000, "text" => 2147483647,
-					"nchar" => 4000, "nvarchar" => 4000, "ntext" => 1073741823,
+					"char" => 8000, "varchar" => 8000, "varchar(max)" => "max", "text" => 2147483647,
+					"nchar" => 4000, "nvarchar" => 4000, "nvarchar(max)" => "max", "ntext" => 1073741823,
 				],
 				lang('Binary') => [
-					"binary" => 8000, "varbinary" => 8000, "image" => 2147483647,
+					"binary" => 8000, "varbinary" => 8000, "varbinary(max)" => "max", "image" => 2147483647,
 				],
 			];
 
