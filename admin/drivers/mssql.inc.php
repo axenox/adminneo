@@ -627,10 +627,13 @@ LEFT JOIN sys.indexes i ON ic.object_id = i.object_id AND ic.index_id = i.index_
 WHERE c.object_id = " . q($table_id)) as $row
 		) {
 			$type = $row["type"];
-			$length = (preg_match("~char|binary~", $type)
-				? intval($row["max_length"]) / ($type[0] == 'n' ? 2 : 1)
-				: ($type == "decimal" ? "$row[precision],$row[scale]" : "")
-			);
+			$length = "";
+			if (preg_match("~char|binary~", $type)) {
+				$maxLength = intval($row["max_length"]);
+				$length = ($maxLength == -1 ? "max" : $maxLength / ($type[0] == 'n' ? 2 : 1));
+			} elseif ($type == "decimal") {
+				$length = "$row[precision],$row[scale]";
+			}
 			$return[$row["name"]] = [
 				"field" => $row["name"],
 				"full_type" => $type . ($length ? "($length)" : ""),
