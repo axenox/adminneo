@@ -1116,6 +1116,10 @@ WHERE sys1.xtype = 'TR' AND sys2.name = " . q($table)
 
 	function unconvert_field(array $field, string $return): string
 	{
+		if (preg_match("~binary|image~", $field["type"]) && preg_match("~^'0x[0-9A-Fa-f]*'$~", $return)) {
+			return substr($return, 1, -1);
+		}
+
 		return $return;
 	}
 
