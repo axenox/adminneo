@@ -775,6 +775,44 @@ ORDER BY table_schema, table_name";
 		return apply_queries("ALTER SCHEMA " . idf_escape($target) . " TRANSFER", array_merge($tables, $views));
 	}
 
+	/**
+	 * Copy tables to another schema (within the same database).
+	 *
+	 * SELECT ... INTO copies the structure and IDENTITY columns but no constraints, so the primary
+	 * key is re-created afterwards. Data is copied unless disabled via the "copyData" config option.
+	 * Views cannot be copied on MS SQL.
+	 */
+	function copy_tables($tables, $views, $target): bool
+	{
+		$copyData = Admin::get()->getConfig()->isCopyDataEnabled();
+		$srcSchema = get_schema();
+		foreach ($tables as $table) {
+			$sameSchema = ($target == $srcSchema);
+			$targetName = $sameSchema ? "{$table}_copy" : $table;
+			$targetFull = idf_escape($target) . "." . idf_escape($targetName);
+			if (
+				// Drop an existing target table first if overwrite was requested.
+				($_POST["overwrite"] && !queries("IF OBJECT_ID(" . q($target . "." . $targetName) . ", N'U') IS NOT NULL\nDROP TABLE $targetFull"))
+				|| !queries("SELECT * INTO $targetFull FROM " . table($table) . ($copyData ? "" : " WHERE 1 = 0"))
+				|| !queries("DECLARE @pkey NVARCHAR(max);
+SELECT @pkey = COLUMN_NAME
+	FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+	WHERE OBJECTPROPERTY(OBJECT_ID(CONSTRAINT_SCHEMA + '.' + QUOTENAME(CONSTRAINT_NAME)), 'IsPrimaryKey') = 1
+		AND TABLE_NAME = " . q($table) . "
+		AND TABLE_SCHEMA = " . q($srcSchema) . ";
+IF @pkey IS NOT NULL
+EXEC('ALTER TABLE $targetFull ADD CONSTRAINT " . idf_escape("PK_$targetName") . " PRIMARY KEY CLUSTERED (' + QUOTENAME(@pkey) + ')');")
+			) {
+				return false;
+			}
+		}
+		if ($views) {
+			Connection::get()->setError("Cannot copy views in Microsoft SQL.");
+			return false;
+		}
+		return true;
+	}
+
 	function trigger(string $name, string $table): array
 	{
 		if ($name == "") {
@@ -921,6 +959,6 @@ WHERE sys1.xtype = 'TR' AND sys2.name = " . q($table)
 	}
 
 	function support($feature) {
-		return preg_match('~^(check|comment|columns|database|drop_col|dump|indexes|descidx|scheme|sql|table|trigger|view|view_trigger)$~', $feature); //! routine|
+		return preg_match('~^(check|comment|columns|copy|database|drop_col|dump|indexes|descidx|scheme|sql|table|trigger|view|view_trigger)$~', $feature); //! routine|
 	}
 }
