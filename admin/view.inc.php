@@ -62,7 +62,7 @@ if (support("materializedview")) {
 	echo checkbox("materialized", 1, $row["materialized"], lang('Materialized view'));
 }
 echo "</p>\n<p>";
-textarea("select", $row["select"]);
+textarea("select", $row["select"], 10, 80, "jush-autosize");
 
 echo "</p>\n<p>";
 echo "<input type='submit' class='button default' value='", lang('Save'), "'>\n";

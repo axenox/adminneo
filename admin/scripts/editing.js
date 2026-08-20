@@ -46,6 +46,9 @@ function initSyntaxHighlighting(version, vendor, autocompletion) {
 			});
 
 			if (pre) {
+				if (textarea.classList.contains('jush-autosize')) {
+					pre.style.height = '';
+				}
 				textarea.onchange = () => {
 					pre.textContent = textarea.value;
 					pre.oninput();

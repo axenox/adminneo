@@ -146,9 +146,10 @@ function referencable_primary($self) {
 * @param string|list<array{string}>
 * @param int
 * @param int
+* @param string
 */
-function textarea($name, $value, $rows = 10, $cols = 80): void {
-	echo "<textarea name='" . h($name) . "' rows='$rows' cols='$cols' class='sqlarea jush-" . DIALECT . "' spellcheck='false' wrap='off'>";
+function textarea($name, $value, $rows = 10, $cols = 80, $class = ""): void {
+	echo "<textarea name='" . h($name) . "' rows='$rows' cols='$cols' class='sqlarea jush-" . DIALECT . " $class' spellcheck='false' wrap='off'>";
 	if (is_array($value)) {
 		foreach ($value as $val) { // not implode() to save memory
 			echo h($val[0]) . "\n\n\n"; // $val == array($query, $time, $elapsed)
