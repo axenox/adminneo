@@ -226,10 +226,38 @@ if (isset($_GET["mssql"])) {
 		function explain(Connection $connection, string $query)
 		{
 			$connection->query("SET SHOWPLAN_ALL ON");
-			$return = $connection->query($query);
+			$result = $connection->query($query);
 			$connection->query("SET SHOWPLAN_ALL OFF"); // connection is used also for indexes
+			if (!is_object($result)) {
+				return $result;
+			}
 
-			return $return;
+			// SHOWPLAN_ALL returns many low-level columns. Condense them into a readable plan: a
+			// relative cost (% of the whole statement) and estimated rows first, dropping the
+			// node/parent id columns and rounding the float metrics.
+			$rows = [];
+			$overallCost = null;
+			while ($row = $result->fetchAssoc()) {
+				if ($overallCost === null) {
+					$overallCost = $row['TotalSubtreeCost'] ?: 1;
+				}
+				$pretty = [
+					'Cost[%]' => round($row['TotalSubtreeCost'] / $overallCost * 100),
+					'Rows' => intval($row['EstimateRows']),
+				];
+				foreach ($row as $col => $val) {
+					if ($col === 'StmtId' || $col === 'NodeId' || $col === 'Parent') {
+						continue;
+					}
+					$pretty[$col] = is_float($val) ? round($val, 2) : $val;
+				}
+				if (!$rows) {
+					$pretty['StmtText'] = "Whole statement";
+				}
+				$rows[] = $pretty;
+			}
+
+			return new MsSqlExplainResult($rows);
 		}
 
 	} else {
@@ -441,6 +469,66 @@ if (isset($_GET["mssql"])) {
 	}
 
 	/**
+	 * In-memory result backing the condensed EXPLAIN output (see explain()). Feeds the rows built
+	 * from SHOWPLAN_ALL to print_select_result() without hitting the database again.
+	 */
+	class MsSqlExplainResult extends Result
+	{
+		/** @var array */
+		private $rows;
+
+		/** @var array */
+		private $firstRow;
+
+		/** @var array */
+		private $fields;
+
+		/** @var int */
+		private $fieldOffset = 0;
+
+		public function __construct(array $rows)
+		{
+			parent::__construct(count($rows));
+
+			$this->rows = $rows;
+			$this->firstRow = $rows ? reset($rows) : [];
+			$this->fields = array_keys($this->firstRow);
+		}
+
+		public function fetchAssoc()
+		{
+			$row = current($this->rows);
+			next($this->rows);
+
+			return $row;
+		}
+
+		public function fetchRow()
+		{
+			$row = $this->fetchAssoc();
+
+			return $row === false ? false : array_values($row);
+		}
+
+		public function fetchField()
+		{
+			if (!isset($this->fields[$this->fieldOffset])) {
+				return false;
+			}
+
+			$name = $this->fields[$this->fieldOffset++];
+			$value = $this->firstRow[$name] ?? null;
+
+			return (object) [
+				'name' => $name,
+				'orgname' => $name,
+				'type' => (is_numeric($value) ? 3 : 254), // 254 - string, avoids number alignment for text
+				'charsetnr' => 0,
+			];
+		}
+	}
+
+	/**
 	 * @param string $string
 	 * @return bool
 	 */
@@ -630,6 +718,15 @@ WHERE OBJECT_NAME(i.object_id) = " . q($table)
 
 	function auto_increment(): string
 	{
+		// Optionally seed the IDENTITY from the auto-increment column's default value, so a start
+		// value can be set per column in the table designer. Leave the column's "default" dropdown
+		// empty - the value is then consumed as the seed here instead of being emitted as a DEFAULT.
+		if (Admin::get()->getConfig()->isIdentitySeedFromDefaultEnabled()
+			&& ($col = $_POST["auto_increment_col"] ?? "") !== ""
+			&& is_numeric($seed = $_POST["fields"][$col]["default"] ?? "")
+		) {
+			$_POST["Auto_increment"] = intval($seed);
+		}
 		return " IDENTITY" . ($_POST["Auto_increment"] != "" ? "(" . number($_POST["Auto_increment"]) . ",1)" : "") . " PRIMARY KEY";
 	}
 

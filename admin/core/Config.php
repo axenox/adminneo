@@ -151,6 +151,16 @@ class Config
 		return $this->params["copyData"] ?? true;
 	}
 
+	/**
+	 * Whether the seed (start value) of a new MS SQL IDENTITY column is taken from that column's
+	 * default value in the table designer. Leave the column's "default" dropdown empty so the value
+	 * is consumed as the IDENTITY seed instead of being emitted as a DEFAULT clause.
+	 */
+	public function isIdentitySeedFromDefaultEnabled(): bool
+	{
+		return $this->params["identitySeedFromDefault"] ?? false;
+	}
+
 	public function getHiddenDatabases(): array
 	{
 		return $this->parseList($this->params["hiddenDatabases"] ?? []);
