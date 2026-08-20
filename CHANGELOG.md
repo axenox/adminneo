@@ -10,6 +10,7 @@ AdminNeo 5.8.1
 
 ### Bugfixes
 
+- MS SQL: Correctly read and edit `(max)` string and binary columns
 - Select: Align titles of numeric columns to the right
 - Export: Fix gzip compression for formats added by plugins
 - PostgreSQL, MS SQL: Fix foreign key statements printed into non-SQL export formats
