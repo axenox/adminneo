@@ -905,6 +905,13 @@ WHERE sys1.xtype = 'TR' AND sys2.name = " . q($table)
 
 	function convert_field(array $field): ?string
 	{
+		// Show small fixed-size binary values (e.g. binary(16) GUIDs/hashes) as a hex string
+		// (0x...). Skip large/variable binary (varbinary(max) has length -1) where the hex string
+		// is 2x the byte size and generated for every row - it would bloat the browse result.
+		if (preg_match("~binary~", $field["type"]) && is_numeric($field["length"]) && $field["length"] > 0 && $field["length"] <= 32) {
+			return "LOWER(CONVERT(VARCHAR(max), " . idf_escape($field["field"]) . ", 1))";
+		}
+
 		return null;
 	}
 
