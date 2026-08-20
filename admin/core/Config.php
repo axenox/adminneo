@@ -140,6 +140,17 @@ class Config
 		return $this->params["outputFlushing"] ?? true;
 	}
 
+	/**
+	 * Whether copying a table also copies its data.
+	 *
+	 * Only affects drivers that support disabling it (currently MS SQL). When false, a copy creates
+	 * the table structure (columns, primary key) without any rows.
+	 */
+	public function isCopyDataEnabled(): bool
+	{
+		return $this->params["copyData"] ?? true;
+	}
+
 	public function getHiddenDatabases(): array
 	{
 		return $this->parseList($this->params["hiddenDatabases"] ?? []);

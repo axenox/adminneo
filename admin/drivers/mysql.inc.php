@@ -1111,12 +1111,13 @@ ORDER BY ordinal_position";
 	* @return bool
 	*/
 	function copy_tables($tables, $views, $target) {
+		$copyData = Admin::get()->getConfig()->isCopyDataEnabled();
 		queries("SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO'");
 		foreach ($tables as $table) {
 			$name = ($target == DB ? table("copy_$table") : idf_escape($target) . "." . table($table));
 			if (($_POST["overwrite"] && !queries("\nDROP TABLE IF EXISTS $name"))
 				|| !queries("CREATE TABLE $name LIKE " . table($table))
-				|| !queries("INSERT INTO $name SELECT * FROM " . table($table))
+				|| ($copyData && !queries("INSERT INTO $name SELECT * FROM " . table($table)))
 			) {
 				return false;
 			}
