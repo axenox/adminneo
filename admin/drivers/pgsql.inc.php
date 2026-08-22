@@ -616,9 +616,9 @@ if (isset($_GET["pgsql"])) {
 
 				$isJson = str_contains($scalarType, "json");
 				if ($isJson) {
-					$values = explode('","', trim($value, '"'));
+					$values = explode('\",\"', trim($value, '"'));
 					array_walk($values, function (&$v) {
-						$v = str_replace('\"', '"', $v);
+						$v = str_replace('\\"', '"', $v);
 					});
 				} elseif (preg_match('~^(\{+)(.*)(}+)$~', $value, $matches)) {
 					// Explode multidimensional array.
@@ -1163,6 +1163,52 @@ ORDER BY s.ordinal_position";
 		return true;
 	}
 
+	/**
+	 * Copies PostgreSQL tables and views to another schema.
+	 *
+	 * Tables are duplicated with CREATE TABLE ... (LIKE ... INCLUDING ALL), preserving columns,
+	 * defaults, constraints, indexes and comments. Data is copied only when the generic copyData
+	 * configuration option is enabled. When copying inside the same schema, target objects receive
+	 * a _copy suffix; when copying to another schema, their original names are kept.
+	 *
+	 * @param list<string> $tables Selected ordinary tables.
+	 * @param list<string> $views Selected views and materialized views.
+	 * @param string $target Target schema name.
+	 */
+	function copy_tables($tables, $views, $target): bool
+	{
+		$copyData = Admin::get()->getConfig()->isCopyDataEnabled();
+		$sourceSchema = get_schema();
+
+		foreach ($tables as $table) {
+			$targetName = ($target == $sourceSchema ? "{$table}_copy" : $table);
+			$targetTable = ($target == $sourceSchema ? table($targetName) : idf_escape($target) . "." . idf_escape($targetName));
+
+			if (($_POST["overwrite"] && !queries("DROP TABLE IF EXISTS $targetTable"))
+				|| !queries("CREATE TABLE $targetTable (LIKE " . table($table) . " INCLUDING ALL)")
+				|| ($copyData && !queries("INSERT INTO $targetTable SELECT * FROM " . table($table)))
+			) {
+				return false;
+			}
+		}
+
+		foreach ($views as $name) {
+			$status = table_status1($name);
+			$isMaterialized = stripos($status["Engine"] ?? "", "materialized") !== false;
+			$targetName = ($target == $sourceSchema ? "{$name}_copy" : $name);
+			$targetView = ($target == $sourceSchema ? table($targetName) : idf_escape($target) . "." . idf_escape($targetName));
+			$view = view($name);
+
+			if (($_POST["overwrite"] && !queries("DROP " . ($isMaterialized ? "MATERIALIZED " : "") . "VIEW IF EXISTS $targetView"))
+				|| !queries("CREATE " . ($isMaterialized ? "MATERIALIZED " : "") . "VIEW $targetView AS $view[select]" . ($isMaterialized && !$copyData ? " WITH NO DATA" : ""))
+			) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	function trigger(string $name, string $table): array
 	{
 		if ($name == "") {
@@ -1529,7 +1575,7 @@ AND typelem = 0"
 			return Connection::get()->isMinVersion("11");
 		}
 
-		return preg_match('~^(check|columns|comment|database|drop_col|dump|descidx|indexes|kill|partial_indexes|routine|scheme|sequence|sql|table|trigger|type|variables|view)$~', $feature);
+		return preg_match('~^(check|columns|comment|copy|database|drop_col|dump|descidx|indexes|kill|partial_indexes|routine|scheme|sequence|sql|table|trigger|type|variables|view)$~', $feature);
 	}
 
 	function kill_process($val) {
