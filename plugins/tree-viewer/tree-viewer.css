@@ -68,6 +68,9 @@
 .tree-viewer-selection {
 	margin: 0 0 1rem 0;
 }
+.tree-viewer-selection > .scrollable > table > thead {
+	top: 0px;
+}
 
 .tree-viewer-selection .scrollable {
 	margin: .5rem 0;
