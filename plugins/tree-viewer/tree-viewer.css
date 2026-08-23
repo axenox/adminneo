@@ -1,0 +1,124 @@
+.tree-viewer-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	vertical-align: middle;
+}
+
+/*
+ * Keep all Tree Viewer SVG icons theme-aware.
+ *
+ * The row action icon is inside an AdminNeo button and already inherits the link/button color. The
+ * header icon is rendered directly into a table header cell, so it needs the same generic SVG rule;
+ * otherwise the browser uses the SVG default fill (black), which is unreadable in dark themes.
+ */
+.tree-viewer-icon {
+	width: 16px;
+	height: 16px;
+	fill: currentColor;
+}
+
+.tree-viewer-action-header,
+.tree-viewer-action-cell {
+	text-align: center;
+	white-space: nowrap;
+}
+
+.tree-viewer-action-header {
+	color: var(--body-icon);
+}
+
+.tree-viewer-modal {
+	position: fixed;
+	z-index: 1000;
+	inset: 3rem;
+	display: none;
+	flex-direction: column;
+	background: var(--body-bg);
+	color: var(--body-text);
+	border: 1px solid var(--panel-border);
+	border-radius: var(--box-border-radius);
+	box-shadow: 0 1rem 3rem rgba(0, 0, 0, .25);
+}
+
+.tree-viewer-modal.open {
+	display: flex;
+}
+
+.tree-viewer-modal-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: .75rem 1rem;
+	border-bottom: 1px solid var(--panel-border);
+	background: var(--table-header-bg);
+}
+
+.tree-viewer-modal-header h2 {
+	margin: 0;
+	font-size: 1.1rem;
+}
+
+.tree-viewer-modal-content {
+	padding: 1rem;
+	overflow: auto;
+}
+
+.tree-viewer-selection {
+	margin: 0 0 1rem 0;
+}
+
+.tree-viewer-selection .scrollable {
+	margin: .5rem 0;
+}
+
+.tree-viewer-node-title {
+	display: flex;
+	align-items: center;
+	gap: .5rem;
+	font-weight: bold;
+}
+
+.tree-viewer-sub-selections {
+	margin-left: 2rem;
+	padding-left: 1rem;
+	border-left: 2px solid var(--panel-border);
+}
+
+.tree-viewer-reverse-links {
+	display: none;
+	margin-top: .25rem;
+}
+
+.tree-viewer-reverse-links.open {
+	display: flex;
+	flex-direction: column;
+	gap: .15rem;
+}
+
+.tree-viewer-empty,
+.tree-viewer-loading,
+.tree-viewer-error {
+	padding: .75rem 1rem;
+	border: 1px solid var(--panel-border);
+	border-radius: var(--box-border-radius);
+	background: var(--panel-bg);
+}
+
+.tree-viewer-error {
+	color: var(--message-error-text);
+	background: var(--message-error-bg);
+	border-color: var(--message-error-border);
+}
+
+@media (max-width: 900px) {
+	.tree-viewer-modal {
+		inset: 1rem;
+	}
+
+	.tree-viewer-sub-selections {
+		margin-left: .5rem;
+		padding-left: .75rem;
+	}
+}
