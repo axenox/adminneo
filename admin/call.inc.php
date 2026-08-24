@@ -6,6 +6,45 @@ $PROCEDURE = $_GET["name"] ?: $_GET["call"];
 page_header(lang('Call') . ": " . h($PROCEDURE), [lang('Call')]);
 
 $routine = routine($_GET["call"], (isset($_GET["callf"]) ? "FUNCTION" : "PROCEDURE"));
+
+if (DIALECT == "mssql") {
+	$query = mssql_routine_test_sql($PROCEDURE, $routine, isset($_GET["callf"]));
+
+	if ($_POST) {
+		$start = microtime(true);
+		$result = Connection::get()->multiQuery($query);
+		$affected = Connection::get()->getAffectedRows();
+		echo Admin::get()->formatSelectQuery($query, $start, !$result);
+
+		if (!$result) {
+			echo "<p class='error'>" . error() . "\n";
+		} else {
+			$connection2 = connect();
+			if ($connection2) {
+				$connection2->selectDatabase(DB);
+			}
+
+			do {
+				$result = Connection::get()->storeResult();
+				if (is_object($result)) {
+					print_select_result($result, $connection2);
+				} else {
+					echo "<p class='message'>" . lang('Routine has been called, %d row(s) affected.', $affected)
+						. " <span class='time'>" . @date("H:i:s") . "</span>\n";
+				}
+			} while (Connection::get()->nextResult());
+		}
+	}
+
+	echo "<form action='' method='post'>\n";
+	echo "<p>" . lang('Run SQL command') . ":</p>\n";
+	textarea("query", $query, 5);
+	echo "<p><input type='submit' class='button' value='", lang('Call'), "'>\n";
+	echo input_token();
+	echo "</p>\n</form>\n";
+	return;
+}
+
 $in = [];
 $out = [];
 foreach ($routine["fields"] as $i => $field) {

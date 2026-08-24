@@ -34,6 +34,9 @@ if (isset($_GET["settings"])) {
 }
 
 include "include/connect.inc.php";
+if (DIALECT == "mssql") {
+	include "mssql-routines.inc.php";
+}
 
 if (isset($_GET["select"]) && ($_POST["edit"] || $_POST["clone"]) && !$_POST["save"]) {
 	$_GET["edit"] = $_GET["select"];
@@ -97,6 +100,9 @@ if (isset($_GET["download"])) {
 	include "script.inc.php";
 } else {
 	include "db.inc.php";
+	if (function_exists('AdminNeo\mssql_print_routines_section')) {
+		mssql_print_routines_section();
+	}
 }
 
 // each page calls its own page_header(), if the footer should not be called then the page exits

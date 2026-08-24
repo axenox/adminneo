@@ -693,7 +693,7 @@ WHERE c.object_id = " . q($table_id)) as $row
 		foreach (get_rows("SELECT i.name, key_ordinal, is_unique, is_primary_key, c.name AS column_name, is_descending_key
 FROM sys.indexes i
 INNER JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
-INNER JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
+INNER JOIN sys.columns c ON ic.object_id = c.object_id AND c.column_id = ic.column_id
 WHERE OBJECT_NAME(i.object_id) = " . q($table)
 		, $connection) as $row) {
 			$name = $row["name"];
@@ -1161,6 +1161,6 @@ WHERE sys1.xtype = 'TR' AND sys2.name = " . q($table)
 	}
 
 	function support($feature) {
-		return preg_match('~^(check|comment|columns|copy|database|drop_col|dump|fast_status|indexes|descidx|scheme|sql|table|trigger|view|view_trigger)$~', $feature); //! routine|
+		return preg_match('~^(check|comment|columns|copy|database|drop_col|dump|fast_status|indexes|descidx|scheme|sql|table|trigger|view|view_trigger)$~', $feature); //! routine is rendered by mssql-routines.inc.php to keep script editing separate from the generic editor.
 	}
 }

@@ -7,6 +7,64 @@ $routine = (isset($_GET["function"]) ? "FUNCTION" : "PROCEDURE");
 $row = $_POST;
 $row["fields"] = (array) $row["fields"];
 
+if (DIALECT == "mssql") {
+	/**
+	 * Converts an existing SQL Server routine script to CREATE OR ALTER where possible.
+	 *
+	 * SQL Server stores the complete CREATE script in OBJECT_DEFINITION(). Reusing that script is
+	 * safer than decomposing/recomposing complex procedures or table-valued functions in the
+	 * generic parameter editor. The fallback keeps manually entered scripts unchanged unless the
+	 * first statement is CREATE/ALTER PROCEDURE/FUNCTION.
+	 */
+	$create_or_alter = function (string $definition): string {
+		$definition = trim($definition);
+		$definition = preg_replace('~^\s*CREATE\s+(?:OR\s+ALTER\s+)?(PROCEDURE|PROC|FUNCTION)\b~i', 'CREATE OR ALTER $1', $definition, 1);
+		$definition = preg_replace('~^\s*ALTER\s+(PROCEDURE|PROC|FUNCTION)\b~i', 'CREATE OR ALTER $1', $definition, 1);
+
+		return rtrim($definition, ";");
+	};
+
+	$old_row = ($PROCEDURE != "" ? routine($_GET["procedure"], $routine) : []);
+	$location = substr(ME, 0, -1);
+
+	if ($_POST) {
+		if ($_POST["drop"]) {
+			query_redirect("DROP $routine " . routine_id($PROCEDURE, $old_row), $location, lang('Routine has been dropped.'));
+		} else {
+			query_redirect($create_or_alter($_POST["definition"]), $location, lang('Routine has been altered.'));
+		}
+	}
+
+	if ($PROCEDURE != "") {
+		$title = isset($_GET["function"]) ? lang('Alter function') : lang('Alter procedure');
+		page_header($title . ": " . h($PROCEDURE), [$title]);
+	} else {
+		$title = isset($_GET["function"]) ? lang('Create function') : lang('Create procedure');
+		page_header($title, [$title]);
+		$old_row = [
+			"definition" => "CREATE OR ALTER $routine " . idf_escape(get_schema()) . "." . idf_escape($PROCEDURE ?: "new_" . strtolower($routine)) . "\nAS\n-- Write the routine body here."
+		];
+	}
+
+	echo "<form action='' method='post' id='form'>\n";
+	echo "<p>", lang('Name'), ": <input class='input' name='name' value='", h($PROCEDURE), "' data-maxlength='128' autocapitalize='off' disabled>";
+	echo "<input type='submit' class='button default' value='", lang('Save'), "'>";
+	echo "</p>\n";
+	echo "<p>";
+	textarea("definition", $old_row["definition"] ?? "", 25);
+	echo "</p>\n<p>";
+	echo "<input type='submit' class='button default' value='", lang('Save'), "'>";
+	if ($PROCEDURE != "") {
+		echo "<input type='submit' class='button' name='drop' value='", lang('Drop'), "'>";
+		echo confirm(lang('Drop %s?', $PROCEDURE));
+	}
+	echo input_token();
+	echo "</p>\n";
+	echo "</form>\n";
+
+	return;
+}
+
 if ($_POST && !process_fields($row["fields"])) {
 	foreach ($row["fields"] as $key => $field) {
 		if ($field["field"] == "") {
@@ -57,7 +115,7 @@ if (!$_POST) {
 	}
 }
 
-$charsets = get_vals("SHOW CHARACTER SET");
+$charsets = (DIALECT == "sql" ? get_vals("SHOW CHARACTER SET") : []);
 sort($charsets);
 $routine_languages = routine_languages();
 
