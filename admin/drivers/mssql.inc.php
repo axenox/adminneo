@@ -989,14 +989,14 @@ COMMIT TRANSACTION;";
 				// Drop an existing target table first if overwrite was requested.
 				($_POST["overwrite"] && !queries("IF OBJECT_ID(" . q($target . "." . $targetName) . ", N'U') IS NOT NULL\nDROP TABLE $targetFull"))
 				|| !queries("SELECT * INTO $targetFull FROM " . table($table) . ($copyData ? "" : " WHERE 1 = 0"))
-				|| !queries("DECLARE @pkey NVARCHAR(max);
+				|| !queries("DECLARE @pkey NVARCHAR(max)
 SELECT @pkey = COLUMN_NAME
 	FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
 	WHERE OBJECTPROPERTY(OBJECT_ID(CONSTRAINT_SCHEMA + '.' + QUOTENAME(CONSTRAINT_NAME)), 'IsPrimaryKey') = 1
 		AND TABLE_NAME = " . q($table) . "
-		AND TABLE_SCHEMA = " . q($srcSchema) . ";
+		AND TABLE_SCHEMA = " . q($srcSchema) . "
 IF @pkey IS NOT NULL
-EXEC('ALTER TABLE $targetFull ADD CONSTRAINT " . idf_escape("PK_$targetName") . " PRIMARY KEY CLUSTERED (' + QUOTENAME(@pkey) + ')');")
+EXEC('ALTER TABLE $targetFull ADD CONSTRAINT " . idf_escape("PK_$targetName") . " PRIMARY KEY CLUSTERED (' + @pkey + ')')")
 			) {
 				return false;
 			}
