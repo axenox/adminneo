@@ -730,7 +730,8 @@ WHERE OBJECT_NAME(i.object_id) = " . q($table)
 		) {
 			$_POST["Auto_increment"] = intval($seed);
 		}
-		return " IDENTITY" . ($_POST["Auto_increment"] != "" ? "(" . number($_POST["Auto_increment"]) . ",1)" : "") . " PRIMARY KEY";
+		$constraint = Admin::get()->getConfig()->isUseNamedConstraintsEnabled() ? " CONSTRAINT " . idf_escape(adminneo_named_constraint_name('PK', trim($_POST["name"] ?? $_GET["create"] ?? ''))) : "";
+		return " IDENTITY" . ($_POST["Auto_increment"] != "" ? "(" . number($_POST["Auto_increment"]) . ",1)" : "") . "$constraint PRIMARY KEY";
 	}
 
 	function alter_table($table, $name, $fields, $foreign, $comment, $engine, $collation, $auto_increment, $partitioning): bool
@@ -746,14 +747,14 @@ WHERE OBJECT_NAME(i.object_id) = " . q($table)
 				// Dropped separately so dependent constraints/indexes can be removed first.
 				$drop_columns[] = $field[0];
 			} else {
-				$val[1] = preg_replace("~( COLLATE )'(\\w+)'~", '\1\2', $val[1]);
+				$val[1] = preg_replace("~( COLLATE )'(\w+)'~", '\1\2', $val[1]);
 				$comments[$field[0]] = $val[5];
 				unset($val[5]);
 				if (preg_match('~ AS ~', $val[3])) {
 					unset($val[1], $val[2]);
 				}
 				if ($field[0] == "") {
-					$alter["ADD"][] = "\n  " . implode("", $val) . ($table == "" ? substr($foreign[$val[0]], 16 + strlen($val[0])) : ""); // 16 - strlen("  FOREIGN KEY ()")
+					$alter["ADD"][] = "\n  " . implode("", $val);
 				} else {
 					$default = $val[3];
 					unset($val[3]); // default values are set separately
@@ -775,6 +776,9 @@ WHERE OBJECT_NAME(i.object_id) = " . q($table)
 			}
 		}
 		if ($table == "") {
+			foreach ($foreign as $foreignKey) {
+				$alter["ADD"][] = "\n  " . ltrim($foreignKey);
+			}
 			return (bool)queries("CREATE TABLE " . table($name) . " (" . implode(",", (array) $alter["ADD"]) . "\n)");
 		}
 		if ($table != $name) {
@@ -849,7 +853,7 @@ COMMIT TRANSACTION;";
 				}
 			} elseif (!queries(($val[0] != "PRIMARY"
 				? "CREATE $val[0] " . ($val[0] != "INDEX" ? "INDEX " : "") . idf_escape($val[1] != "" ? $val[1] : uniqid($table . "_")) . " ON " . table($table)
-				: "ALTER TABLE " . table($table) . " ADD PRIMARY KEY"
+				: "ALTER TABLE " . table($table) . " ADD" . ($val[1] != "" ? " CONSTRAINT " . idf_escape($val[1]) : "") . " PRIMARY KEY"
 			) . " (" . implode(", ", $val[2]) . ")")) {
 				return false;
 			}
@@ -1049,6 +1053,9 @@ WHERE sys1.xtype = 'TR' AND sys2.name = " . q($table)
 		$primary = false;
 		foreach (fields($table) as $name => $field) {
 			$val = process_field($field, $field);
+			if (Admin::get()->getConfig()->isUseNamedConstraintsEnabled() && preg_match('~^ DEFAULT (.+)$~s', $val[3], $match)) {
+				$val[3] = " CONSTRAINT " . idf_escape($field["default_constraint"] ?: adminneo_named_constraint_name('DF', $table, [$name])) . " DEFAULT $match[1]";
+			}
 			if ($val[6]) {
 				$primary = true;
 			}
@@ -1072,8 +1079,8 @@ WHERE sys1.xtype = 'TR' AND sys2.name = " . q($table)
 
 	function foreign_keys_sql($table) {
 		$fields = [];
-		foreach (foreign_keys($table) as $foreign) {
-			$fields[] = ltrim(format_foreign_key($foreign));
+		foreach (foreign_keys($table) as $name => $foreign) {
+			$fields[] = "CONSTRAINT " . idf_escape($name) . " " . ltrim(format_foreign_key($foreign));
 		}
 		return ($fields ? "ALTER TABLE " . table($table) . " ADD\n\t" . implode(",\n\t", $fields) . ";\n\n" : "");
 	}

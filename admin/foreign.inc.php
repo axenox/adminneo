@@ -2,6 +2,31 @@
 
 namespace AdminNeo;
 
+if (!function_exists(__NAMESPACE__ . '\\adminneo_named_constraint_name')) {
+	/**
+	 * Builds deterministic constraint names used when the useNamedConstraints config is enabled.
+	 *
+	 * Names follow the Power UI migration convention and are shortened with a stable hash if a
+	 * database-specific identifier limit would be exceeded.
+	 */
+	function adminneo_named_constraint_name(string $prefix, string $table, array $columns = [], string $targetTable = ""): string
+	{
+		$parts = [$prefix, $table];
+		if ($targetTable !== "") {
+			$parts[] = $targetTable;
+		} else {
+			$parts = array_merge($parts, $columns);
+		}
+		$name = preg_replace('~_+~', '_', trim(preg_replace('~[^A-Za-z0-9]+~', '_', implode('_', $parts)), '_'));
+		$maxLength = (DIALECT == 'pgsql' ? 63 : (DIALECT == 'mssql' ? 128 : 64));
+		if (strlen($name) > $maxLength) {
+			$hash = substr(sha1($name), 0, 8);
+			$name = substr($name, 0, $maxLength - 9) . '_' . $hash;
+		}
+		return $name;
+	}
+}
+
 $TABLE = $_GET["foreign"];
 $name = $_GET["name"];
 $row = $_POST;
@@ -23,7 +48,12 @@ if ($_POST && !$_POST["add"] && !$_POST["change"] && !$_POST["change-js"]) {
 		$alter = "ALTER TABLE " . table($TABLE);
 		$result = ($name == "" || queries("$alter DROP " . (DIALECT == "sql" ? "FOREIGN KEY " : "CONSTRAINT ") . idf_escape($name)));
 		if (!$row["drop"]) {
-			$result = queries("$alter ADD" . format_foreign_key($row));
+			$foreignKey = format_foreign_key($row);
+			if (Admin::get()->getConfig()->isUseNamedConstraintsEnabled()) {
+				$constraintName = $name !== "" ? $name : adminneo_named_constraint_name('FK', $TABLE, $row["source"], $row["table"]);
+				$foreignKey = " CONSTRAINT " . idf_escape($constraintName) . $foreignKey;
+			}
+			$result = queries("$alter ADD" . $foreignKey);
 		}
 	}
 	queries_redirect(

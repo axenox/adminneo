@@ -42,6 +42,8 @@ if ($_POST && !process_fields($row["fields"]) && !Admin::get()->getErrors()) {
 		$foreign = [];
 		$orig_field = reset($orig_fields);
 		$after = " FIRST";
+		$name = trim($row["name"]);
+		$useNamedConstraints = Admin::get()->getConfig()->isUseNamedConstraintsEnabled();
 
 		foreach ($row["fields"] as $key => $field) {
 			$foreign_key = $foreign_keys[$field["type"]];
@@ -51,20 +53,28 @@ if ($_POST && !process_fields($row["fields"]) && !Admin::get()->getErrors()) {
 					$field["default"] = null;
 				}
 				$process_field = process_field($field, $type_field);
+				$compare_field = $process_field;
+				if ($useNamedConstraints && DIALECT == "mssql" && preg_match('~^ DEFAULT (.+)$~s', $process_field[3], $match)) {
+					$process_field[3] = " CONSTRAINT " . idf_escape(adminneo_named_constraint_name('DF', $name, [$field["field"]])) . " DEFAULT $match[1]";
+				}
 				$all_fields[] = [$field["orig"], $process_field, $after];
-				if (!$orig_field || $process_field !== process_field($orig_field, $orig_field)) {
+				if (!$orig_field || $compare_field !== process_field($orig_field, $orig_field)) {
 					$fields[] = [$field["orig"], $process_field, $after];
 					if ($field["orig"] != "" || $after) {
 						$use_all_fields = true;
 					}
 				}
 				if ($foreign_key !== null) {
-					$foreign[idf_escape($field["field"])] = ($TABLE != "" && DIALECT != "sqlite" ? "ADD" : " ") . format_foreign_key([
+					$foreignConstraint = format_foreign_key([
 						'table' => $foreign_keys[$field["type"]],
 						'source' => [$field["field"]],
 						'target' => [$type_field["field"]],
 						'on_delete' => $field["on_delete"],
 					]);
+					if ($useNamedConstraints && DIALECT != "sqlite") {
+						$foreignConstraint = " CONSTRAINT " . idf_escape(adminneo_named_constraint_name('FK', $name, [$field["field"]], $foreign_keys[$field["type"]])) . $foreignConstraint;
+					}
+					$foreign[idf_escape($field["field"])] = ($TABLE != "" && DIALECT != "sqlite" ? "ADD" : " ") . $foreignConstraint;
 				}
 				$after = " AFTER " . idf_escape($field["field"]);
 			} elseif ($field["orig"] != "") {
@@ -109,7 +119,6 @@ if ($_POST && !process_fields($row["fields"]) && !Admin::get()->getErrors()) {
 			cookie("neo_engine", $row["Engine"] ?? "");
 			$message = lang('Table has been created.');
 		}
-		$name = trim($row["name"]);
 
 		queries_redirect(ME . (support("table") ? "table=" : "select=") . urlencode($name), $message, alter_table(
 			$TABLE,

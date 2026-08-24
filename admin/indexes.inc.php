@@ -2,6 +2,25 @@
 
 namespace AdminNeo;
 
+/**
+ * Returns a deterministic, migration-friendly name for a newly created index/constraint.
+ *
+ * The helper is intentionally local to the indexes page because existing indexes already have a
+ * database-provided name and only unnamed *new* rows need to be completed before they are passed to
+ * the driver. Names are shortened with a hash suffix to fit the strictest supported identifier
+ * length (PostgreSQL: 63 bytes), avoiding collisions in schemas with many similar indexes.
+ */
+function named_index_constraint_name(string $type, string $table, array $columns): string
+{
+	$prefix = ($type == 'PRIMARY' ? 'PK' : ($type == 'UNIQUE' ? 'UQ' : 'IX'));
+	$nameColumns = ($type == 'PRIMARY' ? [] : $columns);
+	$name = adminneo_named_constraint_name($prefix, $table, $nameColumns);
+	if ($type == 'INDEX' && count($columns) > 1) {
+		$name = adminneo_named_constraint_name($prefix, $table, $columns);
+	}
+	return $name;
+}
+
 $TABLE = $_GET["indexes"];
 $index_types = ["PRIMARY", "UNIQUE", "INDEX"];
 $table_status = table_status1($TABLE, true);
@@ -70,6 +89,9 @@ if ($_POST && !$_POST["add"] && !$_POST["drop_col"]) {
 				}
 			}
 			if ($columns) {
+				if ($name == "" && Admin::get()->getConfig()->isUseNamedConstraintsEnabled()) {
+					$name = named_index_constraint_name($index["type"], $TABLE, $columns);
+				}
 				$alter[] = [$index["type"], $name, $set, $index_algorithm, $index_condition];
 			}
 		}
