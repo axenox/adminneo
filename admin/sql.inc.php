@@ -187,6 +187,7 @@ if ($_POST) {
 									$explain_id = "explain-$commands";
 									$export = false;
 									$export_id = "export-$commands";
+									$limit = 0;
 
 									if (is_object($result)) {
 										if (!$_POST["only_errors"]) {
@@ -251,6 +252,9 @@ if ($_POST) {
 										echo input_hidden("query", $q);
 										echo input_token();
 										echo " <input type='submit' class='button' name='export' value='" . lang('Export') . "'>";
+										if (!$limit) { // JS export requires all rows in the table.
+											echo script("qsl('input').onclick = partial(sqlExport, '" . js_escape(ME) . "set=export-settings');", "");
+										}
 										echo "</p></form>\n";
 									}
 
