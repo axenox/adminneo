@@ -692,7 +692,7 @@ WHERE schema_id = SCHEMA_ID(" . q(get_schema()) . ") AND type IN ('S', 'U', 'V')
 FROM sys.all_columns c
 JOIN sys.types t ON c.user_type_id = t.user_type_id
 LEFT JOIN sys.default_constraints d ON c.default_object_id = d.object_id
-LEFT JOIN sys.index_columns ic ON c.object_id = ic.object_id AND c.column_id = ic.column_id
+LEFT JOIN sys.index_columns ic ON c.object_id = ic.object_id AND ci.column_id = c.column_id
 LEFT JOIN sys.indexes i ON ic.object_id = i.object_id AND ic.index_id = i.index_id
 WHERE c.object_id = " . q($table_id)) as $row
 		) {
