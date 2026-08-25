@@ -2,10 +2,63 @@
 
 namespace AdminNeo;
 
+/**
+ * Calls a stored procedure or function in one of two modes, selected by routine_script_mode():
+ *
+ * - Script mode (support('routine_script') without support('routine_fields'), e.g. MS SQL): the driver
+ *   generates an editable SQL command, because the call syntax differs per routine kind (EXEC with named
+ *   parameters, SELECT of a scalar function, SELECT FROM a table-valued function) and output parameters
+ *   need their own variables.
+ * - Fields mode (support('routine_fields'), e.g. MySQL, PostgreSQL): parameters are entered in a typed
+ *   form, the CALL/SELECT command is assembled from routine() metadata and OUT values are read back
+ *   from session variables.
+ */
+
 $PROCEDURE = $_GET["name"] ?: $_GET["call"];
 page_header(lang('Call') . ": " . h($PROCEDURE), [lang('Call')]);
 
 $routine = routine($_GET["call"], (isset($_GET["callf"]) ? "FUNCTION" : "PROCEDURE"));
+
+if (routine_script_mode()) {
+	// Keep a manually edited snippet on submit instead of regenerating it from metadata,
+	// otherwise changed parameter values would be replaced by default placeholders again.
+	$query = $_POST["query"] ?? Driver::get()->getRoutineCallSql($PROCEDURE, $routine, isset($_GET["callf"]));
+
+	if ($_POST) {
+		$start = microtime(true);
+		$result = Connection::get()->multiQuery($query);
+		$affected = Connection::get()->getAffectedRows();
+		echo Admin::get()->formatSelectQuery($query, $start, !$result);
+
+		if (!$result) {
+			echo "<p class='error'>" . error() . "\n";
+		} else {
+			$connection2 = connect();
+			if ($connection2) {
+				$connection2->selectDatabase(DB);
+			}
+
+			do {
+				$result = Connection::get()->storeResult();
+				if (is_object($result)) {
+					print_select_result($result, $connection2);
+				} else {
+					echo "<p class='message'>" . lang('Routine has been called, %d row(s) affected.', $affected)
+						. " <span class='time'>" . @date("H:i:s") . "</span>\n";
+				}
+			} while (Connection::get()->nextResult());
+		}
+	}
+
+	echo "<form action='' method='post'>\n";
+	echo "<p>" . lang('Run SQL command') . ":</p>\n";
+	textarea("query", $query, 5);
+	echo "<p><input type='submit' class='button' value='", lang('Call'), "'>\n";
+	echo input_token();
+	echo "</p>\n</form>\n";
+	return;
+}
+
 $in = [];
 $out = [];
 foreach ($routine["fields"] as $i => $field) {

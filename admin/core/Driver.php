@@ -448,6 +448,55 @@ abstract class Driver
 	}
 
 	/**
+	 * Returns the whole CREATE script of a routine. Used by the script editor and by the export.
+	 *
+	 * @param string $name Routine name, empty when creating a new routine.
+	 * @param 'FUNCTION'|'PROCEDURE' $type
+	 * @param array $routine Result of routine(), empty when creating a new routine.
+	 */
+	public function getRoutineScript(string $name, string $type, array $routine): string
+	{
+		return create_routine($type, [
+			"name" => ($name != "" ? $name : "new_" . strtolower($type)),
+			"fields" => $routine["fields"] ?? [],
+			"returns" => $routine["returns"] ?? ["type" => ""],
+			"definition" => ($routine ? $routine["definition"] : "BEGIN\n\nEND"),
+			"language" => $routine["language"] ?? "",
+		]);
+	}
+
+	/**
+	 * Returns the query saving a routine edited in the script editor.
+	 *
+	 * @param string $script Script from the editor.
+	 * @param 'FUNCTION'|'PROCEDURE' $type
+	 * @param array $routine Result of routine(), empty when creating a new routine.
+	 */
+	public function getRoutineScriptQuery(string $script, string $type, array $routine): string
+	{
+		return rtrim(trim($script), ";");
+	}
+
+	/**
+	 * Returns the SQL command calling a routine. Used as a starting point on the Call page.
+	 *
+	 * @param string $name Routine name.
+	 * @param array $routine Result of routine().
+	 * @param bool $function Routine is a function, not a procedure.
+	 */
+	public function getRoutineCallSql(string $name, array $routine, bool $function): string
+	{
+		$parameters = [];
+		foreach (($routine["fields"] ?? []) as $field) {
+			if (substr($field["inout"] ?? "", -3) != "OUT") {
+				$parameters[] = $this->getNull();
+			}
+		}
+
+		return ($function ? "SELECT " : "CALL ") . table($name) . "(" . implode(", ", $parameters) . ")";
+	}
+
+	/**
 	 * Checks whether table supports indexes.
 	 *
 	 * @param array $tableStatus The result of table_status1().
