@@ -447,6 +447,75 @@ if (isset($_GET["pgsql"])) {
 			return "(SELECT oid FROM pg_namespace WHERE nspname = current_schema())";
 		}
 
+		/**
+		 * {@inheritDoc}
+		 *
+		 * Retrieves all eligible primary keys in one catalog query instead of resolving
+		 * fields() separately for every table in the current schema.
+		 *
+		 * @see Driver::getReferencablePrimary()
+		 */
+		public function getReferencablePrimary(string $self): array
+		{
+			$return = [];
+			$aliases = [
+				'timestamp without time zone' => 'timestamp',
+				'timestamp with time zone' => 'timestamptz',
+			];
+			$query = "SELECT
+	c.relname AS table_name,
+	a.attname AS field,
+	format_type(a.atttypid, a.atttypmod) AS full_type,
+	a.attndims,
+	pg_get_expr(d.adbin, d.adrelid) AS default,
+	a.attnotnull::int,
+	col_description(a.attrelid, a.attnum) AS comment" . ($this->connection->isMinVersion("10") ? ",
+	a.attidentity" . ($this->connection->isMinVersion("12") ? ",
+	a.attgenerated" : "") : "") . "
+FROM pg_index i
+JOIN pg_class c ON c.oid = i.indrelid
+JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = i.indkey[0]
+LEFT JOIN pg_attrdef d ON a.attrelid = d.adrelid AND a.attnum = d.adnum
+WHERE i.indisprimary
+AND array_length(i.indkey, 1) = 1
+AND c.relnamespace = " . $this->getNsOidSql() . "
+AND c.relkind IN ('r', 'm', 'f', 'p')
+AND c.relname != " . q($self) . "
+AND NOT a.attisdropped";
+
+		foreach (get_rows($query, $this->connection) as $row) {
+			preg_match('~([^([]+)(\((.*)\))?([a-z ]+)?((\[[0-9]*])*)$~', $row["full_type"], $match);
+			list(, $type, $length, $row["length"], $addon, $array) = $match;
+			$checkType = $type . $addon;
+			if (isset($aliases[$checkType])) {
+				$row["type"] = $aliases[$checkType];
+				$row["full_type"] = $row["type"] . $length;
+			} else {
+				$row["type"] = $type;
+				$row["full_type"] = $row["type"] . $length . $addon;
+			}
+			for ($i = 0; $i < $row["attndims"]; $i++) {
+				$row["length"] .= $array;
+				$row["full_type"] .= $array;
+			}
+			if (in_array($row['attidentity'], ['a', 'd'])) {
+				$row['default'] = 'GENERATED ' . ($row['attidentity'] == 'd' ? 'BY DEFAULT' : 'ALWAYS') . ' AS IDENTITY';
+			}
+			$options = ["s" => "STORED", "v" => "VIRTUAL"];
+			$row["generated"] = ($options[$row["attgenerated"]] ?? "");
+			$row["null"] = !$row["attnotnull"];
+			$row["auto_increment"] = $row['attidentity'] || preg_match('~^nextval\(~i', $row["default"])
+				|| preg_match('~^unique_rowid\(~', $row["default"]);
+			$row["privileges"] = ["insert" => 1, "select" => 1, "update" => 1, "where" => 1, "order" => 1];
+			if (!$row['generated'] && preg_match('~(.+)::[^,)]+(.*)~', $row["default"], $match)) {
+				$row["default"] = ($match[1] == "NULL" ? null : idf_unescape($match[1]) . $match[2]);
+			}
+			$return[$row["table_name"]] = $row;
+		}
+
+		return $return;
+		}
+
 		public function getInsertReturningSql(string $table): string
 		{
 			$autoIncrement = array_filter(fields($table), function ($field) {

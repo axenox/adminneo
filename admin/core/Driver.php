@@ -635,4 +635,29 @@ ORDER BY TABLE_NAME, ORDINAL_POSITION", $this->connection);
 
 		return $allFields;
 	}
+
+	/**
+	 * Returns tables with a single-column primary key that can be referenced from a table editor.
+	 *
+	 * @return array<string,array>
+	 */
+	public function getReferencablePrimary(string $self): array
+	{
+		$return = [];
+		foreach (table_status('', true) as $tableName => $table) {
+			if ($tableName != $self && fk_support($table)) {
+				foreach (fields($tableName) as $field) {
+					if ($field["primary"]) {
+						if (isset($return[$tableName])) {
+							unset($return[$tableName]);
+							break;
+						}
+						$return[$tableName] = $field;
+					}
+				}
+			}
+		}
+
+		return $return;
+	}
 }

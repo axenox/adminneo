@@ -127,21 +127,7 @@ function print_select_result(Result $result, ?Connection $connection = null, arr
 * @return array[] [$table_name => $field]
 */
 function referencable_primary($self) {
-	$return = []; // table_name => field
-	foreach (table_status('', true) as $table_name => $table) {
-		if ($table_name != $self && fk_support($table)) {
-			foreach (fields($table_name) as $field) {
-				if ($field["primary"]) {
-					if ($return[$table_name]) { // multi column primary key
-						unset($return[$table_name]);
-						break;
-					}
-					$return[$table_name] = $field;
-				}
-			}
-		}
-	}
-	return $return;
+	return Driver::get()->getReferencablePrimary($self);
 }
 
 /** Print SQL <textarea> tag

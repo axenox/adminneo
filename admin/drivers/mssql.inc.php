@@ -402,6 +402,65 @@ if (isset($_GET["mssql"])) {
 			$this->systemSchemas = ["INFORMATION_SCHEMA", "guest", "sys", "db_*"];
 		}
 
+		/**
+		 * {@inheritDoc}
+		 *
+		 * Retrieves all eligible primary keys in one catalog query. The generic implementation
+		 * calls fields() for every table, which is prohibitively expensive on larger schemas.
+		 *
+		 * @see Driver::getReferencablePrimary()
+		 */
+		public function getReferencablePrimary(string $self): array
+		{
+			$schema = get_schema();
+			$return = [];
+			$query = "SELECT o.name AS table_name, c.max_length, c.precision, c.scale, c.name, c.is_nullable, c.is_identity, c.collation_name, t.name AS type, d.definition AS [default], d.name AS default_constraint
+FROM sys.all_columns c
+JOIN sys.all_objects o ON c.object_id = o.object_id
+JOIN sys.types t ON c.user_type_id = t.user_type_id
+LEFT JOIN sys.default_constraints d ON c.default_object_id = d.object_id
+JOIN sys.index_columns ic ON c.object_id = ic.object_id AND c.column_id = ic.column_id
+JOIN sys.indexes i ON ic.object_id = i.object_id AND ic.index_id = i.index_id
+WHERE o.schema_id = SCHEMA_ID(" . q($schema) . ")
+AND o.type IN ('S', 'U', 'V')
+AND o.name != " . q($self) . "
+AND i.is_primary_key = 1
+AND i.object_id IN (
+	SELECT object_id
+	FROM sys.index_columns
+	WHERE index_id IN (SELECT index_id FROM sys.indexes WHERE object_id = sys.index_columns.object_id AND is_primary_key = 1)
+	GROUP BY object_id
+	HAVING COUNT(*) = 1
+)";
+
+		foreach (get_rows($query, $this->connection) as $row) {
+			$type = $row["type"];
+			$length = "";
+			if (preg_match("~char|binary~", $type)) {
+				$maxLength = intval($row["max_length"]);
+				$length = ($maxLength == -1 ? "max" : $maxLength / ($type[0] == 'n' ? 2 : 1));
+			} elseif ($type == "decimal") {
+				$length = "$row[precision],$row[scale]";
+			}
+
+			$return[$row["table_name"]] = [
+				"field" => $row["name"],
+				"full_type" => $type . ($length ? "($length)" : ""),
+				"type" => $type,
+				"length" => $length,
+				"default" => (preg_match("~^\('(.*)'\)$~", $row["default"], $match) ? str_replace("''", "'", $match[1]) : $row["default"]),
+				"default_constraint" => $row["default_constraint"],
+				"null" => $row["is_nullable"],
+				"auto_increment" => $row["is_identity"],
+				"collation" => $row["collation_name"],
+				"privileges" => ["insert" => 1, "select" => 1, "update" => 1, "where" => 1, "order" => 1],
+				"primary" => true,
+			];
+		}
+
+		return $return;
+		}
+
 		public function insertUpdate(string $table, array $records, array $primary)
         {
 			$fields = fields($table);
