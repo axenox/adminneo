@@ -7,8 +7,11 @@ page_header(lang('Call') . ": " . h($PROCEDURE), [lang('Call')]);
 
 $routine = routine($_GET["call"], (isset($_GET["callf"]) ? "FUNCTION" : "PROCEDURE"));
 
-if (DIALECT == "mssql") {
-	$query = mssql_routine_test_sql($PROCEDURE, $routine, isset($_GET["callf"]));
+if (function_exists('AdminNeo\routine_test_sql')) {
+	// Some drivers expose routines as full SQL scripts instead of decomposed form inputs.
+	// Keep a manually edited snippet on submit instead of regenerating it from metadata,
+	// otherwise changed parameter values would be replaced by default placeholders again.
+	$query = $_POST["query"] ?? routine_test_sql($PROCEDURE, $routine, isset($_GET["callf"]));
 
 	if ($_POST) {
 		$start = microtime(true);

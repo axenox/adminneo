@@ -7,23 +7,7 @@ $routine = (isset($_GET["function"]) ? "FUNCTION" : "PROCEDURE");
 $row = $_POST;
 $row["fields"] = (array) $row["fields"];
 
-if (DIALECT == "mssql") {
-	/**
-	 * Converts an existing SQL Server routine script to CREATE OR ALTER where possible.
-	 *
-	 * SQL Server stores the complete CREATE script in OBJECT_DEFINITION(). Reusing that script is
-	 * safer than decomposing/recomposing complex procedures or table-valued functions in the
-	 * generic parameter editor. The fallback keeps manually entered scripts unchanged unless the
-	 * first statement is CREATE/ALTER PROCEDURE/FUNCTION.
-	 */
-	$create_or_alter = function (string $definition): string {
-		$definition = trim($definition);
-		$definition = preg_replace('~^\s*CREATE\s+(?:OR\s+ALTER\s+)?(PROCEDURE|PROC|FUNCTION)\b~i', 'CREATE OR ALTER $1', $definition, 1);
-		$definition = preg_replace('~^\s*ALTER\s+(PROCEDURE|PROC|FUNCTION)\b~i', 'CREATE OR ALTER $1', $definition, 1);
-
-		return rtrim($definition, ";");
-	};
-
+if (function_exists('AdminNeo\routine_script_from_definition')) {
 	$old_row = ($PROCEDURE != "" ? routine($_GET["procedure"], $routine) : []);
 	$location = substr(ME, 0, -1);
 
@@ -31,7 +15,7 @@ if (DIALECT == "mssql") {
 		if ($_POST["drop"]) {
 			query_redirect("DROP $routine " . routine_id($PROCEDURE, $old_row), $location, lang('Routine has been dropped.'));
 		} else {
-			query_redirect($create_or_alter($_POST["definition"]), $location, lang('Routine has been altered.'));
+			query_redirect(routine_script_from_definition($_POST["definition"]), $location, lang('Routine has been altered.'));
 		}
 	}
 
@@ -42,7 +26,7 @@ if (DIALECT == "mssql") {
 		$title = isset($_GET["function"]) ? lang('Create function') : lang('Create procedure');
 		page_header($title, [$title]);
 		$old_row = [
-			"definition" => "CREATE OR ALTER $routine " . idf_escape(get_schema()) . "." . idf_escape($PROCEDURE ?: "new_" . strtolower($routine)) . "\nAS\n-- Write the routine body here."
+			"definition" => routine_script_from_definition("CREATE $routine " . idf_escape(get_schema()) . "." . idf_escape($PROCEDURE ?: "new_" . strtolower($routine)) . "\nAS\n-- Write the routine body here.")
 		];
 	}
 

@@ -2,8 +2,12 @@
 
 namespace AdminNeo;
 
+if (DIALECT != 'mssql') {
+	return;
+}
+
 /**
- * MS SQL routine helpers kept outside the generic routine driver hooks for the first iteration.
+ * MS SQL routine support for procedures and T-SQL functions.
  *
  * AdminNeo's generic routine editor decomposes routines into parameters, return type and body.
  * That is risky for T-SQL table-valued functions and more complex procedure options, because SQL
@@ -197,10 +201,19 @@ function routine_id($name, $row)
 }
 
 /**
+ * Converts an existing SQL Server routine script to CREATE OR ALTER where possible.
+ */
+function routine_script_from_definition(string $definition): string
+{
+	$definition = trim($definition);
+	$definition = preg_replace('~^\s*CREATE\s+(?:OR\s+ALTER\s+)?(PROCEDURE|PROC|FUNCTION)\b~i', 'CREATE OR ALTER $1', $definition, 1);
+	$definition = preg_replace('~^\s*ALTER\s+(PROCEDURE|PROC|FUNCTION)\b~i', 'CREATE OR ALTER $1', $definition, 1);
+
+	return rtrim($definition, ";");
+}
+
+/**
  * Creates NULL placeholders for generated routine test SQL.
- *
- * Stored procedures use named arguments for readability, while SQL Server functions are called
- * positionally. OUTPUT parameters are deliberately skipped in the generated starter SQL.
  */
 function mssql_routine_call_parameters(array $routine, bool $named): string
 {
@@ -218,7 +231,7 @@ function mssql_routine_call_parameters(array $routine, bool $named): string
 /**
  * Generates an executable SQL snippet for testing a procedure, scalar function or TVF.
  */
-function mssql_routine_test_sql(string $name, array $routine, bool $function): string
+function routine_test_sql(string $name, array $routine, bool $function): string
 {
 	$id = routine_id($name, $routine);
 	$params = mssql_routine_call_parameters($routine, !$function);
@@ -233,11 +246,49 @@ function mssql_routine_test_sql(string $name, array $routine, bool $function): s
 }
 
 /**
- * Prints the SQL Server routines section below the normal database overview.
+ * Returns sidebar links for all SQL Server routines in the current schema.
  */
-function mssql_print_routines_section(): void
+function mssql_routine_navigation_html(array $rows): string
 {
-	if (DIALECT != 'mssql' || DB == '' || $_GET['ns'] === '') {
+	$html = "";
+	foreach ($rows as $row) {
+		$isFunction = ($row['ROUTINE_TYPE'] != 'PROCEDURE');
+		$name = $row['ROUTINE_NAME'];
+		$title = h($row['ROUTINE_TYPE'] . ($row['DTD_IDENTIFIER'] ? ': ' . $row['DTD_IDENTIFIER'] : ''));
+		$active = in_array($name, [$_GET['call'] ?? null, $_GET['callf'] ?? null, $_GET['procedure'] ?? null, $_GET['function'] ?? null], true);
+		$html .= '<li><a href="' . h(ME . ($isFunction ? 'callf=' : 'call=') . urlencode($row['SPECIFIC_NAME'])) . '"'
+			. bold($active, 'primary routine') . ' data-primary="true" title="' . $title . '">'
+			. h($name) . '</a>'
+			. ' <a href="' . h(ME . ($isFunction ? 'function=' : 'procedure=') . urlencode($row['SPECIFIC_NAME'])) . '" title="' . lang('Alter') . '" class="secondary">' . icon_solo('edit') . '</a></li>' . "\n";
+	}
+
+	return $html;
+}
+
+/**
+ * Prints SQL Server routines into the existing table/view sidebar list so the live filter includes them.
+ */
+function print_routines_navigation(?string $missing): void
+{
+	if ($missing || DB == '' || $_GET['ns'] === '') {
+		return;
+	}
+
+	$rows = routines();
+	if (!$rows) {
+		return;
+	}
+
+	echo '<template id="routines-navigation">', mssql_routine_navigation_html($rows), "</template>\n";
+	echo script("(() => { const menu = qs('#tables menu'); const template = gid('routines-navigation'); if (menu && template) { menu.append(...template.content.cloneNode(true).childNodes); } })();");
+}
+
+/**
+ * Prints the SQL Server routines section on the database overview page.
+ */
+function print_routines_section(): void
+{
+	if (DB == '' || $_GET['ns'] === '') {
 		return;
 	}
 
@@ -260,3 +311,4 @@ function mssql_print_routines_section(): void
 	echo '<p class="links"><a href="', h(ME), 'procedure=">', icon('function-add'), lang('Create procedure'), "</a> ",
 		'<a href="', h(ME), 'function=">', icon('function-add'), lang('Create function'), "</a></p>\n";
 }
+
