@@ -593,6 +593,14 @@ function create_trigger(string $on, array $trigger): string
 	;
 }
 
+/** Checks whether routines are edited and called as whole SQL scripts instead of decomposed form fields
+* @return bool
+*/
+function routine_script_mode() {
+	// Drivers able to decompose routines keep the fields editor even if they can provide a script.
+	return support("routine_script") && !support("routine_fields");
+}
+
 /** Generate SQL query for creating routine
 * @param 'PROCEDURE'|'FUNCTION'
 * @param string[] result of routine()

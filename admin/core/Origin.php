@@ -9,6 +9,9 @@ abstract class Origin extends Plugin
 	/** @var string[] */
 	private $errors = [];
 
+	/** @var ?list<string[]> Cached result of routines(). */
+	private $routines = null;
+
 	/** @var static|Pluginer|null */
 	private static $instance = null;
 
@@ -814,6 +817,30 @@ abstract class Origin extends Plugin
 	}
 
 	public abstract function printTableList(array $tables): void;
+
+	/**
+	 * Returns routines in the current schema. The result is cached for the whole request.
+	 *
+	 * @return list<string[]> Result of routines().
+	 */
+	public function getRoutines(): array
+	{
+		if ($this->routines === null) {
+			$this->routines = support("routine") ? routines() : [];
+		}
+
+		return $this->routines;
+	}
+
+	/**
+	 * Prints routine list in main navigation.
+	 *
+	 * @param list<string[]> $routines Result of routines().
+	 */
+	public function printRoutineList(array $routines): void
+	{
+		//
+	}
 
 	/**
 	 * Returns rows for settings table organised in groups.

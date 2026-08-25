@@ -2,12 +2,41 @@
 
 namespace AdminNeo;
 
+/**
+ * Creates, alters and drops a stored procedure or function in one of two modes, selected by
+ * routine_script_mode():
+ *
+ * - Script mode (support('routine_script') without support('routine_fields'), e.g. MS SQL): the routine is
+ *   edited as the whole CREATE script, because the database stores it verbatim and accepts options the
+ *   form cannot express (table-valued functions, WITH SCHEMABINDING, ...). Saving runs the script through
+ *   Driver::getRoutineScriptQuery(), so one statement replaces the routine and the name cannot be changed.
+ * - Fields mode (support('routine_fields'), e.g. MySQL, PostgreSQL): parameters, return type and body are
+ *   edited separately and the CREATE command is rebuilt by create_routine(). Renaming is possible, but a
+ *   routine that cannot be replaced in place has to be dropped and created again (see drop_create()).
+ */
+
 $PROCEDURE = ($_GET["name"] ?: $_GET["procedure"]);
 $routine = (isset($_GET["function"]) ? "FUNCTION" : "PROCEDURE");
 $row = $_POST;
 $row["fields"] = (array) $row["fields"];
 
-if ($_POST && !process_fields($row["fields"])) {
+$script_mode = routine_script_mode();
+$old_row = ($script_mode && $PROCEDURE != "" ? routine($_GET["procedure"], $routine) : []);
+
+if ($script_mode) {
+	if ($_POST) {
+		$location = substr(ME, 0, -1);
+		if ($_POST["drop"]) {
+			query_redirect("DROP $routine " . routine_id($PROCEDURE, $old_row), $location, lang('Routine has been dropped.'));
+		} else {
+			query_redirect(
+				Driver::get()->getRoutineScriptQuery($_POST["definition"], $routine, $old_row),
+				$location,
+				($PROCEDURE != "" ? lang('Routine has been altered.') : lang('Routine has been created.'))
+			);
+		}
+	}
+} elseif ($_POST && !process_fields($row["fields"])) {
 	foreach ($row["fields"] as $key => $field) {
 		if ($field["field"] == "") {
 			unset($row["fields"][$key]);
@@ -48,6 +77,36 @@ if ($PROCEDURE != "") {
 	page_header($title, [$title]);
 }
 
+// Script editor: the routine is edited as a whole CREATE script, so there is nothing to decompose.
+if ($script_mode) {
+	$definition = ($_POST ? $_POST["definition"] : Driver::get()->getRoutineScript($PROCEDURE, $routine, $old_row));
+
+	echo "<form action='' method='post' id='form'>\n";
+	echo "<p>", lang('Name'), ": ";
+	// The name is a part of the script; renaming is done by the database specific command.
+	echo "<input class='input' name='name' value='", h($PROCEDURE), "' data-maxlength='128' autocapitalize='off' disabled>";
+	echo "<input type='submit' class='button default' value='", lang('Save'), "'>";
+	echo "</p>\n";
+
+	echo "<p>";
+	textarea("definition", $definition, 25);
+	echo "</p>\n";
+
+	echo "<p>";
+	echo "<input type='submit' class='button default' value='", lang('Save'), "'>";
+	if ($PROCEDURE != "") {
+		echo "<input type='submit' class='button' name='drop' value='", lang('Drop'), "'>";
+		echo confirm(lang('Drop %s?', $PROCEDURE));
+	}
+	echo input_token();
+	echo "</p>\n";
+
+	echo "</form>\n";
+
+	return;
+}
+
+// Fields editor: parameters, return type and body are edited separately.
 if (!$_POST) {
 	if ($PROCEDURE == "") {
 		$row["language"] = "sql";
@@ -57,7 +116,7 @@ if (!$_POST) {
 	}
 }
 
-$charsets = get_vals("SHOW CHARACTER SET");
+$charsets = (DIALECT == "sql" ? get_vals("SHOW CHARACTER SET") : []);
 sort($charsets);
 $routine_languages = routine_languages();
 

@@ -92,9 +92,10 @@ SET foreign_key_checks = 0;
 					foreach (routines() as $row) {
 						$name = $row["ROUTINE_NAME"];
 						$routine = $row["ROUTINE_TYPE"];
-						$create = create_routine($routine, ["name" => $name] + routine($row["SPECIFIC_NAME"], $routine));
+						$definition = routine($row["SPECIFIC_NAME"], $routine);
+						$create = Driver::get()->getRoutineScript($name, $routine, $definition);
 						set_utf8mb4($create);
-						$out .= ($style != 'DROP+CREATE' ? "DROP $routine IF EXISTS " . idf_escape($name) . ";;\n" : "") . "$create;\n\n";
+						$out .= ($style != 'DROP+CREATE' ? "DROP $routine IF EXISTS " . routine_id($name, $definition) . ";;\n" : "") . "$create;\n\n";
 					}
 				}
 

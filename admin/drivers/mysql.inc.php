@@ -1455,11 +1455,11 @@ WHERE ROUTINE_SCHEMA = DATABASE() AND ROUTINE_TYPE = '$type' AND ROUTINE_NAME = 
 
 	/** Check whether a feature is supported
 	* @param literal-string $feature check|comment|copy|database|descidx|drop_col|dump|event|fast_status|indexes|kill|materializedview|
-	* privileges|move_col|procedure|processlist|routine|scheme|sequence|status|table|trigger|type|variables|view|view_trigger
+	* privileges|move_col|procedure|processlist|routine|routine_fields|routine_script|scheme|sequence|status|table|trigger|type|variables|view|view_trigger
 	*/
 	function support($feature) {
 		return preg_match(
-			'~^(comment|columns|copy|database|drop_col|dump|event|indexes|kill|privileges|move_col|procedure|processlist|routine|sql|status|table|trigger|variables|view'
+			'~^(comment|columns|copy|database|drop_col|dump|event|indexes|kill|privileges|move_col|procedure|processlist|routine|routine_fields|sql|status|table|trigger|variables|view'
 			. (Connection::get()->isMinVersion(Connection::get()->isMariaDB() ? "10.8.1" : "8") ? '|descidx' : '')
 			. (Connection::get()->isMinVersion(Connection::get()->isMariaDB() ? "10.2.1" : "8.0.16") ? '|check' : '')
 			// MySQL 8 reads table stats from the data dictionary; MariaDB still opens all tables.
