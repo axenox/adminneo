@@ -2,6 +2,19 @@
 
 namespace AdminNeo;
 
+/**
+ * Creates, alters and drops a stored procedure or function in one of two modes, selected by
+ * routine_script_mode():
+ *
+ * - Script mode (support('routine_script') without support('routine_fields'), e.g. MS SQL): the routine is
+ *   edited as the whole CREATE script, because the database stores it verbatim and accepts options the
+ *   form cannot express (table-valued functions, WITH SCHEMABINDING, ...). Saving runs the script through
+ *   Driver::getRoutineScriptQuery(), so one statement replaces the routine and the name cannot be changed.
+ * - Fields mode (support('routine_fields'), e.g. MySQL, PostgreSQL): parameters, return type and body are
+ *   edited separately and the CREATE command is rebuilt by create_routine(). Renaming is possible, but a
+ *   routine that cannot be replaced in place has to be dropped and created again (see drop_create()).
+ */
+
 $PROCEDURE = ($_GET["name"] ?: $_GET["procedure"]);
 $routine = (isset($_GET["function"]) ? "FUNCTION" : "PROCEDURE");
 $row = $_POST;

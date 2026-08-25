@@ -2,6 +2,18 @@
 
 namespace AdminNeo;
 
+/**
+ * Calls a stored procedure or function in one of two modes, selected by routine_script_mode():
+ *
+ * - Script mode (support('routine_script') without support('routine_fields'), e.g. MS SQL): the driver
+ *   generates an editable SQL command, because the call syntax differs per routine kind (EXEC with named
+ *   parameters, SELECT of a scalar function, SELECT FROM a table-valued function) and output parameters
+ *   need their own variables.
+ * - Fields mode (support('routine_fields'), e.g. MySQL, PostgreSQL): parameters are entered in a typed
+ *   form, the CALL/SELECT command is assembled from routine() metadata and OUT values are read back
+ *   from session variables.
+ */
+
 $PROCEDURE = $_GET["name"] ?: $_GET["call"];
 page_header(lang('Call') . ": " . h($PROCEDURE), [lang('Call')]);
 
