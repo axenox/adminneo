@@ -466,6 +466,46 @@ if (isset($_GET["mssql"])) {
             return null;
 		}
 
+		public function getRoutineScript(string $name, string $type, array $routine): string
+		{
+			if (!$routine) {
+				$id = idf_escape(get_schema()) . "." . idf_escape("new_" . strtolower($type));
+
+				return $type == "FUNCTION"
+					? "CREATE OR ALTER FUNCTION $id ()\nRETURNS int\nAS\nBEGIN\n\tRETURN 0;\nEND"
+					: "CREATE OR ALTER PROCEDURE $id\nAS\nBEGIN\n\tSELECT 1;\nEND";
+			}
+
+			// sys.sql_modules stores the whole original script including options not expressible in the fields editor.
+			return mssql_create_or_alter($routine["definition"]);
+		}
+
+		public function getRoutineScriptQuery(string $script, string $type, array $routine): string
+		{
+			return mssql_create_or_alter($script);
+		}
+
+		public function getRoutineCallSql(string $name, array $routine, bool $function): string
+		{
+			$parameters = [];
+			foreach (($routine["fields"] ?? []) as $field) {
+				if (($field["inout"] ?? "") != "OUT") {
+					$parameters[] = ($function ? "" : "@" . ltrim($field["field"], "@") . " = ") . "NULL";
+				}
+			}
+
+			$id = routine_id($name, $routine);
+			$parameters = implode(", ", $parameters);
+
+			if (!$function) {
+				return "EXEC $id" . ($parameters ? " $parameters" : "");
+			}
+
+			// Scalar functions are selected, table-valued ones are queried.
+			return ($routine["object_type"] ?? "") == "FN"
+				? "SELECT $id($parameters) AS result"
+				: "SELECT * FROM $id($parameters)";
+		}
 	}
 
 
@@ -1054,6 +1094,185 @@ WHERE sys1.xtype = 'TR' AND sys2.name = " . q($table)
 		];
 	}
 
+	/**
+	 * Builds a T-SQL identifier for a schema-scoped routine.
+	 */
+	function mssql_routine_identifier(string $name, ?string $schema = null): string
+	{
+		if ($schema === null) {
+			[$schema, $name] = mssql_routine_parts($name);
+		}
+
+		return idf_escape($schema) . '.' . idf_escape($name);
+	}
+
+	/**
+	 * Splits a possibly schema-qualified routine name into schema and object name.
+	 *
+	 * @return array{0:string, 1:string}
+	 */
+	function mssql_routine_parts(string $name): array
+	{
+		$plain = str_replace(['][', '[', ']'], ['.', '', ''], $name);
+		$parts = explode('.', $plain, 2);
+
+		return count($parts) == 2 ? [$parts[0], $parts[1]] : [get_schema(), $name];
+	}
+
+	/**
+	 * Returns a display-ready SQL Server type declaration from sys.parameters/sys.types metadata.
+	 */
+	function mssql_routine_type(array $row): string
+	{
+		$type = $row['type'] ?: '';
+		if (preg_match('~^(nchar|nvarchar)$~i', $type)) {
+			$length = ((int) $row['max_length'] == -1 ? 'max' : (string) ((int) $row['max_length'] / 2));
+			return "$type($length)";
+		}
+		if (preg_match('~^(char|varchar|binary|varbinary)$~i', $type)) {
+			$length = ((int) $row['max_length'] == -1 ? 'max' : (string) (int) $row['max_length']);
+			return "$type($length)";
+		}
+		if (preg_match('~^(decimal|numeric)$~i', $type)) {
+			return "$type($row[precision],$row[scale])";
+		}
+		if (preg_match('~^(datetime2|datetimeoffset|time)$~i', $type) && $row['scale'] !== null) {
+			return "$type($row[scale])";
+		}
+
+		return $type;
+	}
+
+	/**
+	 * Returns the SQL Server object types belonging to a generic routine type.
+	 */
+	function mssql_routine_types_sql(string $routineType = ''): string
+	{
+		if ($routineType == 'PROCEDURE') {
+			return "'P'";
+		}
+		if ($routineType == 'FUNCTION') {
+			return "'FN', 'IF', 'TF'";
+		}
+
+		return "'P', 'FN', 'IF', 'TF'";
+	}
+
+	/**
+	 * Converts a routine script to CREATE OR ALTER, so that saving works for both new and existing routines.
+	 */
+	function mssql_create_or_alter(string $script): string
+	{
+		$script = trim($script);
+		$script = preg_replace('~^\s*CREATE\s+(?:OR\s+ALTER\s+)?(PROCEDURE|PROC|FUNCTION)\b~i', 'CREATE OR ALTER $1', $script, 1);
+		$script = preg_replace('~^\s*ALTER\s+(PROCEDURE|PROC|FUNCTION)\b~i', 'CREATE OR ALTER $1', $script, 1);
+
+		return rtrim($script, ";");
+	}
+
+	/**
+	 * Gets information about a stored procedure or function from the current schema.
+	 *
+	 * @param string $name Routine name, optionally schema-qualified.
+	 * @param 'FUNCTION'|'PROCEDURE' $type
+	 */
+	function routine($name, $type)
+	{
+		if ($name == '') {
+			return [];
+		}
+
+		[$schema, $routineName] = mssql_routine_parts($name);
+		$result = Connection::get()->query("SELECT o.object_id, o.name, s.name AS schema_name, o.type, sm.definition
+FROM sys.objects o
+JOIN sys.schemas s ON s.schema_id = o.schema_id
+JOIN sys.sql_modules sm ON sm.object_id = o.object_id
+WHERE s.name = " . q($schema) . " AND o.name = " . q($routineName) . " AND o.type IN (" . mssql_routine_types_sql($type) . ")");
+		$object = is_object($result) ? $result->fetchAssoc() : [];
+
+		if (!$object) {
+			return [];
+		}
+
+		$fields = [];
+		$returns = [];
+		foreach (get_rows("SELECT p.parameter_id, p.name AS field, t.name AS type, p.max_length, p.precision, p.scale, p.is_output
+FROM sys.parameters p
+JOIN sys.types t ON t.user_type_id = p.user_type_id
+WHERE p.object_id = " . q($object['object_id']) . "
+ORDER BY p.parameter_id") as $parameter) {
+			$fullType = mssql_routine_type($parameter);
+			$field = [
+				'field' => ltrim($parameter['field'], '@'),
+				'type' => $parameter['type'],
+				'length' => preg_match('~\((.*)\)$~', $fullType, $match) ? $match[1] : '',
+				'unsigned' => '',
+				'null' => true,
+				'full_type' => $fullType,
+				'inout' => ($parameter['is_output'] ? 'OUT' : 'IN'),
+				'collation' => '',
+			];
+			if ((int) $parameter['parameter_id'] === 0) {
+				$returns = $field;
+			} else {
+				$fields[] = $field;
+			}
+		}
+
+		if (!$returns && in_array($object['type'], ['IF', 'TF'], true)) {
+			$returns = ['type' => 'TABLE', 'length' => '', 'unsigned' => '', 'collation' => ''];
+		}
+
+		return [
+			'schema' => $object['schema_name'],
+			'name' => $object['name'],
+			'object_type' => $object['type'],
+			'fields' => $fields,
+			'returns' => $returns,
+			'definition' => $object['definition'],
+			'language' => '',
+			'comment' => null,
+		];
+	}
+
+	function routines() {
+		return get_rows("SELECT
+	o.name AS SPECIFIC_NAME,
+	o.name AS ROUTINE_NAME,
+	CASE WHEN o.type = 'P' THEN 'PROCEDURE' ELSE 'FUNCTION' END AS ROUTINE_TYPE,
+	CASE
+		WHEN o.type = 'P' THEN ''
+		WHEN o.type IN ('IF', 'TF') THEN 'TABLE'
+		ELSE COALESCE((
+			SELECT TOP (1)
+				CASE
+					WHEN t.name IN ('nchar', 'nvarchar') THEN t.name + '(' + CASE WHEN p.max_length = -1 THEN 'max' ELSE CONVERT(varchar(20), p.max_length / 2) END + ')'
+					WHEN t.name IN ('char', 'varchar', 'binary', 'varbinary') THEN t.name + '(' + CASE WHEN p.max_length = -1 THEN 'max' ELSE CONVERT(varchar(20), p.max_length) END + ')'
+					WHEN t.name IN ('decimal', 'numeric') THEN t.name + '(' + CONVERT(varchar(20), p.precision) + ',' + CONVERT(varchar(20), p.scale) + ')'
+					ELSE t.name
+				END
+			FROM sys.parameters p
+			JOIN sys.types t ON t.user_type_id = p.user_type_id
+			WHERE p.object_id = o.object_id AND p.parameter_id = 0
+		), '')
+	END AS DTD_IDENTIFIER,
+	CAST(NULL AS nvarchar(max)) AS ROUTINE_COMMENT
+FROM sys.objects o
+JOIN sys.schemas s ON s.schema_id = o.schema_id
+JOIN sys.sql_modules sm ON sm.object_id = o.object_id
+WHERE s.name = " . q(get_schema()) . "
+  AND o.type IN ('P', 'FN', 'IF', 'TF')
+ORDER BY CASE WHEN o.type = 'P' THEN 0 ELSE 1 END, o.name");
+	}
+
+	function routine_languages() {
+		return []; // T-SQL only
+	}
+
+	function routine_id($name, $row) {
+		return mssql_routine_identifier($name, $row['schema'] ?? null);
+	}
+
 	function schemas(): array
 	{
 		return get_vals("SELECT name FROM sys.schemas");
@@ -1161,6 +1380,6 @@ WHERE sys1.xtype = 'TR' AND sys2.name = " . q($table)
 	}
 
 	function support($feature) {
-		return preg_match('~^(check|comment|columns|copy|database|drop_col|dump|fast_status|indexes|descidx|scheme|sql|table|trigger|view|view_trigger)$~', $feature); //! routine is rendered by mssql-routines.inc.php to keep script editing separate from the generic editor.
+		return preg_match('~^(check|comment|columns|copy|database|drop_col|dump|fast_status|indexes|descidx|procedure|routine|routine_script|scheme|sql|table|trigger|view|view_trigger)$~', $feature);
 	}
 }

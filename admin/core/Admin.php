@@ -1240,7 +1240,7 @@ class Admin extends Origin
 			}
 
 			if ($_GET["ns"] !== "" && !$missing && DB != "") {
-				if ($tables) {
+				if ($tables || $this->admin->getRoutines()) {
 					$this->admin->printTablesFilter();
 					$this->admin->printTableList($tables);
 				} else {
@@ -1261,7 +1261,7 @@ class Admin extends Origin
 					// $ is used in PostgreSQL as part of name.
 					echo js_escape_key(ME . $tableParam . '=$&'), ': /\b(?<!\$)(' . implode('|', $links) . ')(?!\$)\b/g';
 					if (support('routine')) {
-						foreach (routines() as $row) {
+						foreach ($this->admin->getRoutines() as $row) {
 							echo ",\n", js_escape_key(ME . 'function=' . urlencode($row["SPECIFIC_NAME"]) . '&name=$&'), ': /\b' . js_escape_re($row["ROUTINE_NAME"]) . '(?=["`\]]?\()/g';
 						}
 					}
@@ -1396,8 +1396,45 @@ class Admin extends Origin
 			echo "</li>\n";
 		}
 
+		$this->admin->printRoutineList($this->admin->getRoutines());
+
 		echo "</menu></nav>\n";
 		echo script("initTablesList(" . json_encode($this->admin->getDatabase()) . ");");
+	}
+
+	/**
+	 * Prints routine list in main navigation.
+	 *
+	 * @param list<string[]> $routines Result of routines().
+	 */
+	public function printRoutineList(array $routines): void
+	{
+		$dualLinks = $this->settings->isNavigationDual() || $this->settings->isNavigationHover();
+
+		foreach ($routines as $row) {
+			$name = $row["ROUTINE_NAME"];
+			$isFunction = ($row["ROUTINE_TYPE"] != "PROCEDURE");
+			// Overloaded routines are identified by the specific name, the printed name is passed separately.
+			$specific = ($row["SPECIFIC_NAME"] == $name ? "" : "&name=" . urlencode($name));
+			$callUrl = h(ME . ($isFunction ? "callf=" : "call=") . urlencode($row["SPECIFIC_NAME"]) . $specific);
+			$alterUrl = h(ME . ($isFunction ? "function=" : "procedure=") . urlencode($row["SPECIFIC_NAME"]) . $specific);
+			$active = in_array($row["SPECIFIC_NAME"], [$_GET["call"], $_GET["procedure"]], true);
+			$title = h($row["ROUTINE_TYPE"] . ($row["DTD_IDENTIFIER"] ? ": " . $row["DTD_IDENTIFIER"] : ""));
+
+			echo "<li>";
+
+			if ($this->settings->isNavigationReversed()) {
+				echo " <a href='$alterUrl' title='", lang('Alter'), "' class='secondary'>", icon("edit"), "</a>";
+			}
+
+			echo "<a href='$callUrl'", bold($active, "primary routine"), " data-primary='true' title='$title'>", h($name), "</a>";
+
+			if ($dualLinks) {
+				echo " <a href='$alterUrl' title='", lang('Alter'), "' class='secondary'>", icon_solo("edit"), "</a>";
+			}
+
+			echo "</li>\n";
+		}
 	}
 
 	public function getSettingsRows(int $groupId): array

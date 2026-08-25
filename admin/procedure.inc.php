@@ -7,49 +7,23 @@ $routine = (isset($_GET["function"]) ? "FUNCTION" : "PROCEDURE");
 $row = $_POST;
 $row["fields"] = (array) $row["fields"];
 
-if (function_exists('AdminNeo\routine_script_from_definition')) {
-	$old_row = ($PROCEDURE != "" ? routine($_GET["procedure"], $routine) : []);
-	$location = substr(ME, 0, -1);
+$script_mode = routine_script_mode();
+$old_row = ($script_mode && $PROCEDURE != "" ? routine($_GET["procedure"], $routine) : []);
 
+if ($script_mode) {
 	if ($_POST) {
+		$location = substr(ME, 0, -1);
 		if ($_POST["drop"]) {
 			query_redirect("DROP $routine " . routine_id($PROCEDURE, $old_row), $location, lang('Routine has been dropped.'));
 		} else {
-			query_redirect(routine_script_from_definition($_POST["definition"]), $location, lang('Routine has been altered.'));
+			query_redirect(
+				Driver::get()->getRoutineScriptQuery($_POST["definition"], $routine, $old_row),
+				$location,
+				($PROCEDURE != "" ? lang('Routine has been altered.') : lang('Routine has been created.'))
+			);
 		}
 	}
-
-	if ($PROCEDURE != "") {
-		$title = isset($_GET["function"]) ? lang('Alter function') : lang('Alter procedure');
-		page_header($title . ": " . h($PROCEDURE), [$title]);
-	} else {
-		$title = isset($_GET["function"]) ? lang('Create function') : lang('Create procedure');
-		page_header($title, [$title]);
-		$old_row = [
-			"definition" => routine_script_from_definition("CREATE $routine " . idf_escape(get_schema()) . "." . idf_escape($PROCEDURE ?: "new_" . strtolower($routine)) . "\nAS\n-- Write the routine body here.")
-		];
-	}
-
-	echo "<form action='' method='post' id='form'>\n";
-	echo "<p>", lang('Name'), ": <input class='input' name='name' value='", h($PROCEDURE), "' data-maxlength='128' autocapitalize='off' disabled>";
-	echo "<input type='submit' class='button default' value='", lang('Save'), "'>";
-	echo "</p>\n";
-	echo "<p>";
-	textarea("definition", $old_row["definition"] ?? "", 25);
-	echo "</p>\n<p>";
-	echo "<input type='submit' class='button default' value='", lang('Save'), "'>";
-	if ($PROCEDURE != "") {
-		echo "<input type='submit' class='button' name='drop' value='", lang('Drop'), "'>";
-		echo confirm(lang('Drop %s?', $PROCEDURE));
-	}
-	echo input_token();
-	echo "</p>\n";
-	echo "</form>\n";
-
-	return;
-}
-
-if ($_POST && !process_fields($row["fields"])) {
+} elseif ($_POST && !process_fields($row["fields"])) {
 	foreach ($row["fields"] as $key => $field) {
 		if ($field["field"] == "") {
 			unset($row["fields"][$key]);
@@ -90,6 +64,36 @@ if ($PROCEDURE != "") {
 	page_header($title, [$title]);
 }
 
+// Script editor: the routine is edited as a whole CREATE script, so there is nothing to decompose.
+if ($script_mode) {
+	$definition = ($_POST ? $_POST["definition"] : Driver::get()->getRoutineScript($PROCEDURE, $routine, $old_row));
+
+	echo "<form action='' method='post' id='form'>\n";
+	echo "<p>", lang('Name'), ": ";
+	// The name is a part of the script; renaming is done by the database specific command.
+	echo "<input class='input' name='name' value='", h($PROCEDURE), "' data-maxlength='128' autocapitalize='off' disabled>";
+	echo "<input type='submit' class='button default' value='", lang('Save'), "'>";
+	echo "</p>\n";
+
+	echo "<p>";
+	textarea("definition", $definition, 25);
+	echo "</p>\n";
+
+	echo "<p>";
+	echo "<input type='submit' class='button default' value='", lang('Save'), "'>";
+	if ($PROCEDURE != "") {
+		echo "<input type='submit' class='button' name='drop' value='", lang('Drop'), "'>";
+		echo confirm(lang('Drop %s?', $PROCEDURE));
+	}
+	echo input_token();
+	echo "</p>\n";
+
+	echo "</form>\n";
+
+	return;
+}
+
+// Fields editor: parameters, return type and body are edited separately.
 if (!$_POST) {
 	if ($PROCEDURE == "") {
 		$row["language"] = "sql";

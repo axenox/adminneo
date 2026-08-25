@@ -316,9 +316,6 @@ function page_footer(?string $missing = null): void
 	echo "<button id='navigation-button' class='button light navigation-button'>", icon_solo("menu"), icon_solo("close"), "</button>";
 	echo "<div id='navigation-panel' class='navigation-panel'>\n";
 	Admin::get()->printNavigation($missing);
-	if (function_exists('AdminNeo\print_routines_navigation')) {
-		print_routines_navigation($missing);
-	}
 
 	echo "<div class='footer'>\n";
 
