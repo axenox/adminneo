@@ -930,4 +930,14 @@ abstract class Origin extends Plugin
 	}
 
 	public abstract function getForeignColumnInfo(array $foreignKeys, string $column): ?array;
+
+    /**
+	 * Prints a replacement for the database schema page.
+	 *
+	 * Plugins return true after rendering the page body. Returning null lets another plugin or
+	 * the built-in renderer handle the page; the default false preserves the built-in diagram.
+	 */
+	public function printDatabaseSchema(): ?bool { 
+        return false; 
+    }
 }

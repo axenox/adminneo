@@ -5,6 +5,11 @@ namespace AdminNeo;
 $title2 = h(": " . DB . ($_GET["ns"] ? ".$_GET[ns]" : ""));
 page_header(lang('Database schema') . $title2, [lang('Database schema')]);
 
+// Plugins may replace the schema body while the router remains responsible for the common footer.
+if (Admin::get()->printDatabaseSchema() === true) {
+	return;
+}
+
 /** @var array{float, float}[] $table_pos */
 $table_pos = [];
 $table_pos_js = [];
