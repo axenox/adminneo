@@ -12,7 +12,9 @@ The plugin architecture is the primary extension mechanism:
 - `Origin` (extends `Plugin`) — the base class with all overridable methods. `admin/core/Admin.php` and `editor/core/Admin.php` each independently define their own `class Admin extends Origin` (there is no separate `Editor` class — EditorNeo's customization classes also extend `Admin`).
 - `Pluginer` — wraps an `Origin` instance; intercepts every public method call and dispatches to registered plugins first. For "append" methods (e.g., `getErrors`, `getFieldFunctions`), results from all plugins are merged. For others, the first plugin that returns a non-null value wins; the `Origin` instance is the fallback.
 
-Custom instances are created via `Admin::create($config, $plugins)` (inherited from `Origin::create()`, using late static binding). The entry point for customization is a PHP file that defines `adminneo_instance()` returning this instance, then includes the compiled file.
+Custom instances are created via `Admin::create($config, $plugins)` (inherited from `Origin::create()`, using late static binding). The entry point for customization is a PHP file that defines `adminneo_instance
+
+Common hooks (methods a plugin can override) and their purpose are [described here](Hooks.md).
 
 ## Routing
 
