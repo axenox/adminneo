@@ -796,7 +796,7 @@ abstract class Origin extends Plugin
 			echo "</span>\n";
 
 			if ($this->config->isVersionVerificationEnabled() && !$last_version) {
-				echo script("verifyVersion('" . js_escape(ME) . "', '" . get_token() . "');");
+				echo script("verifyVersion();");
 			}
 		}
 
@@ -812,7 +812,7 @@ abstract class Origin extends Plugin
 	{
 		echo "<div class='tables-filter jsonly'>"
 			. "<input id='tables-filter' type='search' class='input' autocomplete='off' placeholder='" . lang('Table') . "'>"
-			. script("initTablesFilter(" . json_encode($this->admin->getDatabase()) . ");")
+			. script("initTablesFilter(" . json_encode($this->admin->getDatabase(), JSON_HEX_TAG) . ");")
 			. "</div>\n";
 	}
 
