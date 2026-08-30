@@ -167,7 +167,7 @@ if ($_GET["ns"] === "") {
 			echo "<fieldset><legend>" . lang('Search data in tables') . " <span id='selected2'></span></legend><div class='fieldset-content'>";
 			echo html_select("op", Admin::get()->getOperators(), $_POST["op"] ?? Driver::get()->getLikeOperator());
 			echo "<input type='search' class='input' name='query' value='" . h($_POST["query"]) . "'>";
-			echo script("qsl('input').onkeydown = partialArg(bodyKeydown, 'search');", "");
+			echo script("qsl('input').onkeydown = event => bodyKeydown(event, 'search');", "");
 			echo " <input type='submit' class='button' name='search' value='" . lang('Search') . "'>\n";
 			echo "</div></fieldset>\n";
 			echo "</div>\n";
@@ -230,7 +230,7 @@ if ($_GET["ns"] === "") {
 				$title = lang('View');
 				$colspan = count($columns) - (support("comment") ? 2 : 1); // Rows and Comment columns are printed separately.
 				echo '<td colspan="' . $colspan . '">' . (support("view") ? "<a href='" . h(ME) . "view=" . urlencode($name) . "' title='" . lang('Alter view') . "'>$title</a>" : $title);
-				echo '<td align="right"><a href="' . h(ME) . "select=" . urlencode($name) . '" title="' . lang('Select data') . '">?</a>';
+				echo "<td align='right'><a href='" . h(ME) . "select=" . urlencode($name) . "' title='" . lang('Select data') . "'>?</a>";
 			} else {
 				foreach ($columns as $key => $column) {
 					if ($key == "Comment") {
@@ -279,7 +279,7 @@ if ($_GET["ns"] === "") {
 		}
 
 		echo "</tbody>\n";
-		echo script("mixin(qsl('tbody'), {onclick: tableClick, ondblclick: partialArg(tableClick, true)});");
+		echo script("mixin(qsl('tbody'), {onclick: tableClick, ondblclick: event => tableClick(event, true)});");
 
 		echo "<tfoot><tr>";
 		echo "<td><th>" . lang('%d in total', count($tables_list));

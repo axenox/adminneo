@@ -1,32 +1,52 @@
 'use strict';
 // Editor specific functions
 
+/**
+ * Does nothing. EditorNeo does not indicate whether the query will be executed with an index.
+ *
+ * @this {HTMLElement}
+ */
 function selectFieldChange() {
 }
 
 // Help.
 (() => {
+	/**
+	 * Does nothing. EditorNeo displays no help popup.
+	 */
 	window.initHelpPopup = function() {
 	};
 
+	/**
+	 * Does nothing. EditorNeo displays no help popup.
+	 *
+	 * @param {HTMLElement} element
+	 * @param {string|function} content
+	 * @param {boolean} side Displays on left side (otherwise on top).
+	 */
 	window.initHelpFor = function(element, content, side = false) {
 	};
 })();
 
-/** Display typeahead
-* @param string
-* @this HTMLInputElement
-*/
+/**
+ * Displays typeahead.
+ *
+ * @param {string} url
+ *
+ * @this {HTMLInputElement}
+ *
+ * @return {XMLHttpRequest}
+ */
 function whisper(url) {
 	const field = this;
 	field.orig = field.value;
 	field.previousSibling.value = field.value; // accept number, reject string
 	return ajax(url + encodeURIComponent(field.value), xmlhttp => {
-		if (xmlhttp.status && field.orig == field.value) { // ignore old responses
+		if (xmlhttp.status && field.orig === field.value) { // ignore old responses
 			field.nextSibling.innerHTML = xmlhttp.responseText;
 			field.nextSibling.style.display = '';
 			const a = field.nextSibling.firstChild;
-			if (a?.firstChild.data == field.value) {
+			if (a?.firstChild.data === field.value) {
 				field.previousSibling.value = decodeURIComponent(a.href.replace(/.*=/, ''));
 				a.classList.add('active');
 			}
@@ -34,11 +54,15 @@ function whisper(url) {
 	});
 }
 
-/** Select typeahead value
-* @param MouseEvent
-* @return boolean false for success
-* @this HTMLDivElement
-*/
+/**
+ * Selects typeahead value.
+ *
+ * @param {MouseEvent} event
+ *
+ * @this {HTMLDivElement}
+ *
+ * @return {boolean} False for success.
+ */
 function whisperClick(event) {
 	const field = this.previousSibling;
 	const el = event.target;

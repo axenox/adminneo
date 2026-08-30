@@ -4,67 +4,72 @@
  * Returns the element found by given identifier.
  *
  * @param {string} id
- * @param {?HTMLElement} context Defaults to document.
+ * @param {Document} context Defaults to document.
+ *
  * @return {?HTMLElement}
  */
 function gid(id, context = document) {
 	return context.getElementById(id);
 }
 
-/** Get first element by selector
-* @param string
-* @param [HTMLElement] defaults to document
-* @return HTMLElement
-*/
+/**
+ * Returns the first element matching the selector.
+ *
+ * @param {string} selector
+ * @param {ParentNode} context Defaults to document.
+ *
+ * @return {?HTMLElement}
+ */
 function qs(selector, context = document) {
 	return context.querySelector(selector);
 }
 
-/** Get last element by selector
-* @param string
-* @param [HTMLElement] defaults to document
-* @return HTMLElement
-*/
+/**
+ * Returns the last element matching the selector.
+ *
+ * @param {string} selector
+ * @param {ParentNode} context Defaults to document.
+ *
+ * @return {HTMLElement|undefined}
+ */
 function qsl(selector, context = document) {
 	const els = qsa(selector, context);
 	return els[els.length - 1];
 }
 
-/** Get all elements by selector
-* @param string
-* @param [HTMLElement] defaults to document
-* @return NodeList
-*/
+/**
+ * Returns all elements matching the selector.
+ *
+ * @param {string} selector
+ * @param {ParentNode} context Defaults to document.
+ *
+ * @return {NodeListOf<HTMLElement>}
+ */
 function qsa(selector, context = document) {
-	return context.querySelectorAll(selector);
+	// The application markup holds no other elements than the HTML ones.
+	return /** @type {NodeListOf<HTMLElement>} */ (context.querySelectorAll(selector));
 }
 
-/** Return a function calling fn with the next arguments
-* @param function
-* @param ...
-* @return function with preserved this
-*/
+/**
+ * Returns a function calling fn with the given arguments.
+ *
+ * @param {function} fn
+ * @param {...*} args
+ *
+ * @return {function} Function with preserved this.
+ */
 function partial(fn, ...args) {
 	return function () {
 		return fn.apply(this, args);
 	};
 }
 
-/** Return a function calling fn with the first parameter and then the next arguments
-* @param function
-* @param ...
-* @return function with preserved this
-*/
-function partialArg(fn, ...args) {
-	return function (arg) {
-		return fn.apply(this, [arg, ...args]);
-	};
-}
-
-/** Assign values from source to target
-* @param Object
-* @param Object
-*/
+/**
+ * Assigns values from source to target.
+ *
+ * @param {Object} target
+ * @param {Object} source
+ */
 function mixin(target, source) {
 	for (const key in source) {
 		target[key] = source[key];
@@ -75,6 +80,7 @@ function mixin(target, source) {
  * Toggles visibility of element with ID.
  *
  * @param {string} id
+ *
  * @return {boolean} Always false.
  */
 function toggle(id) {
@@ -83,10 +89,12 @@ function toggle(id) {
 	return false;
 }
 
-/** Set permanent cookie
-* @param string
-* @param number
-*/
+/**
+ * Sets permanent cookie.
+ *
+ * @param {string} assign Assignment in the 'name=value' format.
+ * @param {number} days Number of days until expiration.
+ */
 function cookie(assign, days) {
 	const date = new Date();
 	date.setDate(date.getDate() + days);
@@ -95,11 +103,8 @@ function cookie(assign, days) {
 
 /**
  * Verifies current AdminNeo version.
- *
- * @param baseUrl string
- * @param token string
  */
-function verifyVersion(baseUrl, token) {
+function verifyVersion() {
 	document.addEventListener("DOMContentLoaded", () => {
 		// Dummy value to prevent repeated verifications after AJAX failure.
 		cookie('neo_version=0', 1);
@@ -115,10 +120,13 @@ function verifyVersion(baseUrl, token) {
 	});
 }
 
-/** Get value of select
-* @param HTMLElement <select> or <input>
-* @return string
-*/
+/**
+ * Returns the value of select or input.
+ *
+ * @param {HTMLSelectElement|HTMLInputElement} select
+ *
+ * @return {string}
+ */
 function selectValue(select) {
 	if (!select.selectedIndex) {
 		return select.value;
@@ -127,21 +135,27 @@ function selectValue(select) {
 	return (selected.attributes.value?.specified ? selected.value : selected.text);
 }
 
-/** Verify if element has a specified tag name
-* @param HTMLElement
-* @param string regular expression
-* @return boolean
-*/
+/**
+ * Checks whether the element has a specified tag name.
+ *
+ * @param {?Node} el
+ * @param {string} tag Regular expression.
+ *
+ * @return {boolean}
+ */
 function isTag(el, tag) {
 	const re = new RegExp('^(' + tag + ')$', 'i');
 	return el && re.test(el.tagName);
 }
 
-/** Get parent node with specified tag name
-* @param HTMLElement
-* @param string regular expression
-* @return HTMLElement
-*/
+/**
+ * Returns the closest parent node with a specified tag name.
+ *
+ * @param {?Node} el
+ * @param {string} tag Regular expression.
+ *
+ * @return {?HTMLElement}
+ */
 function parentTag(el, tag) {
 	while (el && !isTag(el, tag)) {
 		el = el.parentNode;
@@ -149,9 +163,11 @@ function parentTag(el, tag) {
 	return el;
 }
 
-/** Set checked class
-* @param HTMLInputElement
-*/
+/**
+ * Sets the checked class on the row of the given checkbox.
+ *
+ * @param {HTMLInputElement} el
+ */
 function trCheck(el) {
 	const tr = parentTag(el, 'tr');
 	tr.classList.toggle('checked', el.checked);
@@ -163,6 +179,7 @@ function trCheck(el) {
  *
  * @param {string} id
  * @param {number|string} count Can be exact number or string like '~ 100'.
+ *
  * @uses thousandsSeparator
  */
 function selectCount(id, count) {
@@ -179,10 +196,13 @@ function selectCount(id, count) {
 	}
 }
 
-/** Check all elements matching given name
-* @param RegExp
-* @this HTMLInputElement
-*/
+/**
+ * Checks all elements matching the given name.
+ *
+ * @param {RegExp} name
+ *
+ * @this {HTMLInputElement}
+ */
 function formCheck(name) {
 	for (const el of this.form.elements) {
 		if (name.test(el.name)) {
@@ -192,8 +212,9 @@ function formCheck(name) {
 	}
 }
 
-/** Check all rows in <table class="checkable"> once the browser restores the checkboxes
-*/
+/**
+ * Checks all rows in <table class="checkable"> once the browser restores the checkboxes.
+ */
 function tableCheck() {
 	window.addEventListener('pageshow', () => {
 		qsa('table.checkable td:first-child input').forEach(trCheck);
@@ -201,14 +222,18 @@ function tableCheck() {
 }
 
 /**
- * Uncheck single element.
+ * Unchecks single element.
+ *
+ * @param {string} id
  */
 function formUncheck(id) {
 	formUncheckAll("#" + id);
 }
 
 /**
- * Uncheck elements matched by selector.
+ * Unchecks elements matched by selector.
+ *
+ * @param {string} selector
  */
 function formUncheckAll(selector) {
 	for (const element of qsa(selector)) {
@@ -217,19 +242,25 @@ function formUncheckAll(selector) {
 	}
 }
 
-/** Get number of checked elements matching given name
-* @param HTMLInputElement
-* @param RegExp
-* @return number
-*/
+/**
+ * Returns the number of checked elements matching the given name.
+ *
+ * @param {HTMLInputElement} input
+ * @param {RegExp} name
+ *
+ * @return {number}
+ */
 function formChecked(input, name) {
 	return [...input.form.elements].filter(el => name.test(el.name) && el.checked).length;
 }
 
-/** Select clicked row
-* @param MouseEvent
-* @param [boolean] force click
-*/
+/**
+ * Selects clicked row.
+ *
+ * @param {MouseEvent} event
+ * @param {boolean} [click] Forces the click.
+ * @param {boolean} canEdit
+ */
 function tableClick(event, click, canEdit = true) {
 	const td = parentTag(event.target, 'td');
 	let text;
@@ -262,7 +293,7 @@ function tableClick(event, click, canEdit = true) {
 		el.form['all'].checked = false;
 		formUncheck('all-page');
 	}
-	if (/^(tables|views)\[\]$/.test(el.name)) {
+	if (/^(tables|views)\[]$/.test(el.name)) {
 		formUncheck('check-all');
 	}
 	trCheck(el);
@@ -270,10 +301,13 @@ function tableClick(event, click, canEdit = true) {
 
 let lastChecked;
 
-/** Shift-click on checkbox for multiple selection.
-* @param MouseEvent
-* @this HTMLInputElement
-*/
+/**
+ * Handles Shift+click on checkbox for multiple selection.
+ *
+ * @param {MouseEvent} event
+ *
+ * @this {HTMLInputElement}
+ */
 function checkboxClick(event) {
 	if (!this.name) {
 		return;
@@ -300,10 +334,12 @@ function checkboxClick(event) {
 	}
 }
 
-/** Set HTML code of an element
-* @param string
-* @param string undefined to set parentNode to empty string
-*/
+/**
+ * Sets HTML code of an element.
+ *
+ * @param {string} id
+ * @param {?string} html Null to set parentNode to empty string.
+ */
 function setHtml(id, html) {
 	const el = qs('[id="' + id.replace(/[\\"]/g, '\\$&') + '"]'); // database name is used as ID
 	if (el) {
@@ -315,10 +351,13 @@ function setHtml(id, html) {
 	}
 }
 
-/** Find node position
-* @param Node
-* @return number
-*/
+/**
+ * Returns the position of the node among its siblings.
+ *
+ * @param {Node} el
+ *
+ * @return {number}
+ */
 function nodePosition(el) {
 	let pos = 0;
 	while ((el = el.previousSibling)) {
@@ -327,16 +366,21 @@ function nodePosition(el) {
 	return pos;
 }
 
-/** Go to the specified page
-* @param string
-* @param string
-*/
+/**
+ * Goes to the specified page.
+ *
+ * @param {string} href
+ * @param {number} page
+ */
 function pageClick(href, page) {
 	if (!isNaN(page) && page) {
 		location.href = href + (page !== 1 ? '&page=' + (page - 1) : '');
 	}
 }
 
+/**
+ * Initializes toggling of the navigation panel by the navigation button.
+ */
 function initNavigation() {
 	const button = gid("navigation-button");
 	const panel = gid("navigation-panel");
@@ -427,37 +471,102 @@ function initNavigationResizer(url, token, minWidth, maxWidth) {
 	});
 }
 
+/**
+ * Restores the scroll position of the navigation panel and the tables list, or scrolls to the active table.
+ *
+ * @param {string} dbName Database the stored position belongs to.
+ */
 function initTablesList(dbName) {
-	if (!sessionStorage) {
+	const navigationPanel = gid('navigation-panel');
+	const tablesList = gid('tables');
+	let restored = false;
+
+	if (sessionStorage) {
+		if (sessionStorage.getItem('neo_tables_position_db') !== dbName) {
+			sessionStorage.removeItem('neo_tables_position');
+		} else if (sessionStorage.getItem('neo_tables_position')) {
+			const positions = sessionStorage.getItem('neo_tables_position').split("|");
+
+			navigationPanel.classList.add('opened');
+			navigationPanel.scrollTop = positions[0] * 1;
+			tablesList.scrollTop = positions[1] * 1;
+			navigationPanel.classList.remove('opened');
+
+			restored = true;
+		}
+
+		sessionStorage.setItem('neo_tables_position_db', dbName);
+
+		window.addEventListener('pagehide', function() {
+			navigationPanel.classList.add('opened');
+			sessionStorage.setItem('neo_tables_position', `${navigationPanel.scrollTop}|${tablesList.scrollTop}`);
+			navigationPanel.classList.remove('opened');
+		}, false);
+	}
+
+	if (!restored) {
+		scrollToActiveTable(navigationPanel, tablesList);
+	}
+
+	initTablesListSeparator(tablesList);
+}
+
+/**
+ * Scrolls the tables list to make the active table visible, ideally 25 % from its top.
+ *
+ * @param {HTMLElement} navigationPanel Navigation panel element.
+ * @param {HTMLElement} tablesList Tables list element.
+ */
+function scrollToActiveTable(navigationPanel, tablesList) {
+	const active = qs('.active', tablesList);
+	if (!active) {
 		return;
 	}
 
-	const navigationPanel = gid('navigation-panel');
-	const tablesList = gid('tables');
+	navigationPanel.classList.add('opened');
 
-	if (sessionStorage.getItem('neo_tables_position_db') !== dbName) {
-		sessionStorage.removeItem('neo_tables_position');
-	} else if (sessionStorage.getItem('neo_tables_position')) {
-		const positions = sessionStorage.getItem('neo_tables_position').split("|");
+	// On wide screens the tables list scrolls itself, on narrow ones the whole panel scrolls.
+	const container = (tablesList.scrollHeight > tablesList.clientHeight ? tablesList : navigationPanel);
+	const containerTop = container.getBoundingClientRect().top;
+	const activeRect = active.getBoundingClientRect();
 
-		navigationPanel.classList.add('opened');
-		navigationPanel.scrollTop = positions[0] * 1;
-		tablesList.scrollTop = positions[1] * 1;
-		navigationPanel.classList.remove('opened');
+	if (activeRect.top < containerTop || activeRect.bottom > containerTop + container.clientHeight) {
+		// The browser clamps the value to the scrollable range, so the 25 % offset is best effort.
+		container.scrollTop += activeRect.top - containerTop - container.clientHeight * 0.2;
 	}
 
-	sessionStorage.setItem('neo_tables_position_db', dbName);
+	navigationPanel.classList.remove('opened');
+}
 
-	window.addEventListener('pagehide', function() {
-		navigationPanel.classList.add('opened');
-		sessionStorage.setItem('neo_tables_position', `${navigationPanel.scrollTop}|${tablesList.scrollTop}`);
-		navigationPanel.classList.remove('opened');
-	}, false);
+/**
+ * Displays a separator line at the top of the tables list while the list is scrolled.
+ *
+ * @param {HTMLElement} tablesList Tables list element.
+ */
+function initTablesListSeparator(tablesList) {
+	// The marker sits at the very top of the list content, so it leaves the visible area as soon as
+	// the list is scrolled. Watching it avoids handling every scroll event.
+	const marker = qs('.scroll-marker', tablesList);
+	if (!marker) {
+		return;
+	}
+
+	const observer = new IntersectionObserver(() => {
+		// The observer only triggers the check, the scroll position itself is authoritative.
+		tablesList.classList.toggle('scrolled', tablesList.scrollTop > 1);
+	}, { root: tablesList });
+
+	observer.observe(marker);
 }
 
 let tablesFilterTimeout = null;
 let tablesFilterValue = '';
 
+/**
+ * Initializes filtering of the tables list, including the Ctrl+Shift+F shortcut.
+ *
+ * @param {string} dbName Database the stored filter value belongs to.
+ */
 function initTablesFilter(dbName) {
 	const filterInput = gid('tables-filter');
 
@@ -489,6 +598,9 @@ function initTablesFilter(dbName) {
 	});
 }
 
+/**
+ * Hides the tables not matching the filter value and highlights the matched part of their name.
+ */
 function filterTables() {
 	const value = gid('tables-filter').value.toLowerCase();
 	if (value === tablesFilterValue) {
@@ -529,7 +641,7 @@ function filterTables() {
 }
 
 /**
- * Initialize collapsable fieldset.
+ * Initializes collapsible fieldset.
  *
  * @param {string} id
  */
@@ -569,7 +681,7 @@ function initToggles(parent) {
 }
 
 /**
- * Initialize auto-submitting of settings form.
+ * Initializes auto-submitting of the settings form.
  */
 function initSettingsForm() {
 	const form = gid("settings");
@@ -583,14 +695,41 @@ function initSettingsForm() {
 }
 
 /**
+ * Sets up validation of the files upload form.
+ *
+ * @param {string} formId
+ * @param {string} inputName
+ * @param {number} maxCount
+ * @param {string} countErrorMessage
+ * @param {number} maxSize
+ * @param {string} sizeErrorMessage
+ */
+function initFilesUploadForm(formId, inputName, maxCount, countErrorMessage, maxSize, sizeErrorMessage) {
+	const form = gid(formId);
+
+	form.addEventListener("submit", event => {
+		const files = form.elements[inputName].files;
+
+		if (files.length > maxCount) {
+			alert(countErrorMessage);
+			event.preventDefault();
+		} else if (Array.from(files).reduce((sum, file) => sum + file.size, 0) > maxSize) {
+			alert(sizeErrorMessage);
+			event.preventDefault();
+		}
+	});
+}
+
+/**
  * Adds row in select fieldset.
  *
  * @param {Event} event
- * @this HTMLSelectElement
+ *
+ * @this {HTMLSelectElement|HTMLInputElement}
  */
 function selectAddRow(event) {
 	const field = this;
-	const row = cloneNode(field.parentNode);
+	const row = cloneNode(field.parentElement);
 
 	field.onchange = selectFieldChange;
 	field.onchange(event);
@@ -612,7 +751,7 @@ function selectAddRow(event) {
 	const button = qs('.remove', row);
 	button.onclick = selectRemoveRow;
 
-	const parent = field.parentNode.parentNode;
+	const parent = field.parentElement.parentElement;
 	if (parent.classList.contains("sortable")) {
 		initSortableRow(field.parentElement);
 	}
@@ -623,7 +762,8 @@ function selectAddRow(event) {
 /**
  * Removes a row in select fieldset.
  *
- * @this HTMLInputElement
+ * @this {HTMLButtonElement}
+ *
  * @return {boolean} Always false.
  */
 function selectRemoveRow() {
@@ -632,10 +772,13 @@ function selectRemoveRow() {
 	return false;
 }
 
-/** Prevent onsearch handler on Enter
-* @param KeyboardEvent
-* @this HTMLInputElement
-*/
+/**
+ * Prevents onsearch handler on Enter.
+ *
+ * @param {KeyboardEvent} event
+ *
+ * @this {HTMLInputElement}
+ */
 function selectSearchKeydown(event) {
 	if (event.key === 'Enter') {
 		this.onsearch = () => {
@@ -677,16 +820,27 @@ function selectSearchKeydown(event) {
 		handle.addEventListener("touchstart", event => { startSorting(row, event) });
 	};
 
+	/**
+	 * Checks whether a row is being dragged.
+	 *
+	 * @return {boolean}
+	 */
 	window.isSorting = function() {
 		return dragHelper !== null;
 	};
 
+	/**
+	 * Starts dragging of the row.
+	 *
+	 * @param {HTMLElement} row
+	 * @param {MouseEvent|TouchEvent} event
+	 */
 	function startSorting(row, event) {
 		event.preventDefault();
 
 		const pointerY = getPointerY(event);
 
-		const parent = row.parentNode;
+		const parent = row.parentElement;
 		startScrollY = window.scrollY;
 		startY = pointerY - getOffsetTop(row);
 		minY = getOffsetTop(parent);
@@ -746,6 +900,11 @@ function selectSearchKeydown(event) {
 		window.addEventListener("touchcancel", finishSorting);
 	}
 
+	/**
+	 * Moves the dragged row to the pointer position and places the placeholder to a new position.
+	 *
+	 * @param {Event} event Mouse, touch or scroll event.
+	 */
 	function updateSorting(event) {
 		const pointerY = getPointerY(event);
 		const scrollingBoundary = 30;
@@ -770,7 +929,7 @@ function selectSearchKeydown(event) {
 		dragHelper.style.top = `${top}px`;
 
 		// Find a new position for the placeholder.
-		const parent = placeholderRow.parentNode;
+		const parent = placeholderRow.parentElement;
 		let oldNextRow = nextRow;
 		top = top - minY + parent.offsetTop;
 
@@ -800,6 +959,9 @@ function selectSearchKeydown(event) {
 		}
 	}
 
+	/**
+	 * Drops the dragged row to the position of the placeholder.
+	 */
 	function finishSorting() {
 		dragHelper.classList.remove("dragging");
 		dragHelper.style.top = null;
@@ -808,8 +970,8 @@ function selectSearchKeydown(event) {
 
 		dragHelper.remove();
 
-		placeholderRow.parentNode.insertBefore(
-			dragHelper.tagName === "TABLE" ? dragHelper.firstChild.firstChild : dragHelper,
+		placeholderRow.parentElement.insertBefore(
+			dragHelper.tagName === "TABLE" ? dragHelper.firstElementChild.firstElementChild : dragHelper,
 			placeholderRow
 		);
 		placeholderRow.remove();
@@ -825,6 +987,13 @@ function selectSearchKeydown(event) {
 		window.removeEventListener("touchcancel", finishSorting);
 	}
 
+	/**
+	 * Returns the vertical pointer position.
+	 *
+	 * @param {Event} event Mouse, touch or scroll event.
+	 *
+	 * @return {number} The last known position for events without pointer coordinates.
+	 */
 	function getPointerY(event) {
 		if (event.type.includes("touch")) {
 			const touch = event.touches[0] || event.changedTouches[0];
@@ -840,10 +1009,13 @@ function selectSearchKeydown(event) {
 
 
 
-/** Fill column in search field
-* @param string
-* @return boolean false
-*/
+/**
+ * Fills column in search field.
+ *
+ * @param {string} name
+ *
+ * @return {boolean} Always false.
+ */
 function selectSearch(name) {
 	const fieldset = gid('fieldset-search');
 	fieldset.className = '';
@@ -864,19 +1036,25 @@ function selectSearch(name) {
 }
 
 
-/** Check if Ctrl key (Command key on Mac) was pressed
-* @param KeyboardEvent|MouseEvent
-* @return boolean
-*/
+/**
+ * Checks if the Ctrl key (Command key on Mac) was pressed.
+ *
+ * @param {KeyboardEvent|MouseEvent} event
+ *
+ * @return {boolean}
+ */
 function isCtrl(event) {
 	return (event.ctrlKey || event.metaKey) && !event.altKey; // shiftKey allowed
 }
 
-/** Send form by Ctrl+Enter on <select> and <textarea>
-* @param KeyboardEvent
-* @param [string]
-* @return boolean
-*/
+/**
+ * Sends form by Ctrl+Enter on <select> and <textarea>.
+ *
+ * @param {KeyboardEvent} event
+ * @param {string} [button] Name of the submit button.
+ *
+ * @return {boolean}
+ */
 function bodyKeydown(event, button) {
 	eventStop(event);
 	let target = event.target;
@@ -897,9 +1075,11 @@ function bodyKeydown(event, button) {
 	return true;
 }
 
-/** Open form to a new window on Ctrl+click or Shift+click
-* @param MouseEvent
-*/
+/**
+ * Opens form in a new window on Ctrl+click or Shift+click.
+ *
+ * @param {MouseEvent} event
+ */
 function bodyClick(event) {
 	const target = event.target;
 	if ((isCtrl(event) || event.shiftKey) && target.type === 'submit' && isTag(target, 'input')) {
@@ -964,9 +1144,12 @@ function onEditingKeydown(event)
 /**
  * Disables maxlength for functions and manages value visibility.
  *
- * @this HTMLSelectElement
+ * @param {?Event} event
+ * @param {boolean} init True when applying the function selected by the server, so the value must be kept.
+ *
+ * @this {HTMLSelectElement}
  */
-function functionChange() {
+function functionChange(event, init = false) {
 	const func = selectValue(this);
 
 	const inputName = this.name.replace(/^function/, 'fields');
@@ -1003,68 +1186,75 @@ function functionChange() {
 		}
 	}
 
-	if (func === "NULL") {
-		// Hide input value if it will be not used by selected function.
-		if (input.type === "select-one") {
-			input.lastValue = input.value;
-			input.value = "__adminneo_empty__";
-		} else if (input.length) {
-			// Uncheck every single radio/checkbox.
-			let checkedList = [];
-			for (let i = 0; i < input.length; i++) {
-				const radio = input[i];
+	// Adjust the value to the selected function. The initial value is already set by the server.
+	if (!init) {
+		if (func === "NULL") {
+			// Hide input value if it will be not used by selected function.
+			if (input.type === "select-one") {
+				input.lastValue = input.value;
+				input.value = "__adminneo_empty__";
+			} else if (input.length) {
+				// Uncheck every single radio/checkbox.
+				let checkedList = [];
+				for (let i = 0; i < input.length; i++) {
+					const radio = input[i];
 
-				if (!radio.checked) continue;
+					if (!radio.checked) continue;
 
-				checkedList.push(i);
-				radio.checked = false;
+					checkedList.push(i);
+					radio.checked = false;
 
-				if (radio.type === "radio") {
-					break;
+					if (radio.type === "radio") {
+						break;
+					}
 				}
-			}
 
-			input.lastValue = checkedList;
-		} else {
-			input.lastValue = input.value;
-			input.value = "";
-		}
-	} else if (input.lastValue) {
-		// Restore last value.
-		if (input.type !== "select-one" && input.length) {
-			for (const index of input.lastValue) {
-				input[index].checked = true;
+				input.lastValue = checkedList;
+			} else {
+				input.lastValue = input.value;
+				input.value = "";
+			}
+		} else if (input.lastValue) {
+			// Restore last value.
+			if (input.type !== "select-one" && input.length) {
+				for (const index of input.lastValue) {
+					input[index].checked = true;
+				}
+			} else {
+				input.value = input.lastValue;
 			}
 		} else {
-			input.value = input.lastValue;
-		}
-	} else {
-		// Set the first available value.
-		if (input.type === "select-one") {
-			if (input.options[0].value === "__adminneo_empty__") {
-				input.value = input.options[1].value;
+			// Set the first available value.
+			if (input.type === "select-one") {
+				if (input.options[0].value === "__adminneo_empty__") {
+					input.value = input.options[1].value;
+				}
+			} else if (input.length && input[0].type === "radio") {
+				input[0].checked = true;
 			}
-		} else if (input.length && input[0].type === "radio") {
-			input[0].checked = true;
 		}
 	}
 
-	// Hide input for functions without argument.
-	input.classList.toggle("hidden", /^(now|getdate|current_date|current_timestamp|uuid)$/.test(func));
+	// Hide input for functions without argument. Radio/checkbox groups are a RadioNodeList without classList,
+	// but they never offer such a function.
+	if (input.classList) {
+		input.classList.toggle("hidden", /^(now|getdate|current_date|current_timestamp|uuid)$/.test(func));
+	}
 
 	if (!input.length) {
-		oninput({target: input});
+		updateMaxLengthMark(input);
 	}
 }
 
 /**
- * Unset 'original', 'NULL' and 'now' functions when typing.
+ * Unsets 'original', 'NULL' and 'now' functions when typing.
  *
- * @param first number
- * @this HTMLTableCellElement
+ * @param {number} first
+ *
+ * @this {HTMLTableCellElement}
  */
 function skipOriginal(first) {
-	const fnSelect = qs('select', this.previousSibling);
+	const fnSelect = qs('select', this.previousElementSibling);
 	const value = selectValue(fnSelect);
 
 	if (fnSelect.selectedIndex < first || value === "NULL" || value === "now") {
@@ -1072,9 +1262,11 @@ function skipOriginal(first) {
 	}
 }
 
-/** Add new field in schema-less edit
-* @this HTMLInputElement
-*/
+/**
+ * Adds new field in schema-less edit.
+ *
+ * @this {HTMLInputElement}
+ */
 function fieldChange() {
 	const tr = parentTag(this, 'tr');
 	const row = cloneNode(tr);
@@ -1092,11 +1284,13 @@ function fieldChange() {
  * Sends AJAX request.
  *
  * @param {string} url
- * @param {function|null} onSuccess (XMLHttpRequest)
- * @param {string|null} data POST data.
- * @param {string|null} progressMessage
+ * @param {?function(XMLHttpRequest)} onSuccess
+ * @param {?string} data POST data.
+ * @param {?string} progressMessage
  * @param {boolean} failSilently
- * @return XMLHttpRequest or false in case of an error
+ *
+ * @return {XMLHttpRequest}
+ *
  * @uses offlineMessage
  */
 function ajax(url, onSuccess = null, data = null, progressMessage = null, failSilently = false) {
@@ -1136,10 +1330,13 @@ function ajax(url, onSuccess = null, data = null, progressMessage = null, failSi
 	return request;
 }
 
-/** Use setHtml(key, value) for JSON response
-* @param string
-* @return boolean false for success
-*/
+/**
+ * Uses setHtml(key, value) for JSON response.
+ *
+ * @param {string} url
+ *
+ * @return {boolean} False for success.
+ */
 function ajaxSetHtml(url) {
 	return !ajax(url, request => {
 		const data = JSON.parse(request.responseText);
@@ -1149,12 +1346,15 @@ function ajaxSetHtml(url) {
 	});
 }
 
-/** Save form contents through AJAX
-* @param HTMLFormElement
-* @param string
-* @param [HTMLInputElement]
-* @return boolean
-*/
+/**
+ * Saves form contents through AJAX.
+ *
+ * @param {HTMLFormElement} form
+ * @param {?string} message Progress message.
+ * @param {HTMLInputElement} [button] Button to send with the form data.
+ *
+ * @return {XMLHttpRequest|boolean} False when the form contains a file to upload.
+ */
 function ajaxForm(form, message, button) {
 	let data = [];
 	for (const el of form.elements) {
@@ -1163,7 +1363,9 @@ function ajaxForm(form, message, button) {
 				return false;
 			}
 			if (!/^(checkbox|radio|submit|file)$/i.test(el.type) || el.checked || el === button) {
-				data.push(encodeURIComponent(el.name) + '=' + encodeURIComponent(isTag(el, 'select') ? selectValue(el) : el.value));
+				const value = (isTag(el, 'select') ? selectValue(/** @type {HTMLSelectElement} */ (el)) : el.value);
+
+				data.push(encodeURIComponent(el.name) + '=' + encodeURIComponent(value));
 			}
 		}
 	}
@@ -1183,6 +1385,9 @@ function ajaxForm(form, message, button) {
 	}, data, message);
 }
 
+/**
+ * Makes the table footer sticky while it is scrolled out of the visible area.
+ */
 function initTableFooter() {
 	const footer = qs(".table-footer");
 	if (!footer) return;
@@ -1217,11 +1422,11 @@ function updateSaveButton() {
  *
  * @param {MouseEvent} event
  * @param {number} text Display textarea instead of input, 2 - load long text.
- * @param {string|null} warning Warning text if editing is disabled.
+ * @param {?string} warning Warning text if editing is disabled.
  *
- * @this {HTMLElement}
+ * @this {HTMLTableCellElement}
  *
- * @return boolean|XMLHttpRequest
+ * @return {boolean|XMLHttpRequest}
  */
 function selectClick(event, text, warning) {
 	const td = this;
@@ -1311,9 +1516,10 @@ function selectClick(event, text, warning) {
  *
  * @param {number} limit
  * @param {string} loadingText
- * @this {HTMLLinkElement}
  *
- * @return {boolean} false for success to stop the click event.
+ * @this {HTMLAnchorElement}
+ *
+ * @return {boolean} False for success to stop the click event.
  */
 function loadNextPage(limit, loadingText) {
 	const a = this;
@@ -1348,19 +1554,24 @@ function loadNextPage(limit, loadingText) {
 
 
 
-/** Stop event propagation
-* @param Event
-*/
+/**
+ * Stops event propagation.
+ *
+ * @param {Event} event
+ */
 function eventStop(event) {
 	event.stopPropagation();
 }
 
 
 
-/** Clone node and setup submit highlighting
-* @param HTMLElement
-* @return HTMLElement
-*/
+/**
+ * Clones node and sets up submit highlighting.
+ *
+ * @param {HTMLElement} el
+ *
+ * @return {HTMLElement}
+ */
 function cloneNode(el) {
 	const el2 = el.cloneNode(true);
 	const selector = 'input, select, button';
@@ -1378,22 +1589,42 @@ function cloneNode(el) {
 	return el2;
 }
 
+/**
+ * Returns the distance of the element from the top of the document.
+ *
+ * @param {HTMLElement} element
+ *
+ * @return {number}
+ */
 function getOffsetTop(element) {
 	let box = element.getBoundingClientRect();
 
 	return box.top + window.scrollY;
 }
 
+/**
+ * Returns the distance of the element from the left edge of the document.
+ *
+ * @param {HTMLElement} element
+ *
+ * @return {number}
+ */
 function getOffsetLeft(element) {
 	let box = element.getBoundingClientRect();
 
 	return box.left + window.scrollX;
 }
 
-oninput = event => {
-	const target = event.target;
-	const maxLength = target.dataset.maxlength;
+/**
+ * Marks the input by the 'maxlength' class when its value is longer than the allowed length.
+ *
+ * @param {HTMLInputElement|HTMLTextAreaElement} input
+ */
+function updateMaxLengthMark(input) {
+	const maxLength = input.dataset.maxlength;
 
 	// maxLength could be 0
-	target.classList.toggle('maxlength', target.value && maxLength != null && target.value.length > maxLength);
-};
+	input.classList.toggle('maxlength', input.value && maxLength != null && input.value.length > maxLength);
+}
+
+oninput = event => updateMaxLengthMark(event.target);

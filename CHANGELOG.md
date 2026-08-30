@@ -1,6 +1,36 @@
 Changelog
 =========
 
+AdminNeo 5.8.0
+--------------
+
+### Changes
+
+- Scroll the navigation panel to the selected table when it is out of view
+- Indicate a scrolled table list in the navigation panel by a separator line
+
+### Bugfixes
+
+- Editor: Fix JavaScript error on the select page caused by the import form (regression from 5.5.0)
+
+AdminNeo 5.7.1 (2026-08-27)
+---------------------------
+
+### Changes
+
+- Editor: Display all images recognized by PHP, set their size, load them lazily (by @vrana)
+
+### Bugfixes
+
+- Escape < in strings printed to JavaScript, a name containing <!--<script> broke the page
+- Alter table: Edit multiline column comments in a textarea (by @vrana)
+- Alter table: Do not rewrite newlines in multiline column and table comments
+- Edit: Fix losing the value of nullable enum fields (fix #203, regression from 5.7.0)
+- Edit: Fix JavaScript error when changing the function of enum, set and bool fields (regression from 5.7.0)
+- PostgreSQL, SQLite, MS SQL: Fix reading a multiline default value
+
+(Ported relevant changes from Adminer 6.0.0 • part 2)
+
 AdminNeo 5.7.0 (2026-08-24)
 ---------------------------
 
