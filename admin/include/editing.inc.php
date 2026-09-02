@@ -254,9 +254,17 @@ function process_field($field, $type_field) {
 		($field["null"] ? " NULL" : " NOT NULL"), // NULL for timestamp
 		default_value($field),
 		(preg_match('~timestamp|datetime~', $field["type"]) && $field["on_update"] ? " ON UPDATE " . $field["on_update"] : ""),
-		(support("comment") && $field["comment"] != "" ? " COMMENT " . q($field["comment"]) : ""),
+		(support("comment") && $field["comment"] != "" ? " COMMENT " . q(normalize_newlines($field["comment"])) : ""),
 		($field["auto_increment"] ? auto_increment() : null),
 	];
+}
+
+/**
+ * Normalizes newlines in a value submitted by a textarea, which sends CRLF.
+ */
+function normalize_newlines(?string $value): string
+{
+	return str_replace("\r", "", (string) $value);
 }
 
 /** Get default value clause
@@ -268,7 +276,7 @@ function default_value($field) {
 		return "";
 	}
 
-	$default = str_replace("\r", "", $field["default"]);
+	$default = normalize_newlines($field["default"]);
 
 	$generated = $field["generated"];
 	if (in_array($generated, Driver::get()->getGenerated())) {
@@ -360,7 +368,7 @@ function edit_fields(array $fields, array $collations, $type = "TABLE", $foreign
 	}
 
 	echo "<td>";
-	echo "<button name='add[", (support("move_col") ? 0 : count($fields)), "]' value='1' title='", h(lang('Add next')), "' class='button light'>", icon_solo("add"), "</button>";
+	echo "<button name='add[", (support("move_col") ? 0 : count($fields)), "]' value='1' title='", lang('Add next'), "' class='button light'>", icon_solo("add"), "</button>";
 	echo (support("move_col") ? "" : script("qsl('button').onclick = onAddLastFieldRowClick;"));
 	echo script("row_count = " . count($fields) . ";");
 	echo "</td>\n";
@@ -419,20 +427,31 @@ function edit_fields(array $fields, array $collations, $type = "TABLE", $foreign
 
 			if (support("comment")) {
 				$max_length = Connection::get()->isMinVersion("5.5") ? 1024 : 255;
-				echo "<td $comment_class>",
-					"<input class='input' name='fields[$i][comment]' value='", h($field["comment"]), "' data-maxlength='$max_length' aria-labelledby='label-comment'>",
-					"</td>\n";
+				$attrs = "name='fields[$i][comment]' data-maxlength='$max_length' aria-labelledby='label-comment'";
+				$value = h($field["comment"]);
+
+				echo "<td $comment_class>";
+				if (str_contains($value, "\n")) {
+					// Preserve the leading newline in textarea.
+					if ($value[0] == "\n") {
+						$value = "\n$value";
+					}
+					echo "<textarea $attrs rows='3' cols='30' style='vertical-align: bottom;'>$value</textarea>";
+				} else {
+					echo "<input class='input' $attrs value='$value'>";
+				}
+				echo "</td>\n";
 			}
 		}
 
 		echo "<td>";
 		if (support("move_col")) {
-			echo "<button name='add[$i]' value='1' title='" . h(lang('Add next')) . "' class='button light'>", icon_solo("add"), "</button>",
-				"<button name='up[$i]' value='1' title='" . h(lang('Move up')) . "' class='button light hidden'>", icon_solo("arrow-up"), "</button>",
-				"<button name='down[$i]' value='1' title='" . h(lang('Move down')) . "' class='button light hidden'>", icon_solo("arrow-down"), "</button>";
+			echo "<button name='add[$i]' value='1' title='" . lang('Add next') . "' class='button light'>", icon_solo("add"), "</button>",
+				"<button name='up[$i]' value='1' title='" . lang('Move up') . "' class='button light hidden'>", icon_solo("arrow-up"), "</button>",
+				"<button name='down[$i]' value='1' title='" . lang('Move down') . "' class='button light hidden'>", icon_solo("arrow-down"), "</button>";
 		}
 		if ($orig == "" || support("drop_col")) {
-			echo "<button name='drop_col[$i]' value='1' title='" . h(lang('Remove')) . "' class='button light'>", icon_solo("remove"), "</button>";
+			echo "<button name='drop_col[$i]' value='1' title='" . lang('Remove') . "' class='button light'>", icon_solo("remove"), "</button>";
 		}
 		echo "</td>\n</tr>\n";
 	}

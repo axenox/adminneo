@@ -5,8 +5,8 @@
  * Loads syntax highlighting.
  *
  * @param {string} version First three characters of database system version.
- * @param {string|null} vendor
- * @param {object} autocompletion
+ * @param {?string} vendor
+ * @param {Object} autocompletion
  */
 function initSyntaxHighlighting(version, vendor, autocompletion) {
 	if (!window.jush) {
@@ -58,10 +58,12 @@ function initSyntaxHighlighting(version, vendor, autocompletion) {
 	}
 }
 
-/** Try to change input type to password or to text
-* @param HTMLInputElement
-* @param boolean
-*/
+/**
+ * Tries to change input type to password or to text.
+ *
+ * @param {HTMLInputElement} el
+ * @param {boolean} disable
+ */
 function typePassword(el, disable) {
 	try {
 		el.type = (disable ? 'text' : 'password');
@@ -94,10 +96,13 @@ function initLoginDriver(driverSelect) {
 let dbCtrl;
 const dbPrevious = {};
 
-/** Check if database should be opened to a new window
-* @param MouseEvent
-* @this HTMLSelectElement
-*/
+/**
+ * Checks if database should be opened in a new window.
+ *
+ * @param {MouseEvent} event
+ *
+ * @this {HTMLSelectElement}
+ */
 function dbMouseDown(event) {
 	// Firefox: mouse-down event does not contain pressed key information for OPTION.
 	// Chrome: mouse-down event has inherited key information from SELECT.
@@ -108,9 +113,11 @@ function dbMouseDown(event) {
 	dbPrevious[this.name] ??= this.value;
 }
 
-/** Load database after selecting it
-* @this HTMLSelectElement
-*/
+/**
+ * Loads database after selecting it.
+ *
+ * @this {HTMLSelectElement}
+ */
 function dbChange() {
 	if (dbCtrl) {
 		this.form.target = '_blank';
@@ -125,9 +132,11 @@ function dbChange() {
 
 
 
-/** Check whether the query will be executed with index
-* @this HTMLElement
-*/
+/**
+ * Checks whether the query will be executed with an index.
+ *
+ * @this {HTMLElement}
+ */
 function selectFieldChange() {
 	const form = this.form;
 	const ok = (() => {
@@ -188,7 +197,7 @@ function selectFieldChange() {
 	/**
 	 * Sets up event handlers for table printed by edit_fields().
 	 *
-	 * @param {HTMLElement} table
+	 * @param {HTMLTableElement} table
 	 */
 	window.initFieldsEditing = function(table) {
 		const tableBody = qs("tbody", table);
@@ -204,7 +213,7 @@ function selectFieldChange() {
 	/**
 	 * Sets up event handlers for one row.
 	 *
-	 * @param {HTMLElement} row
+	 * @param {HTMLTableRowElement} row
 	 * @param {boolean} autoAddRow
 	 */
 	function initFieldsEditingRow(row, autoAddRow = true) {
@@ -240,7 +249,9 @@ function selectFieldChange() {
 		field.addEventListener("input", event => {
 			// Mark length as required.
 			const input = event.target;
-			input.classList.toggle('required', !input.value.length && /var(char|binary)$/.test(selectValue(input.parentNode.previousSibling.firstChild)));
+			const typeSelect = input.parentElement.previousElementSibling.firstElementChild;
+
+			input.classList.toggle('required', !input.value.length && /var(char|binary)$/.test(selectValue(typeSelect)));
 		});
 
 		// Autoincrement. Is null in procedure editing.
@@ -333,7 +344,7 @@ function selectFieldChange() {
 	}
 
 	/**
-	 * Checks if value is equal to a-delimiter-b where delimiter is '_', '' or big letter.
+	 * Checks whether the value is equal to a-delimiter-b where delimiter is '_', '' or big letter.
 	 *
 	 * @param {string} value
 	 * @param {string} part1
@@ -346,14 +357,14 @@ function selectFieldChange() {
 	}
 
 	/**
-	 * Edit enum or set.
+	 * Edits enum or set in the focused length input.
 	 *
-	 * @this {HTMLInputElement} Length input.
+	 * @this {HTMLInputElement}
 	 */
 	function onFieldLengthFocus() {
-		const td = this.parentNode;
+		const td = this.parentElement;
 
-		if (/^(enum|set)$/.test(selectValue(td.previousSibling.firstChild))) {
+		if (/^(enum|set)$/.test(selectValue(td.previousElementSibling.firstElementChild))) {
 			const edit = gid('enum-edit');
 			edit.value = parseEnumValues(this.value);
 
@@ -382,11 +393,11 @@ function selectFieldChange() {
 	};
 
 	/**
-	 * Returns enum values.
+	 * Returns enum values separated by newlines.
 	 *
 	 * @param {string} string
 	 *
-	 * @return {string} Values separated by newlines.
+	 * @return {string}
 	 */
 	function parseEnumValues(string) {
 		const re = /(^|,)\s*'(([^\\']|\\.|'')*)'\s*/g;
@@ -409,7 +420,7 @@ function selectFieldChange() {
 	/**
 	 * Clears length and hides collation or unsigned.
 	 *
-	 * @this HTMLSelectElement
+	 * @this {HTMLSelectElement}
 	 */
 	function onFieldTypeChange() {
 		const type = this;
@@ -454,7 +465,7 @@ function selectFieldChange() {
 	/**
 	 * Adds new table row for the next field.
 	 *
-	 * @param {(HTMLInputElement|HTMLButtonElement)} button
+	 * @param {HTMLInputElement|HTMLButtonElement} button
 	 * @param {boolean} focus
 	 */
 	function addRow(button, focus = false) {
@@ -512,6 +523,7 @@ function selectFieldChange() {
 	 * Adds new table row after the last field. Used by drivers where columns can be added only to the end.
 	 *
 	 * @this {HTMLButtonElement}
+	 *
 	 * @return {boolean} False on success, true to submit the form.
 	 */
 	window.onAddLastFieldRowClick = function () {
@@ -530,7 +542,8 @@ function selectFieldChange() {
  * Removes row in indexes table.
  *
  * @this {HTMLButtonElement}
- * @return {false}
+ *
+ * @return {boolean} Always false.
  */
 function onRemoveIndexRowClick() {
 	removeTableRow(this, "type");
@@ -543,6 +556,8 @@ function onRemoveIndexRowClick() {
  *
  * @param {HTMLButtonElement} button
  * @param {string} columnName Name of the key input field.
+ *
+ * @return {boolean} Always false.
  */
 function removeTableRow(button, columnName) {
 	const row = parentTag(button, "tr");
@@ -554,28 +569,34 @@ function removeTableRow(button, columnName) {
 	return false;
 }
 
-/** Show or hide selected table column
-* @param boolean
-* @param number
-*/
+/**
+ * Shows or hides selected table column.
+ *
+ * @param {boolean} checked
+ * @param {number} column Column index.
+ */
 function columnShow(checked, column) {
 	for (const tr of qsa('tr', gid('edit-fields'))) {
 		qsa('td', tr)[column].classList.toggle('hidden', !checked);
 	}
 }
 
-/** Show or hide index column options
-* @param boolean
-*/
+/**
+ * Shows or hides index column options.
+ *
+ * @param {boolean} checked
+ */
 function indexOptionsShow(checked) {
 	for (const option of qsa(".idxopts")) {
 		option.classList.toggle("hidden", !checked);
 	}
 }
 
-/** Display partition options
-* @this HTMLSelectElement
-*/
+/**
+ * Displays partition options.
+ *
+ * @this {HTMLSelectElement}
+ */
 function partitionByChange() {
 	const partitionTable = /RANGE|LIST/.test(selectValue(this));
 
@@ -583,9 +604,11 @@ function partitionByChange() {
 	gid('partition-table').classList.toggle('hidden', !partitionTable);
 }
 
-/** Add next partition row
-* @this HTMLInputElement
-*/
+/**
+ * Adds next partition row.
+ *
+ * @this {HTMLInputElement}
+ */
 function partitionNameChange() {
 	const tr = parentTag(this, 'tr');
 	const row = cloneNode(tr);
@@ -611,10 +634,13 @@ function editingCommentsClick(el, columnIndex) {
 	}
 }
 
-/** Uncheck 'all' checkbox
-* @param MouseEvent
-* @this HTMLTableElement
-*/
+/**
+ * Unchecks the 'all' checkbox.
+ *
+ * @param {MouseEvent} event
+ *
+ * @this {HTMLTableElement}
+ */
 function dumpClick(event) {
 	let el = parentTag(event.target, 'label');
 	if (!el) return;
@@ -629,9 +655,11 @@ function dumpClick(event) {
 
 
 
-/** Add row for foreign key
-* @this HTMLSelectElement
-*/
+/**
+ * Adds row for foreign key.
+ *
+ * @this {HTMLSelectElement}
+ */
 function foreignAddRow() {
 	const tr = parentTag(this, 'tr');
 	const row = cloneNode(tr);
@@ -645,9 +673,11 @@ function foreignAddRow() {
 
 
 
-/** Add row for indexes
-* @this HTMLSelectElement
-*/
+/**
+ * Adds row for indexes.
+ *
+ * @this {HTMLSelectElement}
+ */
 function indexesAddRow() {
 	const tr = parentTag(this, 'tr');
 	const row = cloneNode(tr);
@@ -667,10 +697,13 @@ function indexesAddRow() {
 	tr.parentNode.append(row);
 }
 
-/** Change column in index
-* @param string name prefix
-* @this HTMLSelectElement
-*/
+/**
+ * Changes column in index.
+ *
+ * @param {string} prefix Name prefix.
+ *
+ * @this {HTMLSelectElement|HTMLInputElement}
+ */
 function indexesChangeColumn(prefix) {
 	const names = [];
 	for (const column of qsa('select, input', parentTag(this, 'td'))) {
@@ -684,10 +717,13 @@ function indexesChangeColumn(prefix) {
 	this.form[this.name.replace(/].*/, '][name]')].value = prefix + names.join('_');
 }
 
-/** Add column for index
-* @param string name prefix
-* @this HTMLSelectElement
-*/
+/**
+ * Adds column for index.
+ *
+ * @param {string} prefix Name prefix.
+ *
+ * @this {HTMLSelectElement|HTMLInputElement}
+ */
 function indexesAddColumn(prefix) {
 	const field = this;
 	const select = field.form[field.name.replace(/].*/, '][type]')];
@@ -697,7 +733,7 @@ function indexesAddColumn(prefix) {
 		}
 		select.onchange();
 	}
-	const column = cloneNode(field.parentNode);
+	const column = cloneNode(field.parentElement);
 	for (const select of qsa('select', column)) {
 		select.name = select.name.replace(/]\[\d+/, '$&1');
 		select.selectedIndex = 0;
@@ -714,35 +750,11 @@ function indexesAddColumn(prefix) {
 }
 
 /**
- * Setup validation of files upload form.
+ * Updates the form action.
  *
- * @param {string} formId
- * @param {string} inputName
- * @param {number} maxCount
- * @param {string} countErrorMessage
- * @param {number} maxSize
- * @param {string} sizeErrorMessage
+ * @param {HTMLFormElement} form
+ * @param {string} root
  */
-function initFilesUploadForm(formId, inputName, maxCount, countErrorMessage, maxSize, sizeErrorMessage) {
-	const form = gid(formId);
-
-	form.addEventListener("submit", event => {
-		const files = form.elements[inputName].files;
-
-		if (files.length > maxCount) {
-			alert(countErrorMessage);
-			event.preventDefault();
-		} else if (Array.from(files).reduce((sum, file) => sum + file.size, 0) > maxSize) {
-			alert(sizeErrorMessage);
-			event.preventDefault();
-		}
-	});
-}
-
-/** Updates the form action
-* @param HTMLFormElement
-* @param string
-*/
 function sqlSubmit(form, root) {
 	const action = root
 		+ '&sql=' + encodeURIComponent(form['query'].value)
@@ -761,8 +773,10 @@ function sqlSubmit(form, root) {
  * Exports the result table by JS without re-running the query.
  *
  * @param {string} settingsUrl Address storing the selected format and output.
- * @return {boolean} False when the export is handled by JS.
+ *
  * @this {HTMLInputElement}
+ *
+ * @return {boolean} False when the export is handled by JS.
  */
 function sqlExport(settingsUrl) {
 	const form = this.form;
@@ -818,6 +832,7 @@ function sqlExport(settingsUrl) {
  * Formats date and time as Ymd-His.
  *
  * @param {Date} date
+ *
  * @return {string}
  */
 function formatDateTime(date) {
@@ -827,11 +842,13 @@ function formatDateTime(date) {
 		+ '-' + pad(date.getHours()) + pad(date.getMinutes()) + pad(date.getSeconds());
 }
 
-/** Handle changing trigger time or event
-* @param RegExp
-* @param string
-* @param HTMLFormElement
-*/
+/**
+ * Handles changing trigger time or event.
+ *
+ * @param {RegExp} tableRe
+ * @param {string} table
+ * @param {HTMLFormElement} form
+ */
 function triggerChange(tableRe, table, form) {
 	const formEvent = selectValue(form['Event']);
 	if (tableRe.test(form['Trigger'].value)) {
@@ -843,10 +860,13 @@ function triggerChange(tableRe, table, form) {
 
 let that, x, y; // em and tablePos defined in schema.inc.php
 
-/** Get mouse position
-* @param MouseEvent
-* @this HTMLElement
-*/
+/**
+ * Stores the mouse position.
+ *
+ * @param {MouseEvent} event
+ *
+ * @this {HTMLElement}
+ */
 function schemaMousedown(event) {
 	if (event.button === 0) { // 0 - left button
 		that = this;
@@ -855,9 +875,11 @@ function schemaMousedown(event) {
 	}
 }
 
-/** Move object
-* @param MouseEvent
-*/
+/**
+ * Moves object.
+ *
+ * @param {MouseEvent} event
+ */
 function schemaMousemove(event) {
 	if (that !== undefined) {
 		const left = (event.clientX - x) / em;
@@ -896,10 +918,12 @@ function schemaMousemove(event) {
 	}
 }
 
-/** Finish move
-* @param MouseEvent
-* @param string
-*/
+/**
+ * Finishes move.
+ *
+ * @param {MouseEvent} event
+ * @param {string} db
+ */
 function schemaMouseup(event, db) {
 	if (that !== undefined) {
 		tablePos[that.firstChild.firstChild.firstChild.data] = [ (event.clientY - y) / em, (event.clientX - x) / em ];
@@ -922,6 +946,9 @@ function schemaMouseup(event, db) {
 	let closeTimeout = null;
 	let helpVisible = false;
 
+	/**
+	 * Initializes the help popup so it stays visible while the pointer is over it.
+	 */
 	window.initHelpPopup = function() {
 		const help = gid("help");
 
@@ -934,6 +961,8 @@ function schemaMouseup(event, db) {
 	};
 
 	/**
+	 * Installs help popup handlers for the element.
+	 *
 	 * @param {HTMLElement} element
 	 * @param {string|function} content
 	 * @param {boolean} side Displays on left side (otherwise on top).
@@ -958,7 +987,7 @@ function schemaMouseup(event, db) {
 	 *
 	 * @param {HTMLElement} element
 	 * @param {string} text
-	 * @param {boolean} side display on left side (otherwise on top)
+	 * @param {boolean} side Displays on left side (otherwise on top).
 	 */
 	function showHelp(element, text, side) {
 		if (!text) {
