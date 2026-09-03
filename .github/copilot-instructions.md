@@ -4,7 +4,7 @@ This is a fork of the AdminNeo PHP database management system. The fork is inten
 
 The fork is intended to be kept backwards compatible and will receive updates from the original. New features added to the fork will be contributed back to the original project if they are deemed useful.
 
-Read the architecture documentation in `docs/Architecture.md`. Update this file every time you make significant changes to AdminNeo.
+Read the architecture documentation in `docs/Architecture.md`.
 
 ## Integration
 
@@ -49,3 +49,13 @@ This usage context results in a couple of common requirements for the DB adminis
 ## Development rules
 
 - Do not attempt to compile AdminNeo into a single file - the result is not committed anyway. The compile process does not produce any useful output.
+
+## Documentation
+
+### Global documentation
+
+The `docs` folder contains documentation for AdminNeo in its current state (including changes done in this fork). Update the docs files every time you make significant changes to AdminNeo.
+
+### Fork specific features
+
+The `docs/Changes_in_this_fork.md` file contains a log of all changes made in this fork of AdminNeo compared to the original. Update this file every time you make a change or fix to the fork. Maintain a feature-oriented log. Since you cannot know the next commit hash, describe your changes and write `TDB` as placeholder instead of the hash. Every time you read the file and see `TBD`, look through the last commits and replace the placeholder with a real commit hash. This ensures that the change history remains accurate and traceable.
