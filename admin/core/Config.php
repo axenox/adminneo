@@ -129,16 +129,11 @@ class Config
 	}
 
 	/**
-	 * Whether mid-render output flushing (ob_flush()/flush()) is allowed.
-	 *
-	 * Streaming progress feedback (e.g. the running query or the query kill-timeout script) to the
-	 * browser requires flushing. When AdminNeo is embedded and its output is captured by a host
-	 * application, an explicit flush() prematurely commits the HTTP headers (mod_php sends them on
-	 * every flush()), which breaks the host's own response. Set to false to buffer the whole page.
+	 * Whether AdminNeo runs inside a host application that captures its output and controls the response.
 	 */
-	public function isOutputFlushingEnabled(): bool
+	public function isEmbeddedModeEnabled(): bool
 	{
-		return $this->params["outputFlushing"] ?? true;
+		return $this->params["embeddedMode"] ?? false;
 	}
 
 	/**

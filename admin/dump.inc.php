@@ -211,6 +211,9 @@ SET foreign_key_checks = 0;
 	if ($is_sql) {
 		echo "-- " . gmdate("Y-m-d H:i:s e") . "\n";
 	}
+	if (Admin::get()->getConfig()->isEmbeddedModeEnabled()) {
+		return;
+	}
 	exit;
 }
 

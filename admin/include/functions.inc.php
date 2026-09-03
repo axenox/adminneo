@@ -849,8 +849,7 @@ function dump_headers(string $identifier, bool $multi_table = false): string
 	if (!ob_get_level()) {
 		ob_start(null, 4096);
 	}
-	ob_flush();
-	flush();
+	flush_output();
 
 	return $extension;
 }
@@ -1217,17 +1216,16 @@ function count_rows($table, $where, $is_group, $group) {
 	);
 }
 
-/** Flush the output buffer to the browser, unless flushing is disabled by configuration
+/** Flush the output buffer to the browser unless AdminNeo is embedded in a host application.
 *
 * Mid-render flushing streams progress feedback (e.g. the running query or the query
 * kill-timeout script) to the browser. When AdminNeo is embedded and its output is captured
 * by the host application, an explicit flush() would prematurely commit the HTTP headers
-* (mod_php sends them on every flush()), breaking the host's own response. Set the "outputFlushing"
-* config option to false (see Config::isOutputFlushingEnabled()) to buffer the whole page instead.
+* (mod_php sends them on every flush()), breaking the host's own response.
 * @return void
 */
 function flush_output() {
-	if (!Admin::get()->getConfig()->isOutputFlushingEnabled()) {
+	if (Admin::get()->getConfig()->isEmbeddedModeEnabled()) {
 		return;
 	}
 	ob_flush();

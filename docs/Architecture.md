@@ -118,6 +118,8 @@ When adding new features, that potentially make sense for multiple drivers, make
 
 `adminneo-config.php` (placed next to the entry point) returns a PHP array of config options. Key options include `colorVariant`, `navigationMode`, `servers`, `hiddenDatabases`, `defaultPasswordHash`. See `admin/core/Config.php` for all supported keys and `examples/adminneo-custom.php` for a full example.
 
+Host applications that capture AdminNeo output can enable `embeddedMode`. AdminNeo then suppresses progressive output flushing so the host retains control of its HTTP headers. Completed dump requests return to the host instead of terminating the PHP request with `exit`, and the router omits their HTML page footer. The option is disabled by default, preserving standalone and compiled behavior.
+
 `adminneo-plugins.php` (placed next to the entry point) returns an array of `Plugin` instances.
 
 ## Namespace

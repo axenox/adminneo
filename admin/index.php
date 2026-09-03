@@ -99,5 +99,8 @@ if (isset($_GET["download"])) {
 	include "db.inc.php";
 }
 
-// each page calls its own page_header(), if the footer should not be called then the page exits
-page_footer();
+// Each page calls its own page_header(). Embedded exports return to their host application so it
+// can finish capturing the response; all other pages either render the footer or exit themselves.
+if (!(isset($_GET["dump"]) && $_POST && Admin::get()->getConfig()->isEmbeddedModeEnabled())) {
+	page_footer();
+}
