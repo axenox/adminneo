@@ -6,6 +6,7 @@ and feature-branch merges are listed together with the feature they belong to.
 
 | Feature | Description | Commits |
 | --- | --- | --- |
+| Scrollable SQL results | Limits custom SQL result tables to the available width and 800 pixels in height, with dedicated horizontal and vertical scrollbars. | TBD |
 | Embedded mode | Adds a configuration-based mode for embedding AdminNeo in another application and prevents mid-render stream flushing from breaking host integrations. | [`50e8653a`](https://github.com/axenox/adminneo/commit/50e8653a3a1d2dd7c2efe23d42d5c12d4f5f14bc), [`c0475494`](https://github.com/axenox/adminneo/commit/c0475494c60b5be558cdd32dd32a933d096877aa) |
 | Regex foreign keys | Adds the `RegexForeignKeys` plugin for deriving foreign-key relationships from naming patterns. | [`a7404b63`](https://github.com/axenox/adminneo/commit/a7404b63a860c5d26ab72a7c7f93a4d6d107cdb6), [`be3b8105`](https://github.com/axenox/adminneo/commit/be3b8105cc7d0e7c5d2d3d24994ef74e900f1d58) |
 | Replaceable schema renderer | Adds a plugin hook that lets integrations replace the built-in schema renderer, together with hook and architecture documentation. | [`5a77bd93`](https://github.com/axenox/adminneo/commit/5a77bd933db2b515be3473d1cae677bf54b6c707), [`e5fadad5`](https://github.com/axenox/adminneo/commit/e5fadad5fdb2ba110837a4efd743ad3a1dfbffce), [`c6e89d32`](https://github.com/axenox/adminneo/commit/c6e89d32fbeba2e316a32b4a68242215f984adc0) |
