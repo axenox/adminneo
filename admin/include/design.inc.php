@@ -190,8 +190,7 @@ function page_header(string $title, $breadcrumb = []): void
 	define("AdminNeo\PAGE_HEADER", 1);
 
 	// Let the browser download the CSS and JS while we are running the queries for the page body.
-	ob_flush();
-	flush();
+	flush_output();
 }
 
 function validate_color_variant(string $color_variant): string
