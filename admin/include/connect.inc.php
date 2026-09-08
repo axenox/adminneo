@@ -128,7 +128,12 @@ if (support("scheme")) {
 	if (DB != "" && $_GET["ns"] !== "") {
 		if (!isset($_GET["ns"])) {
 			// When the user goes to a database, take him to the default schema.
-			redirect(preg_replace('~(?<=[?&])db=[^&]+~', '\\0&ns=' . urlencode(get_schema()), relative_uri()));
+			$schema = get_schema();
+			if (Admin::get()->getConfig()->isEmbeddedModeEnabled()) {
+				$_GET["ns"] = $schema;
+			} else {
+				redirect(preg_replace('~(?<=[?&])db=[^&]+~', '\\0&ns=' . urlencode($schema), relative_uri()));
+			}
 		}
 
 		if (!set_schema($_GET["ns"])) {
