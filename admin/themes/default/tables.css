@@ -239,6 +239,17 @@ th:hover .column {
 	margin-bottom: 40px;
 }
 
+/* Keep custom SQL result tables within reach of their query actions and editor. */
+.table-result > .scrollable {
+	max-width: 100%;
+	max-height: 800px;
+	overflow: auto;
+}
+
+.table-result > .scrollable thead {
+	top: 0;
+}
+
 @media (hover: none) {
 	/* Turn off sticky header on touch screens. It does not work on mobile Safari at all. */
 	thead {
