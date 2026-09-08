@@ -26,6 +26,16 @@ body {
 	line-height: 1.4;
 }
 
+body.resizing {
+	cursor: col-resize;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+body.moving, body.moving * {
+	cursor: move;
+}
+
 a {
 	padding: 3px 0;
 	color: var(--link-text);
@@ -188,13 +198,16 @@ ol, ul {
 #schema {
 	margin-left: 100px;
 	position: relative;
-	-moz-user-select: none;
 	-webkit-user-select: none;
+	user-select: none;
 }
 
 #schema .table {
 	border: 1px solid var(--table-border);
 	padding: 0 2px;
+	/* The same line height is in schema.inc.php. */
+	line-height: 1.4;
+	box-sizing: border-box;
 	cursor: move;
 	position: absolute;
 }

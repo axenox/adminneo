@@ -66,7 +66,11 @@ if ($_POST && !$_POST["add"] && !$_POST["change"] && !$_POST["change-js"]) {
 	}
 }
 
-page_header(lang('Foreign key') . ": " . h($TABLE), ["table" => $TABLE, lang('Foreign key')]);
+if ($name != "") {
+	page_header(lang('Alter foreign key') . ": " . h($name), ["table" => $TABLE, lang('Alter foreign key')]);
+} else {
+	page_header(lang('Create foreign key') . ": " . h($TABLE), ["table" => $TABLE, lang('Create foreign key')]);
+}
 
 if ($_POST) {
 	ksort($row["source"]);
@@ -95,7 +99,7 @@ if ($row["ns"] != "") {
 	set_schema($row["ns"]);
 }
 $referencable = array_keys(array_filter(table_status('', true), 'AdminNeo\fk_support'));
-$target = array_keys(fields(in_array($row["table"], $referencable) ? $row["table"] : reset($referencable)));
+$target = $referencable ? array_keys(fields(in_array($row["table"], $referencable) ? $row["table"] : reset($referencable))) : [];
 $onchange = "this.form['change-js'].value = '1'; this.form.submit();";
 
 echo "<p>";
@@ -103,7 +107,7 @@ echo "<span id='label-table'>", lang('Target table'), ":</span> ", html_select("
 
 if (support("scheme")) {
 	$schemas = array_filter(Admin::get()->getSchemas(), function ($schema) {
-		return !preg_match('~^information_schema$~i', $schema);
+		return !information_schema(DB, $schema);
 	});
 	echo "<span id='label-schema'>", lang('Schema'), ":</span> ", html_select("ns", $schemas, $row["ns"] != "" ? $row["ns"] : $_GET["ns"], $onchange, "label-schema");
 	if ($row["ns"] != "") {

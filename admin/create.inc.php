@@ -121,7 +121,8 @@ if ($_POST && !process_fields($row["fields"]) && !Admin::get()->getErrors()) {
 			$message = lang('Table has been created.');
 		}
 
-		queries_redirect(ME . (support("table") ? "table=" : "select=") . urlencode($name), $message, alter_table(
+		$location = ME . (support("table") ? "table=" : "select=") . urlencode($name);
+		$result = alter_table(
 			$TABLE,
 			$name,
 			(DIALECT == "sqlite" && ($use_all_fields || $foreign) ? $all_fields : $fields),
@@ -131,7 +132,13 @@ if ($_POST && !process_fields($row["fields"]) && !Admin::get()->getErrors()) {
 			($row["Collation"] && $row["Collation"] != $table_status["Collation"] ? $row["Collation"] : ""),
 			($row["Auto_increment"] != "" ? number($row["Auto_increment"]) : ""),
 			$partitioning
-		));
+		);
+
+		if ($result && !Queries::$queries) {
+			redirect($location); // Nothing was changed.
+		}
+
+		queries_redirect($location, $message, $result);
 	}
 }
 
@@ -189,6 +196,14 @@ foreach ($engines as $engine) {
 		$row["Engine"] = $engine;
 		break;
 	}
+}
+
+// 12 - the maximum number of inputs per column, 20 - the other inputs
+$max_columns = max_input_vars(12, 20);
+if ($max_columns) {
+	// The message is printed also if the number of columns is fine, JavaScript displays it after adding more columns.
+	$hidden = (count($row["fields"]) > $max_columns ? "" : " hidden");
+	echo "<p" . ($hidden ? " id='max-fields' data-columns='$max_columns'" : "") . " class='error$hidden'>" . max_input_vars_error() . "\n";
 }
 
 echo "<form action='' method='post' id='form'>\n";
