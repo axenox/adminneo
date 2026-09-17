@@ -61,6 +61,11 @@ Docker
 The official Docker image is available on [Docker Hub](https://hub.docker.com/r/adminneoorg/adminneo). Follow the
 instructions on the Docker page to get started.
 
+Documentation
+-------------
+
+See the [documentation index](docs/index.md) for architecture, plugin hooks, security, and fork-specific changes.
+
 Main project files
 ------------------
 

@@ -128,6 +128,47 @@ class Config
 		return $this->params["sqlAutocompletion"] ?? true;
 	}
 
+	/**
+	 * Whether AdminNeo runs inside a host application that captures its output and controls the response.
+	 */
+	public function isEmbeddedModeEnabled(): bool
+	{
+		return $this->params["embeddedMode"] ?? false;
+	}
+
+	/**
+	 * Whether copying a table also copies its data.
+	 *
+	 * Only affects drivers that support disabling it (currently MS SQL). When false, a copy creates
+	 * the table structure (columns, primary key) without any rows.
+	 */
+	public function isCopyDataEnabled(): bool
+	{
+		return $this->params["copyData"] ?? true;
+	}
+
+	/**
+	 * Whether the seed (start value) of a new MS SQL IDENTITY column is taken from that column's
+	 * default value in the table designer. Leave the column's "default" dropdown empty so the value
+	 * is consumed as the seed here instead of being emitted as a DEFAULT clause.
+	 */
+	public function isIdentitySeedFromDefaultEnabled(): bool
+	{
+		return $this->params["identitySeedFromDefault"] ?? false;
+	}
+
+	/**
+	 * Whether drivers should generate explicit, deterministic names for new constraints and indexes.
+	 *
+	 * The default is false to preserve upstream AdminNeo behaviour. Embedded IDE configurations can
+	 * enable this to produce migration-friendly DDL such as PK_table, UQ_table_column,
+	 * IX_table_column, FK_table_target and DF_table_column instead of database-generated names.
+	 */
+	public function isUseNamedConstraintsEnabled(): bool
+	{
+		return $this->params["useNamedConstraints"] ?? false;
+	}
+
 	public function getHiddenDatabases(): array
 	{
 		return $this->parseList($this->params["hiddenDatabases"] ?? []);
@@ -206,6 +247,14 @@ class Config
 		return $this->params["sslMode"] ?? null;
 	}
 
+	/**
+	 * Additional options passed to the native MS SQL SQLSRV connection.
+	 */
+	public function getConnectionOptions(): array
+	{
+		return $this->params["connectionOptions"] ?? [];
+	}
+
 	public function hasServers(): bool
 	{
 		return isset($this->params["servers"]);
@@ -272,5 +321,33 @@ class Config
 		}
 
 		return preg_split('~\s*,\s*~', (string)$list);
+	}
+}
+
+if (!function_exists(__NAMESPACE__ . '\\adminneo_named_constraint_name')) {
+	/**
+	 * Builds deterministic, migration-friendly constraint/index names for SQL drivers.
+	 *
+	 * The generated name consists of the requested prefix, table name and either the participating
+	 * columns or the referenced table. Non-identifier characters are normalized to underscores and a
+	 * stable hash suffix is appended if the result would exceed the active database's identifier
+	 * length limit. Including the table part keeps names unique enough for multi-schema databases
+	 * where each schema has its own constraint namespace.
+	 */
+	function adminneo_named_constraint_name(string $prefix, string $table, array $columns = [], string $targetTable = ""): string
+	{
+		$parts = [$prefix, $table];
+		if ($targetTable !== "") {
+			$parts[] = $targetTable;
+		} else {
+			$parts = array_merge($parts, $columns);
+		}
+		$name = preg_replace('~_+~', '_', trim(preg_replace('~[^A-Za-z0-9]+~', '_', implode('_', $parts)), '_'));
+		$maxLength = (defined(__NAMESPACE__ . '\\DIALECT') && DIALECT == 'pgsql' ? 63 : (defined(__NAMESPACE__ . '\\DIALECT') && DIALECT == 'mssql' ? 128 : 64));
+		if (strlen($name) > $maxLength) {
+			$hash = substr(sha1($name), 0, 8);
+			$name = substr($name, 0, $maxLength - 9) . '_' . $hash;
+		}
+		return $name;
 	}
 }

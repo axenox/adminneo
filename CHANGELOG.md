@@ -4,6 +4,10 @@ Changelog
 AdminNeo 5.8.0 (2026-09-15)
 ---------------------------
 
+### Fork modifications
+
+- MS SQL: Allow native SQLSRV connection options such as Azure managed identity authentication
+
 ### Changes
 
 - CSS: Add new Dune theme

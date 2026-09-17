@@ -393,6 +393,71 @@ if (isset($_GET["mysql"])) {
 			return "X" . q(bin2hex($string));
 		}
 
+		/**
+		 * {@inheritDoc}
+		 *
+		 * Retrieves all eligible primary keys in one information_schema query instead of
+		 * loading the fields of every table separately.
+		 *
+		 * @see Driver::getReferencablePrimary()
+		 */
+		public function getReferencablePrimary(string $self): array
+		{
+			$maria = $this->connection->isMariaDB();
+			$return = [];
+			$query = "SELECT c.*, t.ENGINE
+FROM information_schema.COLUMNS c
+JOIN information_schema.TABLES t ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME
+JOIN (
+	SELECT TABLE_NAME, MIN(COLUMN_NAME) AS COLUMN_NAME
+	FROM information_schema.KEY_COLUMN_USAGE
+	WHERE CONSTRAINT_SCHEMA = DATABASE() AND CONSTRAINT_NAME = 'PRIMARY'
+	GROUP BY TABLE_NAME
+	HAVING COUNT(*) = 1
+) p ON p.TABLE_NAME = c.TABLE_NAME AND p.COLUMN_NAME = c.COLUMN_NAME
+WHERE c.TABLE_SCHEMA = DATABASE()
+AND c.TABLE_NAME != " . q($self) . "
+AND t.ENGINE REGEXP " . q('InnoDB|IBMDB2I' . ($this->connection->isMinVersion("5.6") ? '|NDB' : ''));
+
+		foreach (get_rows($query, $this->connection) as $row) {
+			$type = preg_replace('~\s?/\*.+\*/~U', '', $row["COLUMN_TYPE"]);
+			preg_match('~^([^( ]+)(?:\((.+)\))?( unsigned)?( zerofill)?$~', $type, $typeMatches);
+			preg_match('~^(VIRTUAL|PERSISTENT|STORED)~', $row["EXTRA"], $generated);
+
+			$default = $maria && $row["COLUMN_DEFAULT"] == "NULL" ? null : $row["COLUMN_DEFAULT"];
+			if ($default !== null) {
+				$isText = preg_match('~(text|json)~', $typeMatches[1]);
+				if (!$maria && $isText) {
+					$default = preg_replace("~^(_\w+)?('.*')$~", '\\2', stripslashes($default));
+				}
+				if ($maria || $isText) {
+					$default = preg_replace_callback("~^'(.*)'$~", function ($matches) {
+						return stripslashes(str_replace("''", "'", $matches[1]));
+					}, $default);
+				}
+			}
+
+			$return[$row["TABLE_NAME"]] = [
+				"field" => $row["COLUMN_NAME"],
+				"full_type" => $type,
+				"type" => $typeMatches[1],
+				"length" => $typeMatches[2],
+				"unsigned" => ltrim($typeMatches[3] . $typeMatches[4]),
+				"default" => $default,
+				"null" => ($row["IS_NULLABLE"] == "YES"),
+				"auto_increment" => ($row["EXTRA"] == "auto_increment"),
+				"on_update" => (preg_match('~\bon update (\w+)~i', $row["EXTRA"], $onUpdate) ? $onUpdate[1] : ""),
+				"collation" => $row["COLLATION_NAME"],
+				"privileges" => array_flip(explode(",", $row["PRIVILEGES"])) + ["where" => 1, "order" => 1],
+				"comment" => $row["COLUMN_COMMENT"],
+				"primary" => true,
+				"generated" => ($generated[1] == "PERSISTENT" ? "STORED" : $generated[1]),
+			];
+		}
+
+		return $return;
+		}
+
 		public function insertUpdate(string $table, array $records, array $primary)
         {
 			$columns = array_keys(reset($records));
@@ -1187,12 +1252,13 @@ ORDER BY ORDINAL_POSITION";
 	 */
 	function copy_tables(array $tables, array $views, string $target): bool
 	{
+		$copyData = Admin::get()->getConfig()->isCopyDataEnabled();
 		queries("SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO'");
 		foreach ($tables as $table) {
 			$name = ($target == DB ? table("copy_$table") : idf_escape($target) . "." . table($table));
 			if (($_POST["overwrite"] && !queries("\nDROP TABLE IF EXISTS $name"))
 				|| !queries("CREATE TABLE $name LIKE " . table($table))
-				|| !queries("INSERT INTO $name SELECT * FROM " . table($table))
+				|| ($copyData && !queries("INSERT INTO $name SELECT * FROM " . table($table)))
 			) {
 				return false;
 			}
@@ -1523,12 +1589,12 @@ WHERE ROUTINE_SCHEMA = DATABASE() AND ROUTINE_TYPE = '$type' AND ROUTINE_NAME = 
 	 * Checks whether a feature is supported.
 	 *
 	 * @param literal-string $feature check|comment|copy|database|descidx|drop_col|dump|event|fast_status|indexes|kill|materializedview|
-	 * privileges|move_col|procedure|processlist|routine|scheme|sequence|status|table|trigger|type|variables|view|view_trigger
+	 * privileges|move_col|procedure|processlist|routine|routine_fields|routine_script|scheme|sequence|status|table|trigger|type|variables|view|view_trigger
 	 */
 	function support(string $feature): bool
 	{
 		return preg_match(
-			'~^(comment|columns|copy|database|drop_col|dump|event|indexes|kill|privileges|move_col|procedure|processlist|routine|sql|status|table|trigger|variables|view'
+			'~^(comment|columns|copy|database|drop_col|dump|event|indexes|kill|privileges|move_col|procedure|processlist|routine|routine_fields|sql|status|table|trigger|variables|view'
 			. (Connection::get()->isMinVersion(Connection::get()->isMariaDB() ? "10.8.1" : "8") ? '|descidx' : '')
 			. (Connection::get()->isMinVersion(Connection::get()->isMariaDB() ? "10.2.1" : "8.0.16") ? '|check' : '')
 			// MySQL 8 reads table stats from the data dictionary; MariaDB still opens all tables.

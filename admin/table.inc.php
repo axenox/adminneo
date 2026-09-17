@@ -47,14 +47,22 @@ if ($comment != "") {
 
 if (!is_view($table_status)) {
 	$editLink = '<p class="links"><a href="' . h(ME) . 'create=' . urlencode($TABLE) . '">' . icon("edit") . lang('Alter table') . "</a>\n";
+	$copyForm = "";
+	if (support("copy")) {
+		$target = (support("scheme") ? get_schema() : DB);
+		$copyForm = '<form id="copy-table-form" action="' . h(ME) . '" method="post">' . input_hidden("tables[]", $TABLE) . input_hidden("target", $target) . input_token() . '<input type="hidden" name="copy" value="1"></form>';
+		$editLink .= '<a id="copy-table-link" href="">' . icon("table-add") . lang('Copy') . "</a>" . script("gid('copy-table-link').onclick = function () { gid('copy-table-form').submit(); return false; };", "\n");
+	}
 } elseif (support("view")) {
 	$editLink = '<p class="links"><a href="' . h(ME) . 'view=' . urlencode($TABLE) . '">' . icon("edit") . lang('Alter view') . "</a>\n";
+	$copyForm = "";
 } else {
 	$editLink = "";
+	$copyForm = "";
 }
 
 if ($info || $fields || $comment != "") {
-	echo $editLink;
+	echo $copyForm, $editLink;
 }
 
 $parent_tables = Driver::get()->getParentTables($TABLE);

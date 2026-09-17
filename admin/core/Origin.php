@@ -9,6 +9,9 @@ abstract class Origin extends Plugin
 	/** @var string[] */
 	private $errors = [];
 
+	/** @var ?list<string[]> Cached result of routines(). */
+	private $routines = null;
+
 	/** @var static|Pluginer|null */
 	private static $instance = null;
 
@@ -793,6 +796,30 @@ abstract class Origin extends Plugin
 	public abstract function printTableList(array $tables): void;
 
 	/**
+	 * Returns routines in the current schema. The result is cached for the whole request.
+	 *
+	 * @return list<string[]> Result of routines().
+	 */
+	public function getRoutines(): array
+	{
+		if ($this->routines === null) {
+			$this->routines = support("routine") ? routines() : [];
+		}
+
+		return $this->routines;
+	}
+
+	/**
+	 * Prints routine list in main navigation.
+	 *
+	 * @param list<string[]> $routines Result of routines().
+	 */
+	public function printRoutineList(array $routines): void
+	{
+		//
+	}
+
+	/**
 	 * Returns rows for settings table organised in groups.
 	 *
 	 * @param int $groupId: 1 - overall UI settings, 2 - UI elements settings, 3 - other settings.
@@ -892,4 +919,14 @@ abstract class Origin extends Plugin
 	}
 
 	public abstract function getForeignColumnInfo(array $foreignKeys, string $column): ?array;
+
+    /**
+	 * Prints a replacement for the database schema page.
+	 *
+	 * Plugins return true after rendering the page body. Returning null lets another plugin or
+	 * the built-in renderer handle the page; the default false preserves the built-in diagram.
+	 */
+	public function printDatabaseSchema(): ?bool { 
+        return false; 
+    }
 }

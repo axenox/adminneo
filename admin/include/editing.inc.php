@@ -127,21 +127,7 @@ function print_select_result(Result $result, ?Connection $connection = null, arr
 * @return array[] [$table_name => $field]
 */
 function referencable_primary($self) {
-	$return = []; // table_name => field
-	foreach (table_status('', true) as $table_name => $table) {
-		if ($table_name != $self && fk_support($table)) {
-			foreach (fields($table_name) as $field) {
-				if ($field["primary"]) {
-					if ($return[$table_name]) { // multi column primary key
-						unset($return[$table_name]);
-						break;
-					}
-					$return[$table_name] = $field;
-				}
-			}
-		}
-	}
-	return $return;
+	return Driver::get()->getReferencablePrimary($self);
 }
 
 /** Print SQL <textarea> tag
@@ -149,9 +135,10 @@ function referencable_primary($self) {
 * @param string|list<array{string}>
 * @param int
 * @param int
+* @param string
 */
-function textarea($name, $value, $rows = 10, $cols = 80): void {
-	echo "<textarea name='" . h($name) . "' rows='$rows' cols='$cols' class='sqlarea jush-" . DIALECT . "' spellcheck='false' wrap='off'>";
+function textarea($name, $value, $rows = 10, $cols = 80, $class = ""): void {
+	echo "<textarea name='" . h($name) . "' rows='$rows' cols='$cols' class='sqlarea jush-" . DIALECT . " $class' spellcheck='false' wrap='off'>";
 	if (is_array($value)) {
 		foreach ($value as $val) { // not implode() to save memory
 			echo h($val[0]) . "\n\n\n"; // $val == array($query, $time, $elapsed)
@@ -648,6 +635,14 @@ function create_trigger(string $on, array $trigger): string
 		. rtrim(" $trigger[Type]\n$trigger[Statement]", ";")
 		. ";"
 	;
+}
+
+/** Checks whether routines are edited and called as whole SQL scripts instead of decomposed form fields
+* @return bool
+*/
+function routine_script_mode() {
+	// Drivers able to decompose routines keep the fields editor even if they can provide a script.
+	return support("routine_script") && !support("routine_fields");
 }
 
 /** Generate SQL query for creating routine

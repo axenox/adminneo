@@ -32,11 +32,14 @@ if (isset($_GET["mssql"])) {
 
 			public function open(string $server, string $username, string $password): bool
 			{
-				$connectionInfo = [
-					"UID" => $username,
-					"PWD" => $password,
-					"CharacterSet" => "UTF-8",
-				];
+				$connectionInfo = Admin::get()->getConfig()->getConnectionOptions();
+				$connectionInfo["CharacterSet"] = "UTF-8";
+				if ($username != "") {
+					$connectionInfo["UID"] = $username;
+				}
+				if ($password != "") {
+					$connectionInfo["PWD"] = $password;
+				}
 
 				$encrypt = Admin::get()->getConfig()->getSslEncrypt();
 				if ($encrypt !== null) {
@@ -230,10 +233,38 @@ if (isset($_GET["mssql"])) {
 		function explain(Connection $connection, string $query)
 		{
 			$connection->query("SET SHOWPLAN_ALL ON");
-			$return = $connection->query($query);
+			$result = $connection->query($query);
 			$connection->query("SET SHOWPLAN_ALL OFF"); // connection is used also for indexes
+			if (!is_object($result)) {
+				return $result;
+			}
 
-			return $return;
+			// SHOWPLAN_ALL returns many low-level columns. Condense them into a readable plan: a
+			// relative cost (% of the whole statement) and estimated rows first, dropping the
+			// node/parent id columns and rounding the float metrics.
+			$rows = [];
+			$overallCost = null;
+			while ($row = $result->fetchAssoc()) {
+				if ($overallCost === null) {
+					$overallCost = $row['TotalSubtreeCost'] ?: 1;
+				}
+				$pretty = [
+					'Cost[%]' => round($row['TotalSubtreeCost'] / $overallCost * 100),
+					'Rows' => intval($row['EstimateRows']),
+				];
+				foreach ($row as $col => $val) {
+					if ($col === 'StmtId' || $col === 'NodeId' || $col === 'Parent') {
+						continue;
+					}
+					$pretty[$col] = is_float($val) ? round($val, 2) : $val;
+				}
+				if (!$rows) {
+					$pretty['StmtText'] = "Whole statement";
+				}
+				$rows[] = $pretty;
+			}
+
+			return new MsSqlExplainResult($rows);
 		}
 
 	} else {
@@ -336,11 +367,11 @@ if (isset($_GET["mssql"])) {
 					"datetimeoffset" => 10,
 				],
 				lang('Strings') => [
-					"char" => 8000, "varchar" => 8000, "text" => 2147483647,
-					"nchar" => 4000, "nvarchar" => 4000, "ntext" => 1073741823,
+					"char" => 8000, "varchar" => 8000, "varchar(max)" => "max", "text" => 2147483647,
+					"nchar" => 4000, "nvarchar" => 4000, "nvarchar(max)" => "max", "ntext" => 1073741823,
 				],
 				lang('Binary') => [
-					"binary" => 8000, "varbinary" => 8000, "image" => 2147483647,
+					"binary" => 8000, "varbinary" => 8000, "varbinary(max)" => "max", "image" => 2147483647,
 				],
 			];
 
@@ -375,6 +406,65 @@ if (isset($_GET["mssql"])) {
 			];
 
 			$this->systemSchemas = ["INFORMATION_SCHEMA", "guest", "sys", "db_*"];
+		}
+
+		/**
+		 * {@inheritDoc}
+		 *
+		 * Retrieves all eligible primary keys in one catalog query. The generic implementation
+		 * calls fields() for every table, which is prohibitively expensive on larger schemas.
+		 *
+		 * @see Driver::getReferencablePrimary()
+		 */
+		public function getReferencablePrimary(string $self): array
+		{
+			$schema = get_schema();
+			$return = [];
+			$query = "SELECT o.name AS table_name, c.max_length, c.precision, c.scale, c.name, c.is_nullable, c.is_identity, c.collation_name, t.name AS type, d.definition AS [default], d.name AS default_constraint
+FROM sys.all_columns c
+JOIN sys.all_objects o ON c.object_id = o.object_id
+JOIN sys.types t ON c.user_type_id = t.user_type_id
+LEFT JOIN sys.default_constraints d ON c.default_object_id = d.object_id
+JOIN sys.index_columns ic ON c.object_id = ic.object_id AND c.column_id = ic.column_id
+JOIN sys.indexes i ON ic.object_id = i.object_id AND ic.index_id = i.index_id
+WHERE o.schema_id = SCHEMA_ID(" . q($schema) . ")
+AND o.type IN ('S', 'U', 'V')
+AND o.name != " . q($self) . "
+AND i.is_primary_key = 1
+AND i.object_id IN (
+	SELECT object_id
+	FROM sys.index_columns
+	WHERE index_id IN (SELECT index_id FROM sys.indexes WHERE object_id = sys.index_columns.object_id AND is_primary_key = 1)
+	GROUP BY object_id
+	HAVING COUNT(*) = 1
+)";
+
+		foreach (get_rows($query, $this->connection) as $row) {
+			$type = $row["type"];
+			$length = "";
+			if (preg_match("~char|binary~", $type)) {
+				$maxLength = intval($row["max_length"]);
+				$length = ($maxLength == -1 ? "max" : $maxLength / ($type[0] == 'n' ? 2 : 1));
+			} elseif ($type == "decimal") {
+				$length = "$row[precision],$row[scale]";
+			}
+
+			$return[$row["table_name"]] = [
+				"field" => $row["name"],
+				"full_type" => $type . ($length ? "($length)" : ""),
+				"type" => $type,
+				"length" => $length,
+				"default" => (preg_match("~^\('(.*)'\)$~", $row["default"], $match) ? str_replace("''", "'", $match[1]) : $row["default"]),
+				"default_constraint" => $row["default_constraint"],
+				"null" => $row["is_nullable"],
+				"auto_increment" => $row["is_identity"],
+				"collation" => $row["collation_name"],
+				"privileges" => ["insert" => 1, "select" => 1, "update" => 1, "where" => 1, "order" => 1],
+				"primary" => true,
+			];
+		}
+
+		return $return;
 		}
 
 		public function insertUpdate(string $table, array $records, array $primary)
@@ -443,6 +533,46 @@ if (isset($_GET["mssql"])) {
             return null;
 		}
 
+		public function getRoutineScript(string $name, string $type, array $routine): string
+		{
+			if (!$routine) {
+				$id = idf_escape(get_schema()) . "." . idf_escape("new_" . strtolower($type));
+
+				return $type == "FUNCTION"
+					? "CREATE OR ALTER FUNCTION $id ()\nRETURNS int\nAS\nBEGIN\n\tRETURN 0;\nEND"
+					: "CREATE OR ALTER PROCEDURE $id\nAS\nBEGIN\n\tSELECT 1;\nEND";
+			}
+
+			// sys.sql_modules stores the whole original script including options not expressible in the fields editor.
+			return mssql_create_or_alter($routine["definition"]);
+		}
+
+		public function getRoutineScriptQuery(string $script, string $type, array $routine): string
+		{
+			return mssql_create_or_alter($script);
+		}
+
+		public function getRoutineCallSql(string $name, array $routine, bool $function): string
+		{
+			$parameters = [];
+			foreach (($routine["fields"] ?? []) as $field) {
+				if (($field["inout"] ?? "") != "OUT") {
+					$parameters[] = ($function ? "" : "@" . ltrim($field["field"], "@") . " = ") . "NULL";
+				}
+			}
+
+			$id = routine_id($name, $routine);
+			$parameters = implode(", ", $parameters);
+
+			if (!$function) {
+				return "EXEC $id" . ($parameters ? " $parameters" : "");
+			}
+
+			// Scalar functions are selected, table-valued ones are queried.
+			return ($routine["object_type"] ?? "") == "FN"
+				? "SELECT $id($parameters) AS result"
+				: "SELECT * FROM $id($parameters)";
+		}
 	}
 
 
@@ -450,6 +580,66 @@ if (isset($_GET["mssql"])) {
 	function create_driver(Connection $connection): Driver
 	{
 		return MsSqlDriver::create($connection, Admin::get());
+	}
+
+	/**
+	 * In-memory result backing the condensed EXPLAIN output (see explain()). Feeds the rows built
+	 * from SHOWPLAN_ALL to print_select_result() without hitting the database again.
+	 */
+	class MsSqlExplainResult extends Result
+	{
+		/** @var array */
+		private $rows;
+
+		/** @var array */
+		private $firstRow;
+
+		/** @var array */
+		private $fields;
+
+		/** @var int */
+		private $fieldOffset = 0;
+
+		public function __construct(array $rows)
+		{
+			parent::__construct(count($rows));
+
+			$this->rows = $rows;
+			$this->firstRow = $rows ? reset($rows) : [];
+			$this->fields = array_keys($this->firstRow);
+		}
+
+		public function fetchAssoc()
+		{
+			$row = current($this->rows);
+			next($this->rows);
+
+			return $row;
+		}
+
+		public function fetchRow()
+		{
+			$row = $this->fetchAssoc();
+
+			return $row === false ? false : array_values($row);
+		}
+
+		public function fetchField()
+		{
+			if (!isset($this->fields[$this->fieldOffset])) {
+				return false;
+			}
+
+			$name = $this->fields[$this->fieldOffset++];
+			$value = $this->firstRow[$name] ?? null;
+
+			return (object) [
+				'name' => $name,
+				'orgname' => $name,
+				'type' => (is_numeric($value) ? 3 : 254), // 254 - string, avoids number alignment for text
+				'charsetnr' => 0,
+			];
+		}
 	}
 
 	/**
@@ -588,10 +778,13 @@ LEFT JOIN sys.indexes i ON ic.object_id = i.object_id AND ic.index_id = i.index_
 WHERE c.object_id = " . q($table_id)) as $row
 		) {
 			$type = $row["type"];
-			$length = (preg_match("~char|binary~", $type)
-				? intval($row["max_length"]) / ($type[0] == 'n' ? 2 : 1)
-				: ($type == "decimal" ? "$row[precision],$row[scale]" : "")
-			);
+			$length = "";
+			if (preg_match("~char|binary~", $type)) {
+				$maxLength = intval($row["max_length"]);
+				$length = ($maxLength == -1 ? "max" : $maxLength / ($type[0] == 'n' ? 2 : 1));
+			} elseif ($type == "decimal") {
+				$length = "$row[precision],$row[scale]";
+			}
 			$return[$row["name"]] = [
 				"field" => $row["name"],
 				"full_type" => $type . ($length ? "($length)" : ""),
@@ -636,10 +829,14 @@ WHERE OBJECT_NAME(i.object_id) = " . q($table)
 
 	function view(string $name): array
 	{
+		// Use OBJECT_DEFINITION() instead of INFORMATION_SCHEMA.VIEWS.VIEW_DEFINITION, which is
+		// nvarchar(4000) and truncates longer view definitions. OBJECT_ID() also resolves the
+		// view in the selected schema instead of only the current default schema.
+		$sql = "SELECT OBJECT_DEFINITION(OBJECT_ID(" . q((get_schema() ? get_schema() . '.' : '') . $name) . "))";
 		return ["select" => preg_replace(
 			'~^(?:[^[]|\[[^]]*])*\s+AS\s+~isU',
 			'',
-			Connection::get()->getValue("SELECT VIEW_DEFINITION FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = SCHEMA_NAME() AND TABLE_NAME = " . q($name))
+			Connection::get()->getValue($sql)
 		)];
 	}
 
@@ -683,7 +880,17 @@ WHERE OBJECT_NAME(i.object_id) = " . q($table)
 
 	function auto_increment(): string
 	{
-		return " IDENTITY" . ($_POST["Auto_increment"] != "" ? "(" . number($_POST["Auto_increment"]) . ",1)" : "") . " PRIMARY KEY";
+		// Optionally seed the IDENTITY from the auto-increment column's default value, so a start
+		// value can be set per column in the table designer. Leave the column's "default" dropdown
+		// empty - the value is then consumed as the seed here instead of being emitted as a DEFAULT.
+		if (Admin::get()->getConfig()->isIdentitySeedFromDefaultEnabled()
+			&& ($col = $_POST["auto_increment_col"] ?? "") !== ""
+			&& is_numeric($seed = $_POST["fields"][$col]["default"] ?? "")
+		) {
+			$_POST["Auto_increment"] = intval($seed);
+		}
+		$constraint = Admin::get()->getConfig()->isUseNamedConstraintsEnabled() ? " CONSTRAINT " . idf_escape(adminneo_named_constraint_name('PK', trim($_POST["name"] ?? $_GET["create"] ?? ''))) : "";
+		return " IDENTITY" . ($_POST["Auto_increment"] != "" ? "(" . number($_POST["Auto_increment"]) . ",1)" : "") . "$constraint PRIMARY KEY";
 	}
 
 	function alter_table(string $table, string $name, array $fields, array $foreign, ?string $comment, string $engine, string $collation, string $auto_increment, ?array $partitioning): bool
@@ -691,20 +898,22 @@ WHERE OBJECT_NAME(i.object_id) = " . q($table)
 		$alter = [];
 		$comments = [];
 		$orig_fields = fields($table);
+		$drop_columns = [];
 		foreach ($fields as $field) {
 			$column = idf_escape($field[0]);
 			$val = $field[1];
 			if (!$val) {
-				$alter["DROP"][] = " COLUMN $column";
+				// Dropped separately so dependent constraints/indexes can be removed first.
+				$drop_columns[] = $field[0];
 			} else {
-				$val[1] = preg_replace("~( COLLATE )'(\\w+)'~", '\1\2', $val[1]);
+				$val[1] = preg_replace("~( COLLATE )'(\w+)'~", '\1\2', $val[1]);
 				$comments[$field[0]] = $val[5];
 				unset($val[5]);
 				if (preg_match('~ AS ~', $val[3])) {
 					unset($val[1], $val[2]);
 				}
 				if ($field[0] == "") {
-					$alter["ADD"][] = "\n  " . implode("", $val) . ($table == "" ? substr($foreign[$val[0]], 16 + strlen($val[0])) : ""); // 16 - strlen("  FOREIGN KEY ()")
+					$alter["ADD"][] = "\n  " . implode("", $val);
 				} else {
 					$default = $val[3];
 					unset($val[3]); // default values are set separately
@@ -726,6 +935,9 @@ WHERE OBJECT_NAME(i.object_id) = " . q($table)
 			}
 		}
 		if ($table == "") {
+			foreach ($foreign as $foreignKey) {
+				$alter["ADD"][] = "\n  " . ltrim($foreignKey);
+			}
 			return (bool)queries("CREATE TABLE " . table($name) . " (" . implode(",", (array) $alter["ADD"]) . "\n)");
 		}
 		if ($table != $name) {
@@ -736,6 +948,46 @@ WHERE OBJECT_NAME(i.object_id) = " . q($table)
 		}
 		foreach ($alter as $key => $val) {
 			if (!queries("ALTER TABLE " . table($name) . " $key" . implode(",", $val))) {
+				return false;
+			}
+		}
+		// MS SQL cannot drop a column that still has a default constraint, a foreign key or an index.
+		// Drop those dependents (of this column only) inside a transaction before dropping the column.
+		$ns = get_schema();
+		foreach ($drop_columns as $col) {
+			$qualified = idf_escape($ns) . "." . idf_escape($name);
+			$sql = "SET XACT_ABORT ON;
+BEGIN TRANSACTION;
+DECLARE @sql NVARCHAR(MAX);
+DECLARE @objectId INT = OBJECT_ID(" . q($ns . "." . $name) . ");
+DECLARE @column SYSNAME = " . q($col) . ";
+
+SELECT @sql = STRING_AGG('ALTER TABLE $qualified DROP CONSTRAINT ' + QUOTENAME(name), '; ')
+FROM sys.default_constraints
+WHERE parent_object_id = @objectId AND COL_NAME(parent_object_id, parent_column_id) = @column;
+IF @sql IS NOT NULL EXEC sp_executesql @sql;
+
+SELECT @sql = STRING_AGG('ALTER TABLE $qualified DROP CONSTRAINT ' + QUOTENAME(name), '; ')
+FROM (
+	SELECT DISTINCT fk.name
+	FROM sys.foreign_keys fk
+	JOIN sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
+	WHERE fk.parent_object_id = @objectId AND COL_NAME(fkc.parent_object_id, fkc.parent_column_id) = @column
+) x;
+IF @sql IS NOT NULL EXEC sp_executesql @sql;
+
+SELECT @sql = STRING_AGG('DROP INDEX ' + QUOTENAME(name) + ' ON $qualified', '; ')
+FROM (
+	SELECT DISTINCT i.name
+	FROM sys.indexes i
+	JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+	WHERE i.object_id = @objectId AND i.name IS NOT NULL AND COL_NAME(ic.object_id, ic.column_id) = @column
+) x;
+IF @sql IS NOT NULL EXEC sp_executesql @sql;
+
+ALTER TABLE $qualified DROP COLUMN " . idf_escape($col) . ";
+COMMIT TRANSACTION;";
+			if (!queries($sql)) {
 				return false;
 			}
 		}
@@ -763,7 +1015,7 @@ WHERE OBJECT_NAME(i.object_id) = " . q($table)
 				}
 			} elseif (!queries(($val[0] != "PRIMARY"
 				? "CREATE $val[0] " . ($val[0] != "INDEX" ? "INDEX " : "") . idf_escape($val[1] != "" ? $val[1] : uniqid($table . "_")) . " ON " . table($table)
-				: "ALTER TABLE " . table($table) . " ADD PRIMARY KEY"
+				: "ALTER TABLE " . table($table) . " ADD" . ($val[1] != "" ? " CONSTRAINT " . idf_escape($val[1]) : "") . " PRIMARY KEY"
 			) . " (" . implode(", ", $val[2]) . ")")) {
 				return false;
 			}
@@ -824,12 +1076,69 @@ ORDER BY table_schema, table_name";
 
 	function drop_tables(array $tables): bool
 	{
-		return (bool)queries("DROP TABLE " . implode(", ", array_map('AdminNeo\table', $tables)));
+		// A table cannot be dropped while it is referenced by foreign keys from other tables. Drop
+		// those incoming foreign keys first; the table's own constraints/indexes go with DROP TABLE.
+		foreach ($tables as $table) {
+			$sql = "SET XACT_ABORT ON;
+BEGIN TRANSACTION;
+DECLARE @sql NVARCHAR(MAX);
+DECLARE @objectId INT = OBJECT_ID(" . q((get_schema() ? get_schema() . "." : "") . $table) . ");
+
+SELECT @sql = STRING_AGG('ALTER TABLE ' + QUOTENAME(OBJECT_SCHEMA_NAME(parent_object_id)) + '.' + QUOTENAME(OBJECT_NAME(parent_object_id)) + ' DROP CONSTRAINT ' + QUOTENAME(name), '; ')
+FROM sys.foreign_keys
+WHERE referenced_object_id = @objectId;
+IF @sql IS NOT NULL EXEC sp_executesql @sql;
+
+DROP TABLE " . table($table) . ";
+COMMIT TRANSACTION;";
+			if (!queries($sql)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	function move_tables(array $tables, array $views, string $target): bool
 	{
 		return apply_queries("ALTER SCHEMA " . idf_escape($target) . " TRANSFER", array_merge($tables, $views));
+	}
+
+	/**
+	 * Copy tables to another schema (within the same database).
+	 *
+	 * SELECT ... INTO copies the structure and IDENTITY columns but no constraints, so the primary
+	 * key is re-created afterwards. Data is copied unless disabled via the "copyData" config option.
+	 * Views cannot be copied on MS SQL.
+	 */
+	function copy_tables($tables, $views, $target): bool
+	{
+		$copyData = Admin::get()->getConfig()->isCopyDataEnabled();
+		$srcSchema = get_schema();
+		foreach ($tables as $table) {
+			$sameSchema = ($target == $srcSchema);
+			$targetName = $sameSchema ? "{$table}_copy" : $table;
+			$targetFull = idf_escape($target) . "." . idf_escape($targetName);
+			if (
+				// Drop an existing target table first if overwrite was requested.
+				($_POST["overwrite"] && !queries("IF OBJECT_ID(" . q($target . "." . $targetName) . ", N'U') IS NOT NULL\nDROP TABLE $targetFull"))
+				|| !queries("SELECT * INTO $targetFull FROM " . table($table) . ($copyData ? "" : " WHERE 1 = 0"))
+				|| !queries("DECLARE @pkey NVARCHAR(max)
+SELECT @pkey = COLUMN_NAME
+	FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+	WHERE OBJECTPROPERTY(OBJECT_ID(CONSTRAINT_SCHEMA + '.' + QUOTENAME(CONSTRAINT_NAME)), 'IsPrimaryKey') = 1
+		AND TABLE_NAME = " . q($table) . "
+		AND TABLE_SCHEMA = " . q($srcSchema) . "
+IF @pkey IS NOT NULL
+EXEC('ALTER TABLE $targetFull ADD CONSTRAINT " . idf_escape("PK_$targetName") . " PRIMARY KEY CLUSTERED (' + @pkey + ')')")
+			) {
+				return false;
+			}
+		}
+		if ($views) {
+			Connection::get()->setError("Cannot copy views in Microsoft SQL.");
+			return false;
+		}
+		return true;
 	}
 
 	function trigger(string $name, string $table): array
@@ -884,6 +1193,185 @@ WHERE sys1.xtype = 'TR' AND sys2.name = " . q($table)
 		];
 	}
 
+	/**
+	 * Builds a T-SQL identifier for a schema-scoped routine.
+	 */
+	function mssql_routine_identifier(string $name, ?string $schema = null): string
+	{
+		if ($schema === null) {
+			[$schema, $name] = mssql_routine_parts($name);
+		}
+
+		return idf_escape($schema) . '.' . idf_escape($name);
+	}
+
+	/**
+	 * Splits a possibly schema-qualified routine name into schema and object name.
+	 *
+	 * @return array{0:string, 1:string}
+	 */
+	function mssql_routine_parts(string $name): array
+	{
+		$plain = str_replace(['][', '[', ']'], ['.', '', ''], $name);
+		$parts = explode('.', $plain, 2);
+
+		return count($parts) == 2 ? [$parts[0], $parts[1]] : [get_schema(), $name];
+	}
+
+	/**
+	 * Returns a display-ready SQL Server type declaration from sys.parameters/sys.types metadata.
+	 */
+	function mssql_routine_type(array $row): string
+	{
+		$type = $row['type'] ?: '';
+		if (preg_match('~^(nchar|nvarchar)$~i', $type)) {
+			$length = ((int) $row['max_length'] == -1 ? 'max' : (string) ((int) $row['max_length'] / 2));
+			return "$type($length)";
+		}
+		if (preg_match('~^(char|varchar|binary|varbinary)$~i', $type)) {
+			$length = ((int) $row['max_length'] == -1 ? 'max' : (string) (int) $row['max_length']);
+			return "$type($length)";
+		}
+		if (preg_match('~^(decimal|numeric)$~i', $type)) {
+			return "$type($row[precision],$row[scale])";
+		}
+		if (preg_match('~^(datetime2|datetimeoffset|time)$~i', $type) && $row['scale'] !== null) {
+			return "$type($row[scale])";
+		}
+
+		return $type;
+	}
+
+	/**
+	 * Returns the SQL Server object types belonging to a generic routine type.
+	 */
+	function mssql_routine_types_sql(string $routineType = ''): string
+	{
+		if ($routineType == 'PROCEDURE') {
+			return "'P'";
+		}
+		if ($routineType == 'FUNCTION') {
+			return "'FN', 'IF', 'TF'";
+		}
+
+		return "'P', 'FN', 'IF', 'TF'";
+	}
+
+	/**
+	 * Converts a routine script to CREATE OR ALTER, so that saving works for both new and existing routines.
+	 */
+	function mssql_create_or_alter(string $script): string
+	{
+		$script = trim($script);
+		$script = preg_replace('~^\s*CREATE\s+(?:OR\s+ALTER\s+)?(PROCEDURE|PROC|FUNCTION)\b~i', 'CREATE OR ALTER $1', $script, 1);
+		$script = preg_replace('~^\s*ALTER\s+(PROCEDURE|PROC|FUNCTION)\b~i', 'CREATE OR ALTER $1', $script, 1);
+
+		return rtrim($script, ";");
+	}
+
+	/**
+	 * Gets information about a stored procedure or function from the current schema.
+	 *
+	 * @param string $name Routine name, optionally schema-qualified.
+	 * @param 'FUNCTION'|'PROCEDURE' $type
+	 */
+	function routine($name, $type)
+	{
+		if ($name == '') {
+			return [];
+		}
+
+		[$schema, $routineName] = mssql_routine_parts($name);
+		$result = Connection::get()->query("SELECT o.object_id, o.name, s.name AS schema_name, o.type, sm.definition
+FROM sys.objects o
+JOIN sys.schemas s ON s.schema_id = o.schema_id
+JOIN sys.sql_modules sm ON sm.object_id = o.object_id
+WHERE s.name = " . q($schema) . " AND o.name = " . q($routineName) . " AND o.type IN (" . mssql_routine_types_sql($type) . ")");
+		$object = is_object($result) ? $result->fetchAssoc() : [];
+
+		if (!$object) {
+			return [];
+		}
+
+		$fields = [];
+		$returns = [];
+		foreach (get_rows("SELECT p.parameter_id, p.name AS field, t.name AS type, p.max_length, p.precision, p.scale, p.is_output
+FROM sys.parameters p
+JOIN sys.types t ON t.user_type_id = p.user_type_id
+WHERE p.object_id = " . q($object['object_id']) . "
+ORDER BY p.parameter_id") as $parameter) {
+			$fullType = mssql_routine_type($parameter);
+			$field = [
+				'field' => ltrim($parameter['field'], '@'),
+				'type' => $parameter['type'],
+				'length' => preg_match('~\((.*)\)$~', $fullType, $match) ? $match[1] : '',
+				'unsigned' => '',
+				'null' => true,
+				'full_type' => $fullType,
+				'inout' => ($parameter['is_output'] ? 'OUT' : 'IN'),
+				'collation' => '',
+			];
+			if ((int) $parameter['parameter_id'] === 0) {
+				$returns = $field;
+			} else {
+				$fields[] = $field;
+			}
+		}
+
+		if (!$returns && in_array($object['type'], ['IF', 'TF'], true)) {
+			$returns = ['type' => 'TABLE', 'length' => '', 'unsigned' => '', 'collation' => ''];
+		}
+
+		return [
+			'schema' => $object['schema_name'],
+			'name' => $object['name'],
+			'object_type' => $object['type'],
+			'fields' => $fields,
+			'returns' => $returns,
+			'definition' => $object['definition'],
+			'language' => '',
+			'comment' => null,
+		];
+	}
+
+	function routines() {
+		return get_rows("SELECT
+	o.name AS SPECIFIC_NAME,
+	o.name AS ROUTINE_NAME,
+	CASE WHEN o.type = 'P' THEN 'PROCEDURE' ELSE 'FUNCTION' END AS ROUTINE_TYPE,
+	CASE
+		WHEN o.type = 'P' THEN ''
+		WHEN o.type IN ('IF', 'TF') THEN 'TABLE'
+		ELSE COALESCE((
+			SELECT TOP (1)
+				CASE
+					WHEN t.name IN ('nchar', 'nvarchar') THEN t.name + '(' + CASE WHEN p.max_length = -1 THEN 'max' ELSE CONVERT(varchar(20), p.max_length / 2) END + ')'
+					WHEN t.name IN ('char', 'varchar', 'binary', 'varbinary') THEN t.name + '(' + CASE WHEN p.max_length = -1 THEN 'max' ELSE CONVERT(varchar(20), p.max_length) END + ')'
+					WHEN t.name IN ('decimal', 'numeric') THEN t.name + '(' + CONVERT(varchar(20), p.precision) + ',' + CONVERT(varchar(20), p.scale) + ')'
+					ELSE t.name
+				END
+			FROM sys.parameters p
+			JOIN sys.types t ON t.user_type_id = p.user_type_id
+			WHERE p.object_id = o.object_id AND p.parameter_id = 0
+		), '')
+	END AS DTD_IDENTIFIER,
+	CAST(NULL AS nvarchar(max)) AS ROUTINE_COMMENT
+FROM sys.objects o
+JOIN sys.schemas s ON s.schema_id = o.schema_id
+JOIN sys.sql_modules sm ON sm.object_id = o.object_id
+WHERE s.name = " . q(get_schema()) . "
+  AND o.type IN ('P', 'FN', 'IF', 'TF')
+ORDER BY CASE WHEN o.type = 'P' THEN 0 ELSE 1 END, o.name");
+	}
+
+	function routine_languages() {
+		return []; // T-SQL only
+	}
+
+	function routine_id($name, $row) {
+		return mssql_routine_identifier($name, $row['schema'] ?? null);
+	}
+
 	function schemas(): array
 	{
 		return get_vals("SELECT name FROM sys.schemas");
@@ -914,6 +1402,9 @@ WHERE sys1.xtype = 'TR' AND sys2.name = " . q($table)
 		$primary = false;
 		foreach (fields($table) as $name => $field) {
 			$val = process_field($field, $field);
+			if (Admin::get()->getConfig()->isUseNamedConstraintsEnabled() && preg_match('~^ DEFAULT (.+)$~s', $val[3], $match)) {
+				$val[3] = " CONSTRAINT " . idf_escape($field["default_constraint"] ?: adminneo_named_constraint_name('DF', $table, [$name])) . " DEFAULT $match[1]";
+			}
 			if ($val[6]) {
 				$primary = true;
 			}
@@ -938,8 +1429,8 @@ WHERE sys1.xtype = 'TR' AND sys2.name = " . q($table)
 	function foreign_keys_sql(string $table): string
 	{
 		$fields = [];
-		foreach (foreign_keys($table) as $foreign) {
-			$fields[] = ltrim(format_foreign_key($foreign));
+		foreach (foreign_keys($table) as $name => $foreign) {
+			$fields[] = "CONSTRAINT " . idf_escape($name) . " " . ltrim(format_foreign_key($foreign));
 		}
 		return ($fields ? "ALTER TABLE " . table($table) . " ADD\n\t" . implode(",\n\t", $fields) . ";\n\n" : "");
 	}
@@ -971,16 +1462,27 @@ WHERE sys1.xtype = 'TR' AND sys2.name = " . q($table)
 
 	function convert_field(array $field): ?string
 	{
+		// Show small fixed-size binary values (e.g. binary(16) GUIDs/hashes) as a hex string
+		// (0x...). Skip large/variable binary (varbinary(max) has length -1) where the hex string
+		// is 2x the byte size and generated for every row - it would bloat the browse result.
+		if (preg_match("~binary~", $field["type"]) && is_numeric($field["length"]) && $field["length"] > 0 && $field["length"] <= 32) {
+			return "LOWER(CONVERT(VARCHAR(max), " . idf_escape($field["field"]) . ", 1))";
+		}
+
 		return null;
 	}
 
 	function unconvert_field(array $field, string $return): string
 	{
+		if (preg_match("~binary|image~", $field["type"]) && preg_match("~^'0x[0-9A-Fa-f]*'$~", $return)) {
+			return substr($return, 1, -1);
+		}
+
 		return $return;
 	}
 
 	function support(string $feature): bool
 	{
-		return preg_match('~^(check|comment|columns|database|drop_col|dump|fast_status|indexes|descidx|scheme|sql|table|trigger|view|view_trigger)$~', $feature); // TODO routine|
+		return preg_match('~^(check|comment|columns|copy|database|drop_col|dump|fast_status|indexes|descidx|procedure|routine|routine_script|scheme|sql|table|trigger|view|view_trigger)$~', $feature);
 	}
 }
