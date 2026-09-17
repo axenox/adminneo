@@ -7,6 +7,7 @@ use AdminNeo\ForeignEditPlugin;
 use AdminNeo\FrameSupportPlugin;
 use AdminNeo\JsonDumpPlugin;
 use AdminNeo\JsonPreviewPlugin;
+use AdminNeo\MarkdownDumpPlugin;
 use AdminNeo\SlugifyEditPlugin;
 use AdminNeo\SystemForeignKeysPlugin;
 use AdminNeo\TranslationPlugin;
@@ -51,6 +52,7 @@ function adminneo_instance()
 		new ZipOutputPlugin(),
 		new JsonDumpPlugin(),
 		new XmlDumpPlugin(),
+		new MarkdownDumpPlugin(),
 		// new SqlLogPlugin(),
 		// new TinyMcePlugin("../externals/tinymce/tinymce.min.js"),
 		new FileUploadPlugin("../compiled/upload"),

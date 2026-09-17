@@ -457,4 +457,5 @@ return [
 	'Data table' => 'Dátová tabuľka',
 	'Edit form' => 'Editační formulář',
 	'Ask %s' => 'Opýtať sa %s',
+	'Views' => 'Pohľady',
 ];

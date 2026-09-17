@@ -4,6 +4,10 @@ Changelog
 AdminNeo 5.8.1
 --------------
 
+### Changes
+
+- Add MarkdownDumpPlugin - export of database structure and data to Markdown format
+
 ### Bugfixes
 
 - Export: Fix gzip compression for formats added by plugins
