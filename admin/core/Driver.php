@@ -553,11 +553,12 @@ abstract class Driver
 	public function checkConstraints(string $table): array
 	{
 		// MariaDB contains CHECK_CONSTRAINTS.TABLE_NAME, MySQL and PostgreSQL not.
+		// The schema parameter is empty when exporting all databases or all schemas.
 		return get_key_vals("SELECT c.CONSTRAINT_NAME, CHECK_CLAUSE
 FROM INFORMATION_SCHEMA.CHECK_CONSTRAINTS c
 JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS t ON c.CONSTRAINT_SCHEMA = t.CONSTRAINT_SCHEMA
 	AND c.CONSTRAINT_NAME = t.CONSTRAINT_NAME" . ($this->connection->isMariaDB() ? " AND c.TABLE_NAME = " . q($table) : "") . "
-WHERE c.CONSTRAINT_SCHEMA = " . q($_GET["ns"] != "" ? $_GET["ns"] : DB) . "
+WHERE c.CONSTRAINT_SCHEMA = " . ($_GET["ns"] != "" ? q($_GET["ns"]) : (DIALECT == "pgsql" ? "current_schema()" : "DATABASE()")) . "
 AND t.TABLE_NAME = " . q($table) . (DIALECT == "pgsql" ? "
 AND CHECK_CLAUSE NOT LIKE '% IS NOT NULL'" : ""), $this->connection); // ignore default IS NOT NULL checks in PostgreSQL
 	}
