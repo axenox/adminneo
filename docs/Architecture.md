@@ -120,6 +120,8 @@ When adding new features, that potentially make sense for multiple drivers, make
 
 Host applications that capture AdminNeo output can enable `embeddedMode`. AdminNeo then suppresses progressive output flushing so the host retains control of its HTTP headers. It also selects a driver's default schema in-process because routing parameters supplied by a host may not exist in the external request URI and therefore cannot be preserved by a redirect. Completed dump requests return to the host instead of terminating the PHP request with `exit`, and the router omits their HTML page footer. The option is disabled by default, preserving standalone and compiled behavior.
 
+The settings route also returns through the main router after rendering instead of terminating the PHP process. This lets embedding hosts finish their output-buffer capture while keeping the route isolated from database connection initialization.
+
 MS SQL servers using the native SQLSRV extension can set `connectionOptions` in their `config` array. These values are passed to `sqlsrv_connect()` before AdminNeo adds the selected database, UTF-8 character set, non-empty credentials, and first-class `sslEncrypt` or `sslTrustServerCertificate` settings. This supports authentication modes such as `ActiveDirectoryMsi` without changing standalone defaults.
 
 `adminneo-plugins.php` (placed next to the entry point) returns an array of `Plugin` instances.

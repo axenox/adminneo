@@ -45,4 +45,4 @@ echo "</form>\n";
 echo script("initSettingsForm();");
 
 page_footer();
-exit;
+return;

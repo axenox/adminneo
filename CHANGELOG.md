@@ -7,6 +7,7 @@ AdminNeo 5.8.0 (2026-09-15)
 ### Fork modifications
 
 - MS SQL: Allow native SQLSRV connection options such as Azure managed identity authentication
+- Settings: Fix an empty page when AdminNeo output is captured by an embedding host
 
 ### Changes
 

@@ -31,6 +31,7 @@ include "include/bootstrap.inc.php";
 
 if (isset($_GET["settings"])) {
 	include "settings.inc.php";
+	return;
 }
 
 include "include/connect.inc.php";
