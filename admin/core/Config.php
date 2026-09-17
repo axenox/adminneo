@@ -247,6 +247,14 @@ class Config
 		return $this->params["sslMode"] ?? null;
 	}
 
+	/**
+	 * Additional options passed to the native MS SQL SQLSRV connection.
+	 */
+	public function getConnectionOptions(): array
+	{
+		return $this->params["connectionOptions"] ?? [];
+	}
+
 	public function hasServers(): bool
 	{
 		return isset($this->params["servers"]);

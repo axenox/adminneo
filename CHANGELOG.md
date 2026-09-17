@@ -4,6 +4,10 @@ Changelog
 AdminNeo 5.8.0
 --------------
 
+### Fork modifications
+
+- MS SQL: Allow native SQLSRV connection options such as Azure managed identity authentication
+
 ### Changes
 
 - Scroll the navigation panel to the selected table when it is out of view

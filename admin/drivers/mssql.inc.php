@@ -32,11 +32,14 @@ if (isset($_GET["mssql"])) {
 
 			public function open(string $server, string $username, string $password): bool
 			{
-				$connectionInfo = [
-					"UID" => $username,
-					"PWD" => $password,
-					"CharacterSet" => "UTF-8",
-				];
+				$connectionInfo = Admin::get()->getConfig()->getConnectionOptions();
+				$connectionInfo["CharacterSet"] = "UTF-8";
+				if ($username != "") {
+					$connectionInfo["UID"] = $username;
+				}
+				if ($password != "") {
+					$connectionInfo["PWD"] = $password;
+				}
 
 				$encrypt = Admin::get()->getConfig()->getSslEncrypt();
 				if ($encrypt !== null) {
