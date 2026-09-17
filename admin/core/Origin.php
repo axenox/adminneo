@@ -760,7 +760,7 @@ abstract class Origin extends Plugin
 	public abstract function sendDumpHeaders(string $identifier, bool $multiTable = false): string;
 
 	/**
-	 * Exports database structure.
+	 * Exports database structure. Called for each exported database after it is selected, before its tables.
 	 */
 	public function dumpDatabase(string $database): void
 	{

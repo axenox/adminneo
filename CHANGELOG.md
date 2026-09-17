@@ -7,6 +7,7 @@ AdminNeo 5.8.1
 ### Bugfixes
 
 - Export: Fix gzip compression for formats added by plugins
+- PostgreSQL, MS SQL: Fix foreign key statements printed into non-SQL export formats
 
 AdminNeo 5.8.0 (2026-09-15)
 ---------------------------
