@@ -199,7 +199,7 @@ if (isset($_GET["clickhouse"])) {
 
 				return (object) [
 					'name' => $column['name'],
-					'type' => $column['type'], //! map to MySQL numbers
+					'type' => $column['type'], // TODO map to MySQL numbers
 					'charsetnr' => 0,
 				];
 			}
@@ -213,7 +213,7 @@ if (isset($_GET["clickhouse"])) {
 		{
 			parent::__construct($connection, $admin);
 
-			//! arrays
+			// TODO arrays
 			$this->types = [
 				lang('Numbers') => [
 					"Int8" => 3, "Int16" => 5, "Int32" => 10, "Int64" => 19,
@@ -345,7 +345,7 @@ if (isset($_GET["clickhouse"])) {
 		return !$alter || queries("ALTER TABLE " . table($table) . "\n" . implode(",\n", $alter));
 	}
 
-	function truncate_tables(array $tables, bool $cascade = false): bool
+	function truncate_tables(array $tables): bool
 	{
 		return apply_queries("TRUNCATE TABLE", $tables);
 	}

@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => 'A(z) %s fájlnak tömböt kell visszaadnia.', // by Claude Fable 5.1
 	'%s and %s must return an object created by %s method.' => 'A(z) %s és %s által visszaadott objektumot a(z) %s metódussal kell létrehozni.', // by Claude Fable 5.1
 
+	// Accessibility
+	'Skip to main content' => 'Ugrás a fő tartalomra', // by Claude Fable 5.1
+	'Skip to menu' => 'Ugrás a menüre', // by Claude Fable 5.1
+	'Skip to table list' => 'Ugrás a táblák listájára', // by Claude Fable 5.1
+
 	// Login
 	'System' => 'Adatbázis',
 	'Server' => 'Szerver',
@@ -53,6 +58,7 @@ return [
 	'Refresh' => 'Frissítés',
 	'Info' => 'Infó', // by Claude Fable 5.1
 	'More information.' => 'További információ.', // by Claude Fable 5.1
+	'Close' => 'Bezárás', // by Claude Fable 5.1
 
 	// Privileges
 	'Privileges' => 'Privilégiumok',
@@ -171,7 +177,6 @@ return [
 	'Check' => 'Ellenőrzés',
 	'Repair' => 'Javít',
 	'Truncate' => 'Felszabadít',
-	'Truncate Cascade' => 'Felszabadít (kaszkád)', // by Claude Fable 5.1
 	'Tables have been truncated.' => 'A tábla felszabadítva.',
 	'Move to other database' => 'Áthelyezés másik adatbázisba',
 	'Move' => 'Áthelyez',
@@ -387,6 +392,7 @@ return [
 	// Settings
 	'Settings' => 'Beállítások', // by Claude Fable 5.1
 	'Default' => 'Alapértelmezett', // by Claude Fable 5.1
+	'Theme' => 'Téma', // by Claude Fable 5.1
 	'Color scheme' => 'Színséma', // by Claude Fable 5.1
 	'By system' => 'Rendszer szerint', // by Claude Fable 5.1
 	'Light' => 'Világos', // by Claude Fable 5.1

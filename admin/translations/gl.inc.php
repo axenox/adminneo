@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => '%s debe devolver un array.', // by Claude Fable 5.1
 	'%s and %s must return an object created by %s method.' => '%s e %s deben devolver un obxecto creado polo método %s.', // by Claude Fable 5.1
 
+	// Accessibility
+	'Skip to main content' => 'Saltar ao contido principal', // by Claude Fable 5.1
+	'Skip to menu' => 'Saltar ao menú', // by Claude Fable 5.1
+	'Skip to table list' => 'Saltar á lista de táboas', // by Claude Fable 5.1
+
 	// Login
 	'System' => 'Sistema',
 	'Server' => 'Servidor',
@@ -56,6 +61,7 @@ return [
 	'Refresh' => 'Refrescar',
 	'Info' => 'Info', // by Claude Fable 5.1
 	'More information.' => 'Máis información.', // by Claude Fable 5.1
+	'Close' => 'Pechar', // by Claude Fable 5.1
 
 	// Privileges
 	'Privileges' => 'Privilexios',
@@ -186,7 +192,6 @@ return [
 	'Check' => 'Comprobar',
 	'Repair' => 'Reparar',
 	'Truncate' => 'Baleirar',
-	'Truncate Cascade' => 'Baleirar en cascada', // by Claude Fable 5.1
 	'Tables have been truncated.' => 'Baleiráronse as táboas.',
 	'Move to other database' => 'Mover a outra base de datos',
 	'Move' => 'Mover',
@@ -414,6 +419,7 @@ return [
 	// Settings
 	'Settings' => 'Configuración', // by Claude Fable 5.1
 	'Default' => 'Predeterminado', // by Claude Fable 5.1
+	'Theme' => 'Tema', // by Claude Fable 5.1
 	'Color scheme' => 'Esquema de cores', // by Claude Fable 5.1
 	'By system' => 'Segundo o sistema', // by Claude Fable 5.1
 	'Light' => 'Claro', // by Claude Fable 5.1

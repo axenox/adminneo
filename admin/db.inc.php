@@ -11,9 +11,9 @@ if ($tables_views && !$_POST["search"]) {
 		queries("SET foreign_key_checks = 0"); // allows to truncate or drop several tables at once
 	}
 
-	if ($_POST["truncate"] || $_POST["truncate_cascade"]) {
+	if ($_POST["truncate"]) {
 		if ($_POST["tables"]) {
-			$result = truncate_tables($_POST["tables"], (bool)$_POST["truncate_cascade"]);
+			$result = truncate_tables($_POST["tables"]);
 		}
 		$message = lang('Tables have been truncated.');
 	} elseif ($_POST["move"]) {
@@ -39,7 +39,7 @@ if ($tables_views && !$_POST["search"]) {
 	} elseif (DIALECT != "sql") {
 		$result = (DIALECT == "sqlite"
 			? queries("VACUUM")
-			: apply_queries("VACUUM" . ($_POST["optimize"] ? " ANALYZE" : ""), $_POST["tables"])
+			: apply_queries("VACUUM" . ($_POST["optimize"] ? " ANALYZE" : ""), (array)$_POST["tables"])
 		);
 		$message = lang('Tables have been optimized.');
 	} elseif (!$_POST["tables"]) {
@@ -184,7 +184,7 @@ if ($_GET["ns"] === "") {
 		echo "<table class='nowrap checkable'>\n";
 
 		echo '<thead><tr class="wrap">';
-		echo '<td class="actions"><input id="check-all" type="checkbox" class="input jsonly" title="' . lang('All') . '">' .
+		echo '<th class="actions"><input id="check-all" type="checkbox" class="input jsonly" title="' . lang('All') . '">' .
 			script("gid('check-all').onclick = partial(formCheck, /^(tables|views)\[/);", "");
 		// Tables are already sorted by name when no other column is used, so only the descending order needs a parameter.
 		$name_order = ($order == "" || $order == "__table");
@@ -224,7 +224,7 @@ if ($_GET["ns"] === "") {
 			$engine = ($with_status ? ($status["Engine"] ?? "") : $status);
 			$id = h("Table-" . $name);
 
-			echo '<tr><td class="actions">' . checkbox(($view ? "views[]" : "tables[]"), $name, in_array("$name", $tables_views, true), "", "", "", $id); // "$name" to check numeric table names
+			echo '<tr><th class="actions">' . checkbox(($view ? "views[]" : "tables[]"), $name, in_array("$name", $tables_views, true), "", "", "", $id); // "$name" to check numeric table names
 
 			if (!Admin::get()->getSettings()->isSelectionPreferred() && (support("table") || support("indexes"))) {
 				$action = "table";
@@ -323,7 +323,6 @@ if ($_GET["ns"] === "") {
 			: "")))
 			. "<input type='submit' class='button' name='truncate' value='" . lang('Truncate') . "'> " .
 				help_script(DIALECT == "sqlite" ? "DELETE" : ("TRUNCATE" . (DIALECT == "pgsql" ? "" : " TABLE"))) . confirm()
-			. (DIALECT == "pgsql" ? "<input type='submit' class='button' name='truncate_cascade' value='" . lang('Truncate Cascade') . "'> " . help_script("TRUNCATE CASCADE") . confirm() : "")
 			. "<input type='submit' class='button' name='drop' value='" . lang('Drop') . "'>" . help_script("DROP TABLE") . confirm() . "\n";
 			$databases = (support("scheme") ? Admin::get()->getSchemas() : Admin::get()->getDatabases());
 			echo "</div></fieldset>\n";

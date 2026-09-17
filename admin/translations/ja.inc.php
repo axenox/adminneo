@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => '%s は配列を返す必要があります。',
 	'%s and %s must return an object created by %s method.' => '%s と %s は %s メソッドで作成されたオブジェクトを返す必要があります。',
 
+	// Accessibility
+	'Skip to main content' => 'メインコンテンツへスキップ', // by Claude Fable 5.1
+	'Skip to menu' => 'メニューへスキップ', // by Claude Fable 5.1
+	'Skip to table list' => 'テーブル一覧へスキップ', // by Claude Fable 5.1
+
 	// Login
 	'System' => 'データベース種類',
 	'Server' => 'サーバー',
@@ -53,6 +58,7 @@ return [
 	'Refresh' => 'リフレッシュ',
 	'Info' => '情報',
 	'More information.' => '詳細情報。',
+	'Close' => '閉じる', // by Claude Fable 5.1
 
 	// Privileges
 	'Privileges' => '権限',
@@ -171,7 +177,6 @@ return [
 	'Check' => '検査',
 	'Repair' => '修復',
 	'Truncate' => '空にする',
-	'Truncate Cascade' => 'カスケードで空にする', // by Claude Fable 5.1
 	'Tables have been truncated.' => 'テーブルを空にしました。',
 	'Move to other database' => '他のデータベースへ移動',
 	'Move' => '移動',
@@ -387,6 +392,7 @@ return [
 	// Settings
 	'Settings' => '設定', // by Claude Fable 5.1
 	'Default' => '既定', // by Claude Fable 5.1
+	'Theme' => 'テーマ', // by Claude Fable 5.1
 	'Color scheme' => '配色', // by Claude Fable 5.1
 	'By system' => 'システムに従う', // by Claude Fable 5.1
 	'Light' => 'ライト', // by Claude Fable 5.1

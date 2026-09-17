@@ -91,7 +91,7 @@ if (isset($_GET["mssql"])) {
 
 			function query(string $query, bool $unbuffered = false)
 			{
-				$result = sqlsrv_query($this->connection, $query); //! , [], ($unbuffered ? [] : ["Scrollable" => "keyset"])
+				$result = sqlsrv_query($this->connection, $query); // TODO , [], ($unbuffered ? [] : ["Scrollable" => "keyset"])
 				$this->error = "";
 
 				if (!$result) {
@@ -205,7 +205,7 @@ if (isset($_GET["mssql"])) {
 
 				return (object) [
 					'name' => $field["Name"],
-					//! 'native_type': http://msdn.microsoft.com/en-us/library/cc296197.aspx
+					// TODO 'native_type': http://msdn.microsoft.com/en-us/library/cc296197.aspx
 					'type' => ($field["Type"] == 1 ? 254 : 15),
 					// -2 - SQL_BINARY, -3 - SQL_VARBINARY, -4 - SQL_LONGVARBINARY
 					'charsetnr' => (in_array($field["Type"], [-2, -3, -4]) ? 63 : 0), // 63 - binary
@@ -355,7 +355,7 @@ if (isset($_GET["mssql"])) {
 		{
 			parent::__construct($connection, $admin);
 
-			//! use sys.types
+			// TODO use sys.types
 			$this->types = [
 				lang('Numbers') => [
 					"tinyint" => 3, "smallint" => 5, "int" => 10, "bigint" => 20,
@@ -494,7 +494,7 @@ AND i.object_id IN (
 			}
 			if ($where) {
 				$identity = queries("SET IDENTITY_INSERT " . table($table) . " ON");
-				//! source, c1 - possible conflict
+				// TODO source, c1 - possible conflict
 				$return = queries("MERGE " . table($table) . " USING (VALUES\n\t" . implode(",\n\t", $values) . "\n) AS source ($columns) ON " . implode(" AND ", $where)
 					. ($update ? "\nWHEN MATCHED THEN UPDATE SET " . implode(", ", $update) : "")
 					// ; is mandatory
@@ -859,7 +859,7 @@ WHERE OBJECT_NAME(i.object_id) = " . q($table)
 		return nl2br(h(preg_replace('~^(\[[^]]*])+~m', '', Connection::get()->getError())));
 	}
 
-	function create_database(string $db, string $collation): bool
+	function create_database(string $db, ?string $collation): bool
 	{
 		return (bool)queries("CREATE DATABASE " . idf_escape($db) . (preg_match('~^[a-z0-9_]+$~i', $collation) ? " COLLATE $collation" : ""));
 	}
@@ -875,7 +875,7 @@ WHERE OBJECT_NAME(i.object_id) = " . q($table)
 			queries("ALTER DATABASE " . idf_escape(DB) . " COLLATE $collation");
 		}
 		queries("ALTER DATABASE " . idf_escape(DB) . " MODIFY NAME = " . idf_escape($name));
-		return true; //! false negative "The database name 'test2' has been set."
+		return true; // TODO false negative "The database name 'test2' has been set."
 	}
 
 	function auto_increment(): string
@@ -917,7 +917,7 @@ WHERE OBJECT_NAME(i.object_id) = " . q($table)
 				} else {
 					$default = $val[3];
 					unset($val[3]); // default values are set separately
-					unset($val[6]); //! identity can't be removed
+					unset($val[6]); // TODO identity can't be removed
 					if ($column != $val[0]) {
 						queries("EXEC sp_rename " . q(table($table) . ".$column") . ", " . q(idf_unescape($val[0])) . ", 'COLUMN'");
 					}
@@ -1008,7 +1008,7 @@ COMMIT TRANSACTION;";
 		$drop = [];
 		foreach ($alter as $val) {
 			if ($val[2] == "DROP") {
-				if ($val[0] == "PRIMARY") { //! sometimes used also for UNIQUE
+				if ($val[0] == "PRIMARY") { // TODO sometimes used also for UNIQUE
 					$drop[] = idf_escape($val[1]);
 				} else {
 					$index[] = idf_escape($val[1]) . " ON " . table($table);
@@ -1064,7 +1064,7 @@ ORDER BY table_schema, table_name";
 		return get_rows($query, null, "");
 	}
 
-	function truncate_tables(array $tables, bool $cascade = false): bool
+	function truncate_tables(array $tables): bool
 	{
 		return apply_queries("TRUNCATE TABLE", $tables);
 	}
@@ -1161,7 +1161,7 @@ WHERE s.xtype = 'TR' AND s.name = " . q($name)
 
 		$trigger = reset($rows);
 		if ($trigger) {
-			$trigger["Statement"] = preg_replace('~^.+\s+AS\s+~isU', '', $trigger["text"]); //! identifiers, comments
+			$trigger["Statement"] = preg_replace('~^.+\s+AS\s+~isU', '', $trigger["text"]); // TODO identifiers, comments
 		}
 
 		return $trigger;

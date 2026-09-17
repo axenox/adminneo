@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => 'Η %s πρέπει να επιστρέφει πίνακα.', // by Claude Fable 5.1
 	'%s and %s must return an object created by %s method.' => 'Οι %s και %s πρέπει να επιστρέφουν αντικείμενο που δημιουργήθηκε από τη μέθοδο %s.', // by Claude Fable 5.1
 
+	// Accessibility
+	'Skip to main content' => 'Μετάβαση στο κύριο περιεχόμενο', // by Claude Fable 5.1
+	'Skip to menu' => 'Μετάβαση στο μενού', // by Claude Fable 5.1
+	'Skip to table list' => 'Μετάβαση στη λίστα πινάκων', // by Claude Fable 5.1
+
 	// Login
 	'System' => 'Σύστημα',
 	'Server' => 'Διακομιστής',
@@ -56,6 +61,7 @@ return [
 	'Refresh' => 'Ανανέωση',
 	'Info' => 'Πληροφορίες', // by Claude Fable 5.1
 	'More information.' => 'Περισσότερες πληροφορίες.', // by Claude Fable 5.1
+	'Close' => 'Κλείσιμο', // by Claude Fable 5.1
 
 	// Privileges
 	'Privileges' => 'Δικαιώματα',
@@ -186,7 +192,6 @@ return [
 	'Check' => 'Έλεγχος',
 	'Repair' => 'Επιδιόρθωση',
 	'Truncate' => 'Περικοπή',
-	'Truncate Cascade' => 'Αλυσιδωτή περικοπή', // by Claude Fable 5.1
 	'Tables have been truncated.' => 'Οι πίνακες περικόπηκαν.',
 	'Move to other database' => 'Μεταφορά σε άλλη Β.Δ.',
 	'Move' => 'Μεταφορά',
@@ -414,6 +419,7 @@ return [
 	// Settings
 	'Settings' => 'Ρυθμίσεις', // by Claude Fable 5.1
 	'Default' => 'Προεπιλογή', // by Claude Fable 5.1
+	'Theme' => 'Θέμα', // by Claude Fable 5.1
 	'Color scheme' => 'Συνδυασμός χρωμάτων', // by Claude Fable 5.1
 	'By system' => 'Κατά το σύστημα', // by Claude Fable 5.1
 	'Light' => 'Φωτεινό', // by Claude Fable 5.1

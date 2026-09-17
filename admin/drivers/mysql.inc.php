@@ -538,7 +538,7 @@ AND t.ENGINE REGEXP " . q('InnoDB|IBMDB2I' . ($this->connection->isMinVersion("5
 			        "performance-schema-" . str_replace("_", "-", $name). "-table.html";
 	        }
 			if (DB == "sys") {
-				//! MariaDB documents each view but the URL is not derivable.
+				// TODO MariaDB documents each view but the URL is not derivable.
 				if ($maria) {
 					return "reference/system-tables/sys-schema/";
 				}
@@ -549,7 +549,7 @@ AND t.ENGINE REGEXP " . q('InnoDB|IBMDB2I' . ($this->connection->isMinVersion("5
 			if (DB == "mysql") {
 				return $maria ?
 					"reference/system-tables/the-mysql-database-tables/mysql-$name" . str_starts_with($name, "innodb_") ? "" : "-table" :
-					"system-schema.html"; //! more precise link
+					"system-schema.html"; // TODO more precise link
 			}
 
             return null;
@@ -886,7 +886,7 @@ WHERE TABLE_SCHEMA = DATABASE() " . ($name != "" ? "AND TABLE_NAME = " . q($name
 				"default" => ($generated ? $generated_expression : $default),
 				"null" => ($row["IS_NULLABLE"] == "YES"),
 				"auto_increment" => ($extra == "auto_increment"),
-				"on_update" => (preg_match('~\bon update (\w+)~i', $extra, $type_matches) ? $type_matches[1] : ""), //! available since MySQL 5.1.23
+				"on_update" => (preg_match('~\bon update (\w+)~i', $extra, $type_matches) ? $type_matches[1] : ""), // TODO available since MySQL 5.1.23
 				"collation" => $row["COLLATION_NAME"],
 				"privileges" => array_flip(explode(",", $row["PRIVILEGES"])) + ["where" => 1, "order" => 1],
 				"comment" => $row["COLUMN_COMMENT"],
@@ -1035,7 +1035,7 @@ ORDER BY ORDINAL_POSITION";
 	/**
 	 * Creates database.
 	 */
-	function create_database(string $db, string $collation): bool
+	function create_database(string $db, ?string $collation): bool
 	{
 		return (bool)queries("CREATE DATABASE " . idf_escape($db) . ($collation ? " COLLATE " . q($collation) : ""));
 	}
@@ -1137,7 +1137,7 @@ ORDER BY ORDINAL_POSITION";
 			if ($partitioning["partition_by"] == 'RANGE' || $partitioning["partition_by"] == 'LIST') {
 				foreach ($partitioning["partition_names"] as $key => $val) {
 					$value = $partitioning["partition_values"][$key];
-					//! SQL injection
+					// TODO SQL injection
 					$partitions[] = "\n  PARTITION " . idf_escape($val) . " VALUES " . ($partitioning["partition_by"] == 'RANGE' ? "LESS THAN" : "IN") . ($value != "" ? " ($value)" : " MAXVALUE");
 				}
 			}
@@ -1189,7 +1189,7 @@ ORDER BY ORDINAL_POSITION";
 	 *
 	 * @param list<string> $tables
 	 */
-	function truncate_tables(array $tables, bool $cascade = false): bool
+	function truncate_tables(array $tables): bool
 	{
 		return apply_queries("TRUNCATE TABLE", $tables);
 	}
@@ -1240,7 +1240,7 @@ ORDER BY ORDINAL_POSITION";
 			}
 			return true;
 		}
-		//! move triggers
+		// TODO move triggers
 		return false;
 	}
 
@@ -1275,7 +1275,7 @@ ORDER BY ORDINAL_POSITION";
 			$name = ($target == DB ? table("copy_$table") : idf_escape($target) . "." . table($table));
 			$view = view($table);
 			if (($_POST["overwrite"] && !queries("DROP VIEW IF EXISTS $name"))
-				|| !queries("CREATE VIEW $name AS $view[select]")) { //! USE to avoid db.table
+				|| !queries("CREATE VIEW $name AS $view[select]")) { // TODO USE to avoid db.table
 				return false;
 			}
 		}
@@ -1452,7 +1452,7 @@ WHERE ROUTINE_SCHEMA = DATABASE() AND ROUTINE_TYPE = '$type' AND ROUTINE_NAME = 
 	{
 		$query = Connection::get()->getValue("SHOW CREATE TABLE " . table($table), 1);
 		if (!$auto_increment) {
-			$query = preg_replace('~ AUTO_INCREMENT=\d+~', '', $query); //! skip comments
+			$query = preg_replace('~ AUTO_INCREMENT=\d+~', '', $query); // TODO skip comments
 		}
 
 		return !str_contains($query, "\n") ? format_sql($query) : $query;

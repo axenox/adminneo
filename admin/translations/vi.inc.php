@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => '%s phải trả về một mảng.',
 	'%s and %s must return an object created by %s method.' => '%s và %s phải trả về một đối tượng được tạo bởi phương thức %s.',
 
+	// Accessibility
+	'Skip to main content' => 'Chuyển đến nội dung chính', // by Claude Fable 5.1
+	'Skip to menu' => 'Chuyển đến menu', // by Claude Fable 5.1
+	'Skip to table list' => 'Chuyển đến danh sách bảng', // by Claude Fable 5.1
+
 	// Login
 	'System' => 'Hệ thống',
 	'Server' => 'Máy chủ',
@@ -53,6 +58,7 @@ return [
 	'Refresh' => 'Làm mới',
 	'Info' => 'Thông tin',
 	'More information.' => 'Thông tin thêm.',
+	'Close' => 'Đóng', // by Claude Fable 5.1
 
 	// Privileges
 	'Privileges' => 'Quyền truy cập',
@@ -171,7 +177,6 @@ return [
 	'Check' => 'Kiểm tra',
 	'Repair' => 'Sửa chữa',
 	'Truncate' => 'Làm rỗng',
-	'Truncate Cascade' => 'Làm rỗng theo tầng', // by Claude Fable 5.1
 	'Tables have been truncated.' => 'Bảng đã bị làm rỗng.',
 	'Move to other database' => 'Chuyển tới cơ sở dữ liệu khác',
 	'Move' => 'Chuyển đi',
@@ -387,6 +392,7 @@ return [
 	// Settings
 	'Settings' => 'Cài đặt',
 	'Default' => 'Mặc định',
+	'Theme' => 'Chủ đề', // by Claude Fable 5.1
 	'Color scheme' => 'Giao diện màu sắc',
 	'By system' => 'Theo hệ thống',
 	'Light' => 'Sáng',
