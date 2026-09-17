@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => '%s bir dizi döndürmelidir.', // by Claude Fable 5.1
 	'%s and %s must return an object created by %s method.' => '%s ve %s, %s yöntemiyle oluşturulmuş bir nesne döndürmelidir.', // by Claude Fable 5.1
 
+	// Accessibility
+	'Skip to main content' => 'Ana içeriğe atla', // by Claude Fable 5.1
+	'Skip to menu' => 'Menüye atla', // by Claude Fable 5.1
+	'Skip to table list' => 'Tablo listesine atla', // by Claude Fable 5.1
+
 	// Login
 	'System' => 'Sistem',
 	'Server' => 'Sunucu',
@@ -53,6 +58,7 @@ return [
 	'Refresh' => 'Tazele',
 	'Info' => 'Bilgi', // by Claude Fable 5.1
 	'More information.' => 'Daha fazla bilgi.', // by Claude Fable 5.1
+	'Close' => 'Kapat', // by Claude Fable 5.1
 
 	// Privileges
 	'Privileges' => 'İzinler',
@@ -180,7 +186,6 @@ return [
 	'Check' => 'Denetle',
 	'Repair' => 'Tamir Et',
 	'Truncate' => 'Boşalt',
-	'Truncate Cascade' => 'Kademeli boşalt', // by Claude Fable 5.1
 	'Tables have been truncated.' => 'Tablolar boşaltıldı.',
 	'Move to other database' => 'Başka veri tabanına taşı',
 	'Move' => 'Taşı',
@@ -405,6 +410,7 @@ return [
 	// Settings
 	'Settings' => 'Ayarlar', // by Claude Fable 5.1
 	'Default' => 'Varsayılan', // by Claude Fable 5.1
+	'Theme' => 'Tema', // by Claude Fable 5.1
 	'Color scheme' => 'Renk şeması', // by Claude Fable 5.1
 	'By system' => 'Sisteme göre', // by Claude Fable 5.1
 	'Light' => 'Açık', // by Claude Fable 5.1

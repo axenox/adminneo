@@ -170,7 +170,7 @@ Format:
 Co-Authored-By: Claude <model name> <noreply@anthropic.com>
 ```
 
-- `<Area:>` is an optional prefix naming the driver or subsystem: `PostgreSQL:`, `MySQL:`, `SQLite:`, `Compiler:`, `Tests:`, `Translations:`, `Select:`.
+- `<Area:>` is an optional prefix naming the driver or subsystem: `PostgreSQL:`, `MySQL:`, `SQLite:`, `Compiler:`, `Tests:`, `Translations:`, `Select:`, `CSS:`, `JavaScript:`.
 - Reference an AdminNeo issue **in the subject**: `(fix #<issue_id>)` when the commit closes it, `(issue #<issue_id>)` when it only relates to it — e.g. a follow-up to an already closed issue, or one part of a larger one. Never add an `Issue:` line — that is porting-only.
 - Always end with the `Co-Authored-By` line naming the used Claude model, e.g. `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
 - Add a `CHANGELOG.md` entry under the open version section for anything user-visible.
@@ -204,7 +204,7 @@ git fetch vrana main --no-tags
   - Map each changed Adminer file to its AdminNeo equivalent; paths aren't always 1:1 (`adminer/` → `admin/`, and a database's code can move between a `plugins/drivers/*.php` optional plugin upstream and a built-in `admin/drivers/*.inc.php` driver here, or vice versa). Skip files for databases AdminNeo doesn't support.
   - If the target code isn't where expected, grep for the specific functions/symbols the commit touches (not just the file) before concluding it is inapplicable — sometimes it moved, sometimes it's genuinely gone (e.g. a legacy PHP extension AdminNeo dropped, like old `ext/mysql` support). "Nothing to port" is a valid, complete outcome once you've confirmed the code isn't there under any name.
   - Grep for the changed function/pattern across `admin/`, `editor/`, and `plugins/` — AdminNeo may have more or fewer call sites than upstream for the same code.
-  - Match AdminNeo's current APIs and idioms rather than copying the old code verbatim (e.g. `$connection->isMinVersion()`, not the deprecated `min_version()`; use `??` instead of `idx()` helper; always use short array syntax). If AdminNeo's version already diverged from upstream at the touched spot, preserve that divergence while applying the fix rather than reverting to upstream's simpler version.
+  - Match AdminNeo's current APIs and idioms rather than copying the old code verbatim (e.g. `$connection->isMinVersion()`, not the deprecated `min_version()`; use `??` instead of `idx()` helper; use `// TODO` instead of `\\!` comment; always use short array syntax). If AdminNeo's version already diverged from upstream at the touched spot, preserve that divergence while applying the fix rather than reverting to upstream's simpler version.
   - Rename snake_case to camelCase when the ported code lands in a class.
   - Ignore changes of upstream's git submodules.
   - Use `// by AI model name` mark in translations instead of `// AI model name`.
@@ -279,7 +279,7 @@ Databases for testing:
 | PostgreSQL 18   | 127.0.0.1:5432  | test     | test               | `pgsql=pgsql18`           |
 | MS SQL 18       | 127.0.0.1:1433  | test     | 340$Uuxwp7Mcxo7Khy | `mssql=mssql18`           |
 | Elasticsearch 7 | 127.0.0.1:9200  |          |                    | `elastic=elastic7`        |
-| MongoDB 2       | 127.0.0.1:27017 | test     | test               | `mongo=mongo2`            |
+| MongoDB 7       | 127.0.0.1:27017 | test     | test               | `mongo=mongo7`            |
 | Clickhouse 26   | 127.0.0.1:8123  | default  | default            | `clickhouse=clickhouse26` |
 | SQLite          | —               |          |                    | `sqlite=sqlite`           |
 

@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => '%s xx.',
 	'%s and %s must return an object created by %s method.' => '%s xx %s xx %s.',
 
+	// Accessibility
+	'Skip to main content' => 'Xx',
+	'Skip to menu' => 'Xx',
+	'Skip to table list' => 'Xx',
+
 	// Login
 	'System' => 'Xx',
 	'Server' => 'Xx',
@@ -53,6 +58,7 @@ return [
 	'Refresh' => 'Xx',
 	'Info' => 'Xx',
 	'More information.' => 'Xx.',
+	'Close' => 'Xx',
 
 	// Privileges
 	'Privileges' => 'Xx',
@@ -171,7 +177,6 @@ return [
 	'Check' => 'Xx',
 	'Repair' => 'Xx',
 	'Truncate' => 'Xx',
-	'Truncate Cascade' => 'Xx',
 	'Tables have been truncated.' => 'Xx.',
 	'Move to other database' => 'Xx',
 	'Move' => 'Xx',
@@ -387,6 +392,7 @@ return [
 	// Settings
 	'Settings' => 'Xx',
 	'Default' => 'Xx',
+	'Theme' => 'Xx',
 	'Color scheme' => 'Xx',
 	'By system' => 'Xx',
 	'Light' => 'Xx',

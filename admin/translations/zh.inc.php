@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => '%s 必须返回一个数组。', // by Claude Fable 5.1
 	'%s and %s must return an object created by %s method.' => '%s 和 %s 必须返回由 %s 方法创建的对象。', // by Claude Fable 5.1
 
+	// Accessibility
+	'Skip to main content' => '跳至主要内容', // by Claude Fable 5.1
+	'Skip to menu' => '跳至菜单', // by Claude Fable 5.1
+	'Skip to table list' => '跳至数据表列表', // by Claude Fable 5.1
+
 	// Login
 	'System' => '系统',
 	'Server' => '服务器',
@@ -53,6 +58,7 @@ return [
 	'Refresh' => '刷新',
 	'Info' => '信息', // by Claude Fable 5.1
 	'More information.' => '更多信息。', // by Claude Fable 5.1
+	'Close' => '关闭', // by Claude Fable 5.1
 
 	// Privileges
 	'Privileges' => '权限',
@@ -171,7 +177,6 @@ return [
 	'Check' => '检查',
 	'Repair' => '修复',
 	'Truncate' => '清空',
-	'Truncate Cascade' => '级联清空', // by Claude Fable 5.1
 	'Tables have been truncated.' => '已清空表。',
 	'Move to other database' => '转移到其它数据库',
 	'Move' => '转移',
@@ -387,6 +392,7 @@ return [
 	// Settings
 	'Settings' => '设置', // by Claude Fable 5.1
 	'Default' => '默认', // by Claude Fable 5.1
+	'Theme' => '主题', // by Claude Fable 5.1
 	'Color scheme' => '配色方案', // by Claude Fable 5.1
 	'By system' => '跟随系统', // by Claude Fable 5.1
 	'Light' => '浅色', // by Claude Fable 5.1

@@ -309,7 +309,10 @@ $selected_themes = [];
 if ($arguments) {
 	$params = explode(",", $arguments[0]);
 
-	if (file_exists(__DIR__ . "/../admin/themes/$params[0]")) {
+	// Color variant is stored in a subdirectory, e.g. "dune-green" is in "themes/dune/green".
+	$theme_dir = preg_replace('~-' . $colors_pattern . '$~', '/$1', $params[0]);
+
+	if (file_exists(__DIR__ . "/../admin/themes/$theme_dir")) {
 		$themes_map = [];
 		foreach ($params as $theme) {
 			if (preg_match('~-'. $colors_pattern . '$~', $theme)) {
@@ -391,9 +394,9 @@ if ($arguments) {
 /* Disabled for now because it reports too many warnings.
 $file = file_get_contents(__DIR__ . "/../admin/drivers/mysql.inc.php");
 $file = preg_replace('~class Min_Driver.*\n\t}~sU', '', $file);
-preg_match_all('~\bfunction ([^(]+)~', $file, $matches); //! respect context (extension, class)
+preg_match_all('~\bfunction ([^(]+)~', $file, $matches); // TODO respect context (extension, class)
 $functions = array_combine($matches[1], $matches[0]);
-//! do not warn about functions without declared support()
+// TODO do not warn about functions without declared support()
 unset($functions["__construct"], $functions["__destruct"], $functions["set_charset"]);
 
 foreach (glob(__DIR__ . "/../admin/drivers/*.inc.php") as $filename) {
@@ -486,6 +489,10 @@ $file = preg_replace_callback('~\binclude (__DIR__ \. )?"([^"]+)";~', function (
 	return put_file($match, "../admin/include");
 }, $file);
 
+// Remove lines intended only for the other project: those carrying a trailing `// !admin` or `// !editor` marker.
+$file = preg_replace('~^.*// !' . ($project == "editor" ? "admin" : "editor") . '\n~m', '', $file);
+$file = preg_replace('~ // !(admin|editor)$~m', '', $file);
+
 if ($single_driver) {
 	// Remove source code for unsupported features.
 	foreach ($features as $feature) {
@@ -507,7 +514,7 @@ if ($single_driver) {
 		return (trim($links) ? "doc_link([$links])" : "''");
 	}, $file);
 
-	//! strip doc_link() definition
+	// TODO strip doc_link() definition
 }
 
 // Compile language files.
@@ -540,12 +547,13 @@ for ($i = 0; $i < count($matches[0]); $i++) {
 	if (str_starts_with($name, 'default-$color_variant')) {
 		foreach ($selected_themes as $theme) {
 			if (preg_match('~^default-' . $colors_pattern. '$~', $theme, $matches2)) {
+				$color_variant = $matches2[1];
 				$name2 = str_replace('default-$color_variant', $theme, $name);
-				$files2 = str_replace('default-$color_variant', $theme, $files);
+				$files2 = str_replace('$color_variant', $color_variant, $files);
 
 				append_linked_files_cases($name2, $files2, $name_cases, $data_cases);
 
-				$available_themes["default"][$matches2[1]] = true;
+				$available_themes["default"][$color_variant] = true;
 			}
 		}
 
@@ -558,13 +566,15 @@ for ($i = 0; $i < count($matches[0]); $i++) {
 			if (!str_starts_with($theme, "default-")) {
 				preg_match('~^(.*)-' . $colors_pattern. '$~', $theme, $matches2);
 
+				$theme_name = $matches2[1];
+				$color_variant = $matches2[2];
 				$name2 = str_replace('$theme-$color_variant', $theme, $name);
-				$files2 = str_replace('$theme-$color_variant', $theme, $files);
-				$files2 = str_replace('$theme', $matches2[1], $files2);
+				$files2 = str_replace('$color_variant', $color_variant, $files);
+				$files2 = str_replace('$theme', $theme_name, $files2);
 
 				append_linked_files_cases($name2, $files2, $name_cases, $data_cases);
 
-				$available_themes[$matches2[1]][$matches2[2]] = true;
+				$available_themes[$theme_name][$color_variant] = true;
 			}
 		}
 
@@ -575,8 +585,9 @@ for ($i = 0; $i < count($matches[0]); $i++) {
 	if (str_contains($name, 'icon-$colorVariant.')) {
 		foreach ($selected_themes as $theme) {
 			if (preg_match('~^default-' . $colors_pattern. '$~', $theme, $matches2)) {
-				$name2 = str_replace('$colorVariant', $matches2[1], $name);
-				$files2 = str_replace('$colorVariant', $matches2[1], $files);
+				$color_variant = $matches2[1];
+				$name2 = str_replace('$colorVariant', $color_variant, $name);
+				$files2 = str_replace('$colorVariant', $color_variant, $files);
 
 				append_linked_files_cases($name2, $files2, $name_cases, $data_cases);
 			}

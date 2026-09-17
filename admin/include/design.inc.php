@@ -46,8 +46,9 @@ function page_header(string $title, $breadcrumb = []): void
 
 	echo "<link rel='stylesheet' href='", link_files("default-$color_variant.css", [
 		"../admin/themes/default/variables.css",
-		"../admin/themes/default-$color_variant/variables.css",
+		"../admin/themes/default/$color_variant/variables.css",
 		"../admin/themes/default/common.css",
+		"../admin/themes/default/access-menu.css",
 		"../admin/themes/default/forms.css",
 		"../admin/themes/default/code.css",
 		"../admin/themes/default/messages.css",
@@ -57,6 +58,7 @@ function page_header(string $title, $breadcrumb = []): void
 		"../admin/themes/default/dragging.css",
 		"../admin/themes/default/header.css",
 		"../admin/themes/default/navigationPanel.css",
+		"../admin/themes/default/schema.css",
 		"../admin/themes/default/print.css",
 	]), "'>\n";
 
@@ -64,25 +66,25 @@ function page_header(string $title, $breadcrumb = []): void
 		echo "<link rel='stylesheet' " . (!Admin::get()->isDarkModeForced() ? "media='(prefers-color-scheme: dark)' " : "") . "href='";
 		echo link_files("default-$color_variant-dark.css", [
 			"../admin/themes/default/variables-dark.css",
-			"../admin/themes/default-$color_variant/variables-dark.css",
+			"../admin/themes/default/$color_variant/variables-dark.css",
 		]);
 		echo "'>\n";
 	}
 
-	$theme = Admin::get()->getConfig()->getTheme();
+	$theme = Admin::get()->getSettings()->getTheme();
 	[$theme, $color_variant] = validate_theme($theme, $color_variant);
 
 	if ($theme != "default") {
 		echo "<link rel='stylesheet' href='", link_files("$theme-$color_variant.css", [
 			"../admin/themes/$theme/main.css",
-			"../admin/themes/$theme-$color_variant/main.css",
+			"../admin/themes/$theme/$color_variant/variables.css",
 		]), "'>\n";
 
 		if (!Admin::get()->isLightModeForced()) {
 			echo "<link rel='stylesheet' " . (!Admin::get()->isDarkModeForced() ? "media='(prefers-color-scheme: dark)' " : "") . "href='";
 			echo link_files("$theme-$color_variant-dark.css", [
 				"../admin/themes/$theme/main-dark.css",
-				"../admin/themes/$theme-$color_variant/main-dark.css",
+				"../admin/themes/$theme/$color_variant/variables-dark.css",
 			]);
 			echo "'>\n";
 		}
@@ -105,7 +107,15 @@ function page_header(string $title, $breadcrumb = []): void
 	}
 	echo "</style>\n";
 
-	echo script_src(link_files("main.js", ["../admin/scripts/functions.js", "scripts/editing.js"]));
+	echo script_src(link_files("main.js", [
+		"../admin/scripts/functions.js",
+		"../admin/scripts/focus.js",
+		"../admin/scripts/sorting.js",
+		"scripts/editing.js",
+		"scripts/fieldsEditing.js", // !admin
+		"scripts/help.js", // !admin
+		"scripts/schema.js", // !admin
+	]));
 
 	foreach (Admin::get()->getJsUrls() as $url) {
 		echo script_src($url);
@@ -125,10 +135,22 @@ function page_header(string $title, $breadcrumb = []): void
 
 <?php
 	echo "<div id='help' class='jush-" . DIALECT . " jsonly hidden'></div>";
-    echo script("initHelpPopup();");
+	echo script("initHelpPopup();");
 
-    echo "<div id='content'>\n";
+	echo '<menu class="access-menu">';
+	echo '<li><a href="#main-content">' . lang('Skip to main content') . '</a></li>';
+	echo '<li><a class="panel-link" href="#navigation-panel">' . lang('Skip to menu') . '</a></li>';
+
+	if ($breadcrumb !== null && DB != "" && $_GET["ns"] !== "") {
+		echo '<li><a class="panel-link" href="#tables">' . lang('Skip to table list') . '</a></li>';
+	}
+	echo '</menu>';
+
+	echo "<div id='content'>\n";
 	echo "<div class='header'>\n";
+
+	echo "<button id='open-navigation-button' type='button' class='button light navigation-button' title='", lang('Menu'), "' aria-controls='navigation-panel' aria-expanded='false'>",
+		icon_solo("menu"), "</button>";
 
 	if ($breadcrumb !== null) {
 		echo '<nav class="breadcrumbs"><ul>';
@@ -177,6 +199,7 @@ function page_header(string $title, $breadcrumb = []): void
 
 	echo "</div>\n"; // header
 
+	echo "<div id='main-content'>\n";
 	echo "<h1>$title</h1>\n";
 	echo "<div id='ajaxstatus' role='status' class='jsonly'></div>\n";
 
@@ -201,20 +224,27 @@ function validate_color_variant(string $color_variant): string
 	return $color_variant;
 }
 
+/**
+ * Checks if theme and color variants are available.
+ *
+ * If not, fallbacks to the default theme and the first available color variant.
+ *
+ * @return string[]
+ */
 function validate_theme(string $theme, string $color_variant): array
 {
 	$themes = get_available_themes();
 
-	if (!isset($themes[$theme])) {
-		$theme = "default";
+	if (isset($themes[$theme][$color_variant])) {
+		return [$theme, $color_variant];
+	}
+	if (isset($themes["default"][$color_variant])) {
+		return ["default", $color_variant];
 	}
 
-	if (!isset($themes[$theme][$color_variant])) {
-		reset($themes[$theme]);
-		$color_variant = key($themes[$theme]);
-	}
+	reset($themes["default"]);
 
-	return [$theme, $color_variant];
+	return ["default",  key($themes["default"])];
 }
 
 /**
@@ -225,6 +255,25 @@ function validate_theme(string $theme, string $color_variant): array
 function get_available_themes(): array
 {
 	return find_available_themes(); // !compile: available themes
+}
+
+/**
+ * Returns titles of the available themes.
+ *
+ * @return string[]
+ */
+function get_theme_titles(string $color_variant): array
+{
+	$themes = get_available_themes();
+
+	$titles = [];
+	foreach ($themes as $theme => $color_variants) {
+		if ($color_variants[$color_variant] ?? false) {
+			$titles[$theme] = ($theme == "default" ? "Neo" : ucwords(str_replace("-", " ", $theme)));
+		}
+	}
+
+	return $titles;
 }
 
 /**
@@ -308,12 +357,37 @@ function page_messages(): void
  */
 function page_footer(?string $missing = null): void
 {
+	echo "</div>\n"; // main-content
 	echo "</div>\n"; // content
 
 	// Main navigation is printed after the page content, because databases and tables can be changed after the query
 	// execution in the 'SQL command' page.
-	echo "<button id='navigation-button' class='button light navigation-button' title='", lang('Menu'), "'>", icon_solo("menu"), icon_solo("close"), "</button>";
 	echo "<div id='navigation-panel' class='navigation-panel'>\n";
+	echo "<div class='focus-trap-begin'></div>\n";
+
+	$last_version = $_COOKIE["neo_version"] ?? null;
+
+	echo "<div class='header'>\n";
+	echo "<button id='close-navigation-button' type='button' class='button light navigation-button' title='", lang('Close'), "' aria-controls='navigation-panel'>", icon_solo("close"), "</button>";
+	echo Admin::get()->getServiceTitle() . "\n";
+
+	if ($missing != "auth") {
+		echo "<span class='version'>";
+		echo h(preg_replace('~\\.0(-|$)~', '$1', VERSION));
+		if (Admin::get()->getConfig()->isVersionVerificationEnabled() && $last_version && version_compare(VERSION, $last_version) < 0) {
+			echo "<a id='version' class='version-badge' href='https://www.adminneo.org/download' " . target_blank() . " title='" . h($last_version) . "'>";
+			echo icon_solo("asterisk");
+			echo "</a>";
+		}
+		echo "</span>\n";
+
+		if (Admin::get()->getConfig()->isVersionVerificationEnabled() && !$last_version) {
+			echo script("verifyVersion();");
+		}
+	}
+
+	echo "</div>\n"; // header
+
 	Admin::get()->printNavigation($missing);
 
 	echo "<div class='footer'>\n";
@@ -333,6 +407,7 @@ function page_footer(?string $missing = null): void
 	echo "</div>\n"; // footer
 
 	echo "<div id='navigation-resizer' class='navigation-resizer'></div>\n";
+	echo "<div class='focus-trap-end'></div>\n";
 	echo "</div>\n"; // navigation-panel
 
 	echo script("initNavigation(); initNavigationResizer('" . js_escape(ME) . "set=navigation-width', '" . get_token() . "', " .

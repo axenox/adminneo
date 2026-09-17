@@ -143,7 +143,7 @@ if (isset($_GET["mongo"])) {
 						$row[$key] =
 							(is_a($val, 'MongoDB\BSON\ObjectID') ? 'MongoDB\BSON\ObjectID("' . "$val\")" :
 							(is_a($val, 'MongoDB\BSON\UTCDatetime') ? $val->toDateTime()->format('Y-m-d H:i:s') :
-							(is_a($val, 'MongoDB\BSON\Binary') ? $val->getData() : //! allow downloading
+							(is_a($val, 'MongoDB\BSON\Binary') ? $val->getData() : // TODO allow downloading
 							(is_a($val, 'MongoDB\BSON\Regex') ? "$val" :
 							(is_object($val) || is_array($val) ? json_encode($val, JSON_UNESCAPED_UNICODE) :
 							$val // MongoMinKey, MongoMaxKey
@@ -566,7 +566,7 @@ if (isset($_GET["mongo"])) {
 		return $return;
 	}
 
-	function create_database(string $db, string $collation): bool
+	function create_database(string $db, ?string $collation): bool
 	{
 		return true;
 	}
@@ -718,7 +718,7 @@ if (isset($_GET["mongo"])) {
 		return true;
 	}
 
-	function truncate_tables(array $tables, bool $cascade = false): bool
+	function truncate_tables(array $tables): bool
 	{
 		foreach ($tables as $name) {
 			$command = [

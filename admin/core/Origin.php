@@ -775,30 +775,7 @@ abstract class Origin extends Plugin
 
 	public abstract function printDatabaseMenu(): void;
 
-	public function printNavigation(?string $missing): void
-	{
-		$last_version = $_COOKIE["neo_version"] ?? null;
-
-		echo "<div class='header'>\n";
-		echo $this->admin->getServiceTitle() . "\n";
-
-		if ($missing != "auth") {
-			echo "<span class='version'>";
-			echo h(preg_replace('~\\.0(-|$)~', '$1', VERSION));
-			if ($this->config->isVersionVerificationEnabled() && $last_version && version_compare(VERSION, $last_version) < 0) {
-				echo "<a id='version' class='version-badge' href='https://www.adminneo.org/download' " . target_blank() . " title='" . h($last_version) . "'>";
-				echo icon_solo("asterisk");
-				echo "</a>";
-			}
-			echo "</span>\n";
-
-			if ($this->config->isVersionVerificationEnabled() && !$last_version) {
-				echo script("verifyVersion();");
-			}
-		}
-
-		echo "</div>\n";
-	}
+	public abstract function printNavigation(?string $missing): void;
 
 	public abstract function printDatabaseSwitcher(?string $missing): void;
 
@@ -833,6 +810,18 @@ abstract class Origin extends Plugin
 				$settings["lang"] = "<tr><th id='label-language'>" . lang('Language') . "</th>" .
 					"<td>" .
 					html_select("lang", get_language_options(), Locale::get()->getLanguage(), "", "label-language") .
+					"</td></tr>\n";
+			}
+
+			// Theme.
+			$titles = get_theme_titles($this->config->getColorVariant());
+			if (count($titles) > 1) {
+				[$theme] = validate_theme($this->config->getTheme(), $this->config->getColorVariant());
+				$options = ["" => lang('Default') . " ($titles[$theme])"] + $titles;
+
+				$settings["theme"] = "<tr><th id='label-theme'>" . lang('Theme') . "</th>" .
+					"<td>" .
+					html_select("theme", $options, $this->settings->getParameter("theme") ?? "", "", "label-theme") .
 					"</td></tr>\n";
 			}
 

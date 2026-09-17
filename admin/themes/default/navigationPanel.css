@@ -80,25 +80,13 @@
 	width: 2rem;
 	height: 2rem;
 	padding: 0 !important;
-	z-index: 50;
+	font-size: initial;
 }
 
 .navigation-button .icon {
 	width: 1.2rem;
 	height: 1.2rem;
 	margin: 0 !important;
-}
-
-.navigation-button .ic-close {
-	display: none;
-}
-
-.navigation-button.opened .ic-menu {
-	display: none;
-}
-
-.navigation-button.opened .ic-close {
-	display: inline;
 }
 
 .logo {
@@ -153,7 +141,6 @@
 	overflow-y: auto;
 	margin-top: 10px;
 	border-top: 1px solid transparent;
-	transition: border-color .2s ease-in;
 }
 
 #tables.scrolled {
@@ -163,6 +150,10 @@
 #tables .scroll-marker {
 	height: 1px;
 	margin-bottom: -1px;
+}
+
+#tables p:first-child {
+	padding-top: 0;
 }
 
 #logins {
@@ -273,7 +264,7 @@ menu.hover li:hover .secondary, menu.hover .secondary:focus-visible {
 	line-height: 2.05rem; /* +0.05rem for better alignment on Firefox. */
 	padding: 0 20px;
 	display: flex;
-	gap: 10px 20px;
+	gap: 10px;
 	align-items: baseline;
 	z-index: 10;
 }
@@ -346,8 +337,12 @@ menu.hover li:hover .secondary, menu.hover .secondary:focus-visible {
 	}
 
 	.toolbox, .logout {
-		overflow: hidden;
 		line-height: normal;
 		max-width: 100%;
+	}
+
+	.logout span {
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 }

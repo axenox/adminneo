@@ -190,7 +190,7 @@ function formCheck(name) {
  * Checks all rows in <table class="checkable">.
  */
 function tableCheck() {
-	qsa('table.checkable td:first-child input').forEach(trCheck);
+	qsa('table.checkable td:first-child input, table.checkable th:first-child input').forEach(trCheck);
 
 	// Once the browser restores the checkboxes while browsing history.
 	window.addEventListener('pageshow', tableCheck);
@@ -380,12 +380,40 @@ function setHtml(id, html) {
  * Initializes toggling of the navigation panel by the navigation button.
  */
 function initNavigation() {
-	const button = gid("navigation-button");
+	const openButton = gid("open-navigation-button");
+	const closeButton = gid("close-navigation-button");
 	const panel = gid("navigation-panel");
 
-	button.addEventListener("click", () => {
-		button.classList.toggle("opened");
-		panel.classList.toggle("opened");
+	openButton.addEventListener("click", () => {
+		panel.classList.toggle("opened", true);
+		openButton.setAttribute("aria-expanded", "true");
+		closeButton.focus();
+		enableFocusTrap(panel);
+	});
+
+	const close = () => {
+		disableFocusTrap();
+		panel.classList.toggle("opened", false);
+		openButton.setAttribute("aria-expanded", "false");
+	};
+
+	closeButton.addEventListener("click", () => {
+		close();
+		openButton.focus();
+	});
+
+	panel.addEventListener("keydown", event => {
+		if (event.key === "Escape" && panel.classList.contains("opened")) {
+			closeButton.click();
+		}
+	});
+
+	// Release the trap when the panel turns into the regular sidebar on wide screens.
+	// Note: addListener() is used instead of addEventListener("change") for compatibility with Safari 10.
+	window.matchMedia("(min-width: 1024px)").addListener(event => {
+		if (event.matches && panel.classList.contains("opened")) {
+			close();
+		}
 	});
 }
 
@@ -537,6 +565,27 @@ function scrollToActiveTable(navigationPanel, tablesList) {
 }
 
 /**
+ * Toggles a class changing the border of an element, applying the very first state instantly.
+ *
+ * The initial state is computed after the page has been rendered, so the transition must be enabled
+ * only once the browser has applied that state, otherwise it animates right after the page load.
+ *
+ * @param {HTMLElement} element
+ * @param {string} className Class to toggle.
+ * @param {boolean} state
+ */
+function toggleClassWithAnimatedBorder(element, className, state) {
+	element.classList.toggle(className, state);
+
+	if (!element.classList.contains('animated-border')) {
+		// Forces a style recalculation, otherwise the transition enabled below would run on the state applied above.
+		void element.offsetHeight;
+
+		element.classList.add('animated-border');
+	}
+}
+
+/**
  * Displays a separator line at the top of the tables list while the list is scrolled.
  *
  * @param {HTMLElement} tablesList Tables list element.
@@ -551,7 +600,7 @@ function initTablesListSeparator(tablesList) {
 
 	const observer = new IntersectionObserver(() => {
 		// The observer only triggers the check, the scroll position itself is authoritative.
-		tablesList.classList.toggle('scrolled', tablesList.scrollTop > 1);
+		toggleClassWithAnimatedBorder(tablesList, 'scrolled', tablesList.scrollTop > 1);
 	}, { root: tablesList });
 
 	observer.observe(marker);
@@ -795,229 +844,6 @@ function selectSearchKeydown(event) {
 		};
 	}
 }
-
-// Sorting.
-(() => {
-	let placeholderRow = null, nextRow = null, dragHelper = null;
-	let startScrollY, startY, minY, maxY, lastPointerY, rowHeight;
-
-	/**
-	 * Initializes sortable list of DIV elements.
-	 *
-	 * @param {string} parentSelector
-	 */
-	window.initSortable = function(parentSelector) {
-		const parent = qs(parentSelector);
-		if (!parent) return;
-
-		for (const row of parent.children) {
-			if (!row.classList.contains("no-sort")) {
-				initSortableRow(row);
-			}
-		}
-	};
-
-	/**
-	 * Initializes one row of sortable parent.
-	 *
-	 * @param {HTMLElement} row
-	 */
-	window.initSortableRow = function(row) {
-		row.classList.remove("no-sort");
-
-		const handle = qs(".handle", row);
-		handle.addEventListener("mousedown", event => { startSorting(row, event) });
-		handle.addEventListener("touchstart", event => { startSorting(row, event) });
-	};
-
-	/**
-	 * Checks whether a row is being dragged.
-	 *
-	 * @return {boolean}
-	 */
-	window.isSorting = function() {
-		return dragHelper !== null;
-	};
-
-	/**
-	 * Starts dragging of the row.
-	 *
-	 * @param {HTMLElement} row
-	 * @param {MouseEvent|TouchEvent} event
-	 */
-	function startSorting(row, event) {
-		event.preventDefault();
-
-		const pointerY = getPointerY(event);
-
-		const parent = row.parentElement;
-		startScrollY = window.scrollY;
-		startY = pointerY - getOffsetTop(row);
-		minY = getOffsetTop(parent);
-		maxY = minY + parent.offsetHeight - row.offsetHeight;
-
-		placeholderRow = row.cloneNode(true);
-		placeholderRow.classList.add("placeholder");
-		parent.insertBefore(placeholderRow, row);
-
-		rowHeight = placeholderRow.offsetHeight;
-		if (row.tagName !== "TR") {
-			rowHeight += parseFloat(window.getComputedStyle(placeholderRow).marginBottom);
-		}
-
-		nextRow = row.nextElementSibling;
-
-		let top = pointerY - startY;
-		let left = getOffsetLeft(row);
-		let width = row.getBoundingClientRect().width;
-
-		if (row.tagName === "TR") {
-			const firstChild = row.firstElementChild;
-			const borderWidth = (firstChild.offsetWidth - firstChild.clientWidth) / 2;
-			const borderHeight = (firstChild.offsetHeight - firstChild.clientHeight) / 2;
-
-			minY -= borderHeight;
-			maxY -= borderHeight;
-			top -= borderHeight;
-			left -= borderWidth;
-			width += 2 * borderWidth;
-
-			for (const child of row.children) {
-				child.style.width = child.getBoundingClientRect().width + "px";
-			}
-
-			const body = document.createElement("tbody");
-			body.append(row);
-
-			dragHelper = document.createElement("table");
-			dragHelper.append(body);
-		} else {
-			dragHelper = row;
-		}
-
-		dragHelper.style.top = `${top}px`;
-		dragHelper.style.left = `${left}px`;
-		dragHelper.style.width = `${width}px`;
-		dragHelper.classList.add("dragging");
-		document.body.append(dragHelper);
-
-		window.addEventListener("mousemove", updateSorting);
-		window.addEventListener("touchmove", updateSorting);
-		window.addEventListener("scroll", updateSorting);
-
-		window.addEventListener("mouseup", finishSorting);
-		window.addEventListener("touchend", finishSorting);
-		window.addEventListener("touchcancel", finishSorting);
-	}
-
-	/**
-	 * Moves the dragged row to the pointer position and places the placeholder to a new position.
-	 *
-	 * @param {Event} event Mouse, touch or scroll event.
-	 */
-	function updateSorting(event) {
-		const pointerY = getPointerY(event);
-		const scrollingBoundary = 30;
-		const speedCoefficient = 8;
-
-		// If mouse pointer is over the top boundary, scroll page down.
-		let distance = pointerY - scrollingBoundary;
-		if (distance < 0 && window.scrollY > 0) {
-			window.scrollBy(0, distance / speedCoefficient);
-			return;
-		}
-
-		// If mouse pointer is under the bottom boundary, scroll page up.
-		distance = pointerY - window.innerHeight + scrollingBoundary;
-		if (distance > 0 && window.scrollY + window.innerHeight < document.documentElement.scrollHeight) {
-			window.scrollBy(0, distance / speedCoefficient);
-			return;
-		}
-
-		// Move helper row to the pointer position.
-		let top = Math.min(Math.max(pointerY - startY + window.scrollY - startScrollY, minY), maxY);
-		dragHelper.style.top = `${top}px`;
-
-		// Find a new position for the placeholder.
-		const parent = placeholderRow.parentElement;
-		let oldNextRow = nextRow;
-		top = top - minY + parent.offsetTop;
-
-		let testingRow = placeholderRow;
-		do {
-			if (top > testingRow.offsetTop + rowHeight / 2 + 1) {
-				if (!nextRow.classList.contains("no-sort")) {
-					testingRow = nextRow;
-					nextRow = nextRow.nextElementSibling;
-				} else {
-					break;
-				}
-			} else if (top + rowHeight < testingRow.offsetTop + rowHeight / 2 - 1) {
-				nextRow = testingRow = testingRow.previousElementSibling;
-			} else {
-				break;
-			}
-		} while (nextRow);
-
-		// Move the placeholder to a new position.
-		if (nextRow !== oldNextRow) {
-			if (nextRow) {
-				parent.insertBefore(placeholderRow, nextRow);
-			} else {
-				parent.append(placeholderRow);
-			}
-		}
-	}
-
-	/**
-	 * Drops the dragged row to the position of the placeholder.
-	 */
-	function finishSorting() {
-		dragHelper.classList.remove("dragging");
-		dragHelper.style.top = null;
-		dragHelper.style.left = null;
-		dragHelper.style.width = null;
-
-		dragHelper.remove();
-
-		placeholderRow.parentElement.insertBefore(
-			dragHelper.tagName === "TABLE" ? dragHelper.firstElementChild.firstElementChild : dragHelper,
-			placeholderRow
-		);
-		placeholderRow.remove();
-
-		placeholderRow = nextRow = dragHelper = null;
-
-		window.removeEventListener("mousemove", updateSorting);
-		window.removeEventListener("touchmove", updateSorting);
-		window.removeEventListener("scroll", updateSorting);
-
-		window.removeEventListener("mouseup", finishSorting);
-		window.removeEventListener("touchend", finishSorting);
-		window.removeEventListener("touchcancel", finishSorting);
-	}
-
-	/**
-	 * Returns the vertical pointer position.
-	 *
-	 * @param {Event} event Mouse, touch or scroll event.
-	 *
-	 * @return {number} The last known position for events without pointer coordinates.
-	 */
-	function getPointerY(event) {
-		if (event.type.includes("touch")) {
-			const touch = event.touches[0] || event.changedTouches[0];
-			lastPointerY = touch.clientY;
-		} else if (event.clientY !== undefined) {
-			lastPointerY = event.clientY;
-		}
-
-		return lastPointerY;
-	}
-})();
-
-
-
 
 /**
  * Fills column in search field.
@@ -1414,14 +1240,15 @@ function initTableFooter() {
 
 	const options = {
 		root: qs(".table-footer-parent"),
-		rootMargin: "0px 0px -1px 0px",
+		rootMargin: "0px 100% -1px 100%",
 		threshold: 1.0,
 	};
 
 	const observer = new IntersectionObserver((entries) => {
 		const entry = entries[0];
 		// Note: entry.isIntersecting does not work well on mobile Safari so we are comparing bottom positions.
-		footer.classList.toggle("sticky", entry.boundingClientRect.bottom < entry.rootBounds.bottom);
+		// On the other hand, bottom positions are not correctly calculated on Firefox.
+		toggleClassWithAnimatedBorder(footer, "sticky", entry.isIntersecting || entry.boundingClientRect.bottom < entry.rootBounds.bottom);
 	}, options);
 
 	observer.observe(footer);

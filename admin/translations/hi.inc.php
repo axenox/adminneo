@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => '%s को एक ऐरे लौटाना चाहिए।', // by Claude Fable 5.1
 	'%s and %s must return an object created by %s method.' => '%s और %s को %s मेथड द्वारा बनाया गया ऑब्जेक्ट लौटाना चाहिए।', // by Claude Fable 5.1
 
+	// Accessibility
+	'Skip to main content' => 'मुख्य सामग्री पर जाएँ', // by Claude Fable 5.1
+	'Skip to menu' => 'मेनू पर जाएँ', // by Claude Fable 5.1
+	'Skip to table list' => 'टेबल सूची पर जाएँ', // by Claude Fable 5.1
+
 	// Login
 	'System' => 'सिस्टम',
 	'Server' => 'सर्वर',
@@ -53,6 +58,7 @@ return [
 	'Refresh' => 'ताज़ा करें',
 	'Info' => 'जानकारी', // by Claude Fable 5.1
 	'More information.' => 'अधिक जानकारी।', // by Claude Fable 5.1
+	'Close' => 'बंद करें', // by Claude Fable 5.1
 
 	// Privileges
 	'Privileges' => 'विशेषाधिकार',
@@ -183,7 +189,6 @@ return [
 	'Check' => 'जांच',
 	'Repair' => 'मरम्मत',
 	'Truncate' => 'ट्रंकेट',
-	'Truncate Cascade' => 'कैस्केड ट्रंकेट', // by Claude Fable 5.1
 	'Tables have been truncated.' => 'टेबल्स ट्रंकेट कर दिए गए हैं।',
 	'Move to other database' => 'अन्य डेटाबेस में स्थानांतरित करें',
 	'Move' => 'स्थानांतरित करें',
@@ -408,6 +413,7 @@ return [
 	// Settings
 	'Settings' => 'सेटिंग्स', // by Claude Fable 5.1
 	'Default' => 'डिफ़ॉल्ट', // by Claude Fable 5.1
+	'Theme' => 'थीम', // by Claude Fable 5.1
 	'Color scheme' => 'रंग योजना', // by Claude Fable 5.1
 	'By system' => 'सिस्टम के अनुसार', // by Claude Fable 5.1
 	'Light' => 'हल्का', // by Claude Fable 5.1

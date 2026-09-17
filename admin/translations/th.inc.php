@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => '%s ต้องคืนค่าเป็นอาร์เรย์.', // by Claude Fable 5.1
 	'%s and %s must return an object created by %s method.' => '%s และ %s ต้องคืนค่าเป็นอ็อบเจกต์ที่สร้างโดยเมธอด %s.', // by Claude Fable 5.1
 
+	// Accessibility
+	'Skip to main content' => 'ข้ามไปยังเนื้อหาหลัก', // by Claude Fable 5.1
+	'Skip to menu' => 'ข้ามไปยังเมนู', // by Claude Fable 5.1
+	'Skip to table list' => 'ข้ามไปยังรายการตาราง', // by Claude Fable 5.1
+
 	// Login
 	'System' => 'ระบบ',
 	'Server' => 'เซอเวอร์',
@@ -53,6 +58,7 @@ return [
 	'Refresh' => 'โหลดใหม่',
 	'Info' => 'ข้อมูล', // by Claude Fable 5.1
 	'More information.' => 'ข้อมูลเพิ่มเติม.', // by Claude Fable 5.1
+	'Close' => 'ปิด', // by Claude Fable 5.1
 
 	// Privileges
 	'Privileges' => 'สิทธิ์',
@@ -171,7 +177,6 @@ return [
 	'Check' => 'ตรวจสอบ',
 	'Repair' => 'ซ่อมแซม',
 	'Truncate' => 'ตัดทิ้ง',
-	'Truncate Cascade' => 'ตัดทิ้งแบบลูกโซ่', // by Claude Fable 5.1
 	'Tables have been truncated.' => 'เคลียร์ตารางแล้ว (truncate).',
 	'Move to other database' => 'ย้ายไปยังฐานข้อมูลอื่น',
 	'Move' => 'ย้าย',
@@ -387,6 +392,7 @@ return [
 	// Settings
 	'Settings' => 'การตั้งค่า', // by Claude Fable 5.1
 	'Default' => 'ค่าเริ่มต้น', // by Claude Fable 5.1
+	'Theme' => 'ธีม', // by Claude Fable 5.1
 	'Color scheme' => 'ชุดสี', // by Claude Fable 5.1
 	'By system' => 'ตามระบบ', // by Claude Fable 5.1
 	'Light' => 'สว่าง', // by Claude Fable 5.1
