@@ -1,6 +1,13 @@
 Changelog
 =========
 
+AdminNeo 5.8.1
+--------------
+
+### Bugfixes
+
+- Export: Fix gzip compression for formats added by plugins
+
 AdminNeo 5.8.0 (2026-09-15)
 ---------------------------
 

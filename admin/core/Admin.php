@@ -985,21 +985,12 @@ class Admin extends Origin
 	 */
 	public function sendDumpHeaders(string $identifier, bool $multiTable = false): string
 	{
-		$output = $_POST["output"];
-
 		// Multiple CSVs are packed to TAR.
 		$extension = (str_contains($_POST["format"], "sql") ? "sql" : ($multiTable ? "tar" : "csv"));
 
-		if ($output == "gz") {
-			header("Content-Type: application/x-gzip");
-
-			ob_start(function (string $string): string {
-				// ob_start() callback receives an optional parameter $phase but gzencode() accepts optional parameter $level
-				return gzencode($string);
-			}, 1e6);
-		} elseif ($extension == "tar") {
+		if ($extension == "tar") {
 			header("Content-Type: application/x-tar");
-		} elseif ($extension == "sql" || $output == "text") {
+		} elseif ($extension == "sql" || $_POST["output"] == "text") {
 			header("Content-Type: text/plain; charset=utf-8");
 		} else {
 			header("Content-Type: text/csv; charset=utf-8");
