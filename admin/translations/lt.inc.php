@@ -111,6 +111,16 @@ return [
 	'Execute' => 'Vykdyti',
 	'Stop on error' => 'Sustabdyti esant klaidai',
 	'Show only errors' => 'Rodyti tik klaidas',
+	'Collect runtime statistics' => 'Rinkti vykdymo statistiką', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'Vykdo tik duomenų nekeičiančius SELECT sakinius. Statistikos rinkimas sukelia papildomas matavimo instrumentavimo sąnaudas.', // by GitHub Copilot
+	'Runtime statistics' => 'Vykdymo statistika', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'Statistika surinkta vykdant instrumentuotą šios užklausos kopiją ir sukelia papildomas sąnaudas.', // by GitHub Copilot
+	'Category' => 'Kategorija', // by GitHub Copilot
+	'Object' => 'Objektas', // by GitHub Copilot
+	'Metric' => 'Metrika', // by GitHub Copilot
+	'Value' => 'Reikšmė', // by GitHub Copilot
+	'Unit' => 'Vienetas', // by GitHub Copilot
+	'Details' => 'Išsamiau', // by GitHub Copilot
 	'Time' => 'Laikas',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'Istorija',

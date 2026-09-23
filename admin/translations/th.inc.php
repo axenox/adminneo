@@ -95,6 +95,16 @@ return [
 	'Execute' => 'ประมวลผล',
 	'Stop on error' => 'หยุดการทำงานเมื่อเออเรอ',
 	'Show only errors' => 'แสดงเฉพาะเออเรอ',
+	'Collect runtime statistics' => 'รวบรวมสถิติขณะทำงาน', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'เรียกใช้เฉพาะคำสั่ง SELECT แบบอ่านอย่างเดียว การรวบรวมสถิติเพิ่มภาระด้านประสิทธิภาพจากเครื่องมือวัด.', // by GitHub Copilot
+	'Runtime statistics' => 'สถิติขณะทำงาน', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'สถิติถูกรวบรวมโดยเรียกใช้สำเนาของคิวรีนี้ที่เพิ่มเครื่องมือวัดและทำให้มีภาระด้านประสิทธิภาพเพิ่มขึ้น.', // by GitHub Copilot
+	'Category' => 'หมวดหมู่', // by GitHub Copilot
+	'Object' => 'ออบเจ็กต์', // by GitHub Copilot
+	'Metric' => 'ตัวชี้วัด', // by GitHub Copilot
+	'Value' => 'ค่า', // by GitHub Copilot
+	'Unit' => 'หน่วย', // by GitHub Copilot
+	'Details' => 'รายละเอียด', // by GitHub Copilot
 	'Time' => 'เวลา',
 	'%.3f s' => '%.3f วินาที', // sprintf() format for time of the command
 	'History' => 'ประวัติ',

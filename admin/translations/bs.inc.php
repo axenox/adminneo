@@ -111,6 +111,16 @@ return [
 	'Execute' => 'Izvrši',
 	'Stop on error' => 'Zaustavi prilikom greške',
 	'Show only errors' => 'Prikazuj samo greške',
+	'Collect runtime statistics' => 'Prikupljaj statistiku izvršavanja', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'Izvršava samo SELECT naredbe koje ne mijenjaju podatke. Prikupljanje statistike dodaje opterećenje mjernih instrumenata.', // by GitHub Copilot
+	'Runtime statistics' => 'Statistika izvršavanja', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'Statistika je prikupljena izvršavanjem instrumentirane kopije ovog upita i stvara dodatno opterećenje.', // by GitHub Copilot
+	'Category' => 'Kategorija', // by GitHub Copilot
+	'Object' => 'Objekt', // by GitHub Copilot
+	'Metric' => 'Metrika', // by GitHub Copilot
+	'Value' => 'Vrijednost', // by GitHub Copilot
+	'Unit' => 'Jedinica', // by GitHub Copilot
+	'Details' => 'Detalji', // by GitHub Copilot
 	'Time' => 'Vrijeme',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'Historijat',

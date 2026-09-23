@@ -95,6 +95,16 @@ return [
 	'Execute' => '실행',
 	'Stop on error' => '오류의 경우 중지',
 	'Show only errors' => '오류 만 표시',
+	'Collect runtime statistics' => '실행 시간 통계 수집', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => '읽기 전용 SELECT 문만 실행합니다. 통계 수집은 측정 계측으로 인한 추가 성능 비용을 발생시킵니다.', // by GitHub Copilot
+	'Runtime statistics' => '실행 시간 통계', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => '이 쿼리의 계측된 복사본을 실행하여 통계를 수집했으며 추가 성능 비용이 발생합니다.', // by GitHub Copilot
+	'Category' => '범주', // by GitHub Copilot
+	'Object' => '객체', // by GitHub Copilot
+	'Metric' => '측정 항목', // by GitHub Copilot
+	'Value' => '값', // by GitHub Copilot
+	'Unit' => '단위', // by GitHub Copilot
+	'Details' => '세부 정보', // by GitHub Copilot
 	'Time' => '시간',
 	'%.3f s' => '%.3f 초', // sprintf() format for time of the command
 	'History' => '이력',

@@ -95,6 +95,16 @@ return [
 	'Execute' => 'اجرا',
 	'Stop on error' => 'توقف بر روی خطا',
 	'Show only errors' => 'فقط نمایش خطاها',
+	'Collect runtime statistics' => 'جمع‌آوری آمار زمان اجرا', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'فقط عبارت‌های SELECT فقط‌خواندنی را اجرا می‌کند. جمع‌آوری آمار به‌دلیل ابزارگذاری اندازه‌گیری، سربار کارایی ایجاد می‌کند.', // by GitHub Copilot
+	'Runtime statistics' => 'آمار زمان اجرا', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'آمار با اجرای نسخه‌ای ابزارگذاری‌شده از این پرس‌وجو جمع‌آوری شده است و سربار کارایی ایجاد می‌کند.', // by GitHub Copilot
+	'Category' => 'دسته', // by GitHub Copilot
+	'Object' => 'شیء', // by GitHub Copilot
+	'Metric' => 'معیار', // by GitHub Copilot
+	'Value' => 'مقدار', // by GitHub Copilot
+	'Unit' => 'واحد', // by GitHub Copilot
+	'Details' => 'جزئیات', // by GitHub Copilot
 	'Time' => 'زمان',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'تاریخچه', // by Claude Fable 5.1

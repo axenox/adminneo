@@ -107,6 +107,16 @@ return [
 	'Execute' => 'செய‌ல்ப‌டுத்து',
 	'Stop on error' => 'பிழை ஏற்ப‌டின் நிற்க‌',
 	'Show only errors' => 'பிழைக‌ளை ம‌ட்டும் காண்பிக்க‌வும்',
+	'Collect runtime statistics' => 'இயக்கநேரப் புள்ளிவிவரங்களைச் சேகரி', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'தரவை மாற்றாத SELECT கூற்றுகளை மட்டுமே இயக்குகிறது. புள்ளிவிவரங்களைச் சேகரிப்பது அளவீட்டுக் கருவியாக்கத்தால் கூடுதல் செயல்திறன் செலவை ஏற்படுத்துகிறது.', // by GitHub Copilot
+	'Runtime statistics' => 'இயக்கநேரப் புள்ளிவிவரங்கள்', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'இந்த வினவலின் அளவீட்டுக் கருவிகள் சேர்க்கப்பட்ட நகலை இயக்கிப் புள்ளிவிவரங்கள் சேகரிக்கப்பட்டதால் கூடுதல் செயல்திறன் செலவு ஏற்படுகிறது.', // by GitHub Copilot
+	'Category' => 'வகை', // by GitHub Copilot
+	'Object' => 'பொருள்', // by GitHub Copilot
+	'Metric' => 'அளவீடு', // by GitHub Copilot
+	'Value' => 'மதிப்பு', // by GitHub Copilot
+	'Unit' => 'அலகு', // by GitHub Copilot
+	'Details' => 'விவரங்கள்', // by GitHub Copilot
 	'Time' => 'நேர‌ம்',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'வ‌ர‌லாறு',

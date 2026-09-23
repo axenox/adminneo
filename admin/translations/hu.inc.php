@@ -95,6 +95,16 @@ return [
 	'Execute' => 'Végrehajt',
 	'Stop on error' => 'Hiba esetén megáll',
 	'Show only errors' => 'Csak a hibák mutatása',
+	'Collect runtime statistics' => 'Futásidejű statisztikák gyűjtése', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'Csak adatokat olvasó SELECT utasításokat futtat. A statisztikák gyűjtése a mérési műszerezés miatt további teljesítményköltséggel jár.', // by GitHub Copilot
+	'Runtime statistics' => 'Futásidejű statisztikák', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'A statisztikák a lekérdezés műszerezett másolatának futtatásával készültek, ami további teljesítményköltséggel jár.', // by GitHub Copilot
+	'Category' => 'Kategória', // by GitHub Copilot
+	'Object' => 'Objektum', // by GitHub Copilot
+	'Metric' => 'Mérőszám', // by GitHub Copilot
+	'Value' => 'Érték', // by GitHub Copilot
+	'Unit' => 'Mértékegység', // by GitHub Copilot
+	'Details' => 'Részletek', // by GitHub Copilot
 	'Time' => 'Idő',
 	'%.3f s' => '%.3f másodperc', // sprintf() format for time of the command
 	'History' => 'Történet',

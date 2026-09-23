@@ -98,6 +98,16 @@ return [
 	'Execute' => 'সম্পাদন করো',
 	'Stop on error' => 'ত্রুটি পেলে থেমে যান',
 	'Show only errors' => 'শুধুমাত্র ত্রুটিগুলো দেখান',
+	'Collect runtime statistics' => 'রানটাইম পরিসংখ্যান সংগ্রহ করুন', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'শুধু-পঠনযোগ্য SELECT বিবৃতি চালায়। পরিসংখ্যান সংগ্রহে পরিমাপের জন্য অতিরিক্ত কর্মক্ষমতা ব্যয় হয়।', // by GitHub Copilot
+	'Runtime statistics' => 'রানটাইম পরিসংখ্যান', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'এই কোয়েরির পরিমাপ-সজ্জিত অনুলিপি চালিয়ে পরিসংখ্যান সংগ্রহ করা হয়েছে এবং এতে অতিরিক্ত কর্মক্ষমতা ব্যয় হয়।', // by GitHub Copilot
+	'Category' => 'বিভাগ', // by GitHub Copilot
+	'Object' => 'অবজেক্ট', // by GitHub Copilot
+	'Metric' => 'পরিমাপক', // by GitHub Copilot
+	'Value' => 'মান', // by GitHub Copilot
+	'Unit' => 'একক', // by GitHub Copilot
+	'Details' => 'বিস্তারিত', // by GitHub Copilot
 	'Time' => 'সময়',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'ইতিহাস',

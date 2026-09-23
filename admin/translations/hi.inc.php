@@ -104,6 +104,16 @@ return [
 	'Execute' => 'निष्पादित करें',
 	'Stop on error' => 'त्रुटि पर रुकें',
 	'Show only errors' => 'केवल त्रुटियां दिखाएं',
+	'Collect runtime statistics' => 'रनटाइम आंकड़े एकत्र करें', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'केवल-पठन SELECT कथन ही चलाता है। आंकड़े एकत्र करने के लिए मापन उपकरण जोड़ने से अतिरिक्त प्रदर्शन लागत आती है।', // by GitHub Copilot
+	'Runtime statistics' => 'रनटाइम आंकड़े', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'इस क्वेरी की मापन उपकरण युक्त प्रति चलाकर आंकड़े एकत्र किए गए और इससे अतिरिक्त प्रदर्शन लागत आती है।', // by GitHub Copilot
+	'Category' => 'श्रेणी', // by GitHub Copilot
+	'Object' => 'ऑब्जेक्ट', // by GitHub Copilot
+	'Metric' => 'मापदंड', // by GitHub Copilot
+	'Value' => 'मान', // by GitHub Copilot
+	'Unit' => 'इकाई', // by GitHub Copilot
+	'Details' => 'विवरण', // by GitHub Copilot
 	'Time' => 'समय',
 	'%.3f s' => '%.3f सेकंड', // sprintf() format for time of the command
 	'History' => 'इतिहास',

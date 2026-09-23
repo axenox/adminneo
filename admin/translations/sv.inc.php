@@ -107,6 +107,16 @@ return [
 	'Execute' => 'Kör',
 	'Stop on error' => 'Stanna på fel',
 	'Show only errors' => 'Visa bara fel',
+	'Collect runtime statistics' => 'Samla in körningsstatistik', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'Kör endast skrivskyddade SELECT-satser. Insamling av statistik medför extra belastning från instrumenteringen.', // by GitHub Copilot
+	'Runtime statistics' => 'Körningsstatistik', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'Statistiken samlades in genom att köra en instrumenterad kopia av den här frågan och medför extra belastning.', // by GitHub Copilot
+	'Category' => 'Kategori', // by GitHub Copilot
+	'Object' => 'Objekt', // by GitHub Copilot
+	'Metric' => 'Mätvärde', // by GitHub Copilot
+	'Value' => 'Värde', // by GitHub Copilot
+	'Unit' => 'Enhet', // by GitHub Copilot
+	'Details' => 'Detaljer', // by GitHub Copilot
 	'Time' => 'Tid',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'Historia',

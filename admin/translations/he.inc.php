@@ -95,6 +95,16 @@ return [
 	'Execute' => 'הרץ',
 	'Stop on error' => 'עצור בעת שגיאה',
 	'Show only errors' => 'הראה שגיאות בלבד',
+	'Collect runtime statistics' => 'אסוף סטטיסטיקת זמן ריצה', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'מריץ רק משפטי SELECT לקריאה בלבד. איסוף הסטטיסטיקה מוסיף עלות ביצועים עקב מכשור המדידה', // by GitHub Copilot
+	'Runtime statistics' => 'סטטיסטיקת זמן ריצה', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'הסטטיסטיקה נאספה באמצעות הרצת עותק של שאילתה זו עם מכשור מדידה והיא מוסיפה עלות ביצועים', // by GitHub Copilot
+	'Category' => 'קטגוריה', // by GitHub Copilot
+	'Object' => 'אובייקט', // by GitHub Copilot
+	'Metric' => 'מדד', // by GitHub Copilot
+	'Value' => 'ערך', // by GitHub Copilot
+	'Unit' => 'יחידה', // by GitHub Copilot
+	'Details' => 'פרטים', // by GitHub Copilot
 	'Time' => 'זמן',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'היסטוריה',

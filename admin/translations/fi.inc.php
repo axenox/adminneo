@@ -101,6 +101,16 @@ return [
 	'Execute' => 'Suorita',
 	'Stop on error' => 'Pysähdy virheeseen',
 	'Show only errors' => 'Näytä vain virheet',
+	'Collect runtime statistics' => 'Kerää suoritustilastoja', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'Suorittaa vain tietoja muuttamattomia SELECT-lauseita. Tilastojen kerääminen aiheuttaa mittausinstrumentoinnista lisäkuormaa.', // by GitHub Copilot
+	'Runtime statistics' => 'Suoritustilastot', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'Tilastot kerättiin suorittamalla tämän kyselyn instrumentoitu kopio, mikä aiheuttaa lisäkuormaa.', // by GitHub Copilot
+	'Category' => 'Luokka', // by GitHub Copilot
+	'Object' => 'Objekti', // by GitHub Copilot
+	'Metric' => 'Mittari', // by GitHub Copilot
+	'Value' => 'Arvo', // by GitHub Copilot
+	'Unit' => 'Yksikkö', // by GitHub Copilot
+	'Details' => 'Tiedot', // by GitHub Copilot
 	'Time' => 'Aika',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'Historia',

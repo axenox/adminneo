@@ -95,6 +95,16 @@ return [
 	'Execute' => '実行',
 	'Stop on error' => 'エラーの場合は停止',
 	'Show only errors' => 'エラーのみ表示',
+	'Collect runtime statistics' => '実行時統計を収集', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => '読み取り専用のSELECT文のみを実行します。統計の収集では計測処理による性能上のオーバーヘッドが発生します。', // by GitHub Copilot
+	'Runtime statistics' => '実行時統計', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'このクエリに計測処理を組み込んだコピーを実行して統計を収集したため、オーバーヘッドが発生します。', // by GitHub Copilot
+	'Category' => 'カテゴリ', // by GitHub Copilot
+	'Object' => 'オブジェクト', // by GitHub Copilot
+	'Metric' => '測定項目', // by GitHub Copilot
+	'Value' => '値', // by GitHub Copilot
+	'Unit' => '単位', // by GitHub Copilot
+	'Details' => '詳細', // by GitHub Copilot
 	'Time' => 'タイミング',
 	'%.3f s' => '%.3f 秒', // sprintf() format for time of the command
 	'History' => '履歴',

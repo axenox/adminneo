@@ -111,6 +111,16 @@ return [
 	'Execute' => 'Виконати',
 	'Stop on error' => 'Зупинитись при помилці',
 	'Show only errors' => 'Показувати тільки помилки',
+	'Collect runtime statistics' => 'Збирати статистику виконання', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'Виконує лише SELECT-запити без зміни даних. Збирання статистики створює додаткові накладні витрати на вимірювання.', // by GitHub Copilot
+	'Runtime statistics' => 'Статистика виконання', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'Статистику зібрано шляхом виконання інструментованої копії цього запиту, що створює додаткові накладні витрати.', // by GitHub Copilot
+	'Category' => 'Категорія', // by GitHub Copilot
+	'Object' => 'Об’єкт', // by GitHub Copilot
+	'Metric' => 'Метрика', // by GitHub Copilot
+	'Value' => 'Значення', // by GitHub Copilot
+	'Unit' => 'Одиниця', // by GitHub Copilot
+	'Details' => 'Подробиці', // by GitHub Copilot
 	'Time' => 'Час',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'Історія',

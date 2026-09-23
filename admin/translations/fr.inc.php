@@ -107,6 +107,16 @@ return [
 	'Execute' => 'Exécuter',
 	'Stop on error' => 'Arrêter en cas d\'erreur',
 	'Show only errors' => 'Montrer seulement les erreurs',
+	'Collect runtime statistics' => 'Collecter les statistiques d’exécution', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'Exécute uniquement des instructions SELECT en lecture seule. La collecte des statistiques ajoute une surcharge d’instrumentation.', // by GitHub Copilot
+	'Runtime statistics' => 'Statistiques d’exécution', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'Les statistiques ont été collectées en exécutant une copie instrumentée de cette requête et ajoutent une surcharge.', // by GitHub Copilot
+	'Category' => 'Catégorie', // by GitHub Copilot
+	'Object' => 'Objet', // by GitHub Copilot
+	'Metric' => 'Métrique', // by GitHub Copilot
+	'Value' => 'Valeur', // by GitHub Copilot
+	'Unit' => 'Unité', // by GitHub Copilot
+	'Details' => 'Détails', // by GitHub Copilot
 	'Time' => 'Temps',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'Historique',

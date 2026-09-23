@@ -107,6 +107,16 @@ return [
 	'Execute' => 'Изпълнение',
 	'Stop on error' => 'Спиране при грешка',
 	'Show only errors' => 'Показване само на грешките',
+	'Collect runtime statistics' => 'Събиране на статистика за времето за изпълнение', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'Изпълнява само SELECT заявки без запис. Събирането на статистика добавя допълнително натоварване от измерването.', // by GitHub Copilot
+	'Runtime statistics' => 'Статистика за времето за изпълнение', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'Статистиката е събрана чрез изпълнение на инструментално копие на тази заявка и добавя допълнително натоварване.', // by GitHub Copilot
+	'Category' => 'Категория', // by GitHub Copilot
+	'Object' => 'Обект', // by GitHub Copilot
+	'Metric' => 'Метрика', // by GitHub Copilot
+	'Value' => 'Стойност', // by GitHub Copilot
+	'Unit' => 'Единица', // by GitHub Copilot
+	'Details' => 'Подробности', // by GitHub Copilot
 	'Time' => 'Време',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'Хронология',

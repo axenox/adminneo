@@ -101,6 +101,16 @@ return [
 	'Execute' => 'Käivita',
 	'Stop on error' => 'Peatuda vea esinemisel',
 	'Show only errors' => 'Kuva vaid veateateid',
+	'Collect runtime statistics' => 'Kogu käitusaja statistikat', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'Käivitab ainult kirjutuskaitstud SELECT-lauseid. Statistika kogumine lisab mõõtmisega seotud jõudluskulu.', // by GitHub Copilot
+	'Runtime statistics' => 'Käitusaja statistika', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'Statistika koguti selle päringu instrumenteeritud koopia käivitamisega ja see lisab jõudluskulu.', // by GitHub Copilot
+	'Category' => 'Kategooria', // by GitHub Copilot
+	'Object' => 'Objekt', // by GitHub Copilot
+	'Metric' => 'Mõõdik', // by GitHub Copilot
+	'Value' => 'Väärtus', // by GitHub Copilot
+	'Unit' => 'Ühik', // by GitHub Copilot
+	'Details' => 'Üksikasjad', // by GitHub Copilot
 	'Time' => 'Aeg',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'Ajalugu',

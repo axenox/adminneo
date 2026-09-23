@@ -101,6 +101,16 @@ return [
 	'Execute' => 'تنفيذ',
 	'Stop on error' => 'أوقف في حالة حدوث خطأ',
 	'Show only errors' => 'إظهار الأخطاء فقط',
+	'Collect runtime statistics' => 'جمع إحصاءات وقت التشغيل', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'يشغّل فقط عبارات SELECT للقراءة فقط. يضيف جمع الإحصاءات تكلفة أداء إضافية بسبب أدوات القياس.', // by GitHub Copilot
+	'Runtime statistics' => 'إحصاءات وقت التشغيل', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'جُمعت الإحصاءات بتنفيذ نسخة مزودة بأدوات قياس من هذا الاستعلام، مما يضيف تكلفة أداء إضافية.', // by GitHub Copilot
+	'Category' => 'الفئة', // by GitHub Copilot
+	'Object' => 'الكائن', // by GitHub Copilot
+	'Metric' => 'المقياس', // by GitHub Copilot
+	'Value' => 'القيمة', // by GitHub Copilot
+	'Unit' => 'الوحدة', // by GitHub Copilot
+	'Details' => 'التفاصيل', // by GitHub Copilot
 	'Time' => 'الوقت',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'تاريخ',

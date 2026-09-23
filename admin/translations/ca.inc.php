@@ -107,6 +107,16 @@ return [
 	'Execute' => 'Executa',
 	'Stop on error' => 'Atura en trobar un error',
 	'Show only errors' => 'Mostra només els errors',
+	'Collect runtime statistics' => 'Recull estadístiques de temps d’execució', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'Només executa sentències SELECT de lectura. La recopilació d’estadístiques afegeix sobrecàrrega d’instrumentació.', // by GitHub Copilot
+	'Runtime statistics' => 'Estadístiques de temps d’execució', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'Les estadístiques s’han recollit executant una còpia instrumentada d’aquesta consulta i afegeixen sobrecàrrega.', // by GitHub Copilot
+	'Category' => 'Categoria', // by GitHub Copilot
+	'Object' => 'Objecte', // by GitHub Copilot
+	'Metric' => 'Mètrica', // by GitHub Copilot
+	'Value' => 'Valor', // by GitHub Copilot
+	'Unit' => 'Unitat', // by GitHub Copilot
+	'Details' => 'Detalls', // by GitHub Copilot
 	'Time' => 'Temps',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'Història',

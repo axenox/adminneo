@@ -95,6 +95,16 @@ return [
 	'Execute' => 'Laksana',
 	'Stop on error' => 'Berhenti jika ralat',
 	'Show only errors' => 'Paparkan jika ralat',
+	'Collect runtime statistics' => 'Kumpulkan statistik masa jalan', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'Hanya menjalankan pernyataan SELECT baca sahaja. Pengumpulan statistik menambah kos prestasi instrumentasi pengukuran.', // by GitHub Copilot
+	'Runtime statistics' => 'Statistik masa jalan', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'Statistik dikumpulkan dengan menjalankan salinan pertanyaan ini yang dilengkapi instrumentasi dan menambah kos prestasi.', // by GitHub Copilot
+	'Category' => 'Kategori', // by GitHub Copilot
+	'Object' => 'Objek', // by GitHub Copilot
+	'Metric' => 'Metrik', // by GitHub Copilot
+	'Value' => 'Nilai', // by GitHub Copilot
+	'Unit' => 'Unit', // by GitHub Copilot
+	'Details' => 'Butiran', // by GitHub Copilot
 	'Time' => 'Masa',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'Sejarah',

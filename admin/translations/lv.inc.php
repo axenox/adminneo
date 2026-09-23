@@ -111,6 +111,16 @@ return [
 	'Execute' => 'Izpildīt', // by Claude Fable 5.1
 	'Stop on error' => 'Apstāties kļūdas gadījumā', // by Claude Fable 5.1
 	'Show only errors' => 'Rādīt tikai kļūdas',
+	'Collect runtime statistics' => 'Apkopot izpildes statistiku', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'Izpilda tikai datus nemainošus SELECT priekšrakstus. Statistikas apkopošana rada papildu mērīšanas instrumentācijas slodzi.', // by GitHub Copilot
+	'Runtime statistics' => 'Izpildes statistika', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'Statistika tika apkopota, izpildot instrumentētu šī vaicājuma kopiju, un rada papildu slodzi.', // by GitHub Copilot
+	'Category' => 'Kategorija', // by GitHub Copilot
+	'Object' => 'Objekts', // by GitHub Copilot
+	'Metric' => 'Metrika', // by GitHub Copilot
+	'Value' => 'Vērtība', // by GitHub Copilot
+	'Unit' => 'Vienība', // by GitHub Copilot
+	'Details' => 'Informācija', // by GitHub Copilot
 	'Time' => 'Laiks',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'Vēsture',

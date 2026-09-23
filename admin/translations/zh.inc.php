@@ -95,6 +95,16 @@ return [
 	'Execute' => '执行',
 	'Stop on error' => '出错时停止',
 	'Show only errors' => '仅显示错误',
+	'Collect runtime statistics' => '收集运行时统计信息', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => '仅执行只读 SELECT 语句。收集统计信息会因测量插桩而增加性能开销。', // by GitHub Copilot
+	'Runtime statistics' => '运行时统计信息', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => '统计信息通过执行此查询的测量插桩副本来收集，因此会增加性能开销。', // by GitHub Copilot
+	'Category' => '类别', // by GitHub Copilot
+	'Object' => '对象', // by GitHub Copilot
+	'Metric' => '指标', // by GitHub Copilot
+	'Value' => '值', // by GitHub Copilot
+	'Unit' => '单位', // by GitHub Copilot
+	'Details' => '详细信息', // by GitHub Copilot
 	'Time' => '时间',
 	'%.3f s' => '%.3f 秒', // sprintf() format for time of the command
 	'History' => '历史',

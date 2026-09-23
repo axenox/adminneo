@@ -107,6 +107,16 @@ return [
 	'Execute' => 'Εκτέλεση',
 	'Stop on error' => 'Διακοπή όταν υπάρχει σφάλμα',
 	'Show only errors' => 'Να εμφανίζονται μόνο τα σφάλματα',
+	'Collect runtime statistics' => 'Συλλογή στατιστικών χρόνου εκτέλεσης', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'Εκτελεί μόνο εντολές SELECT μόνο για ανάγνωση. Η συλλογή στατιστικών προσθέτει επιβάρυνση από τα όργανα μέτρησης.', // by GitHub Copilot
+	'Runtime statistics' => 'Στατιστικά χρόνου εκτέλεσης', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'Τα στατιστικά συλλέχθηκαν εκτελώντας ένα αντίγραφο αυτού του ερωτήματος με όργανα μέτρησης και προσθέτουν επιβάρυνση.', // by GitHub Copilot
+	'Category' => 'Κατηγορία', // by GitHub Copilot
+	'Object' => 'Αντικείμενο', // by GitHub Copilot
+	'Metric' => 'Μετρική', // by GitHub Copilot
+	'Value' => 'Τιμή', // by GitHub Copilot
+	'Unit' => 'Μονάδα', // by GitHub Copilot
+	'Details' => 'Λεπτομέρειες', // by GitHub Copilot
 	'Time' => 'Ώρα',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'Ιστορικό',

@@ -111,6 +111,16 @@ return [
 	'Execute' => 'Выполнить',
 	'Stop on error' => 'Остановить при ошибке',
 	'Show only errors' => 'Только ошибки',
+	'Collect runtime statistics' => 'Собирать статистику выполнения', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'Выполняет только SELECT-запросы без изменения данных. Сбор статистики создаёт дополнительные накладные расходы на измерения.', // by GitHub Copilot
+	'Runtime statistics' => 'Статистика выполнения', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'Статистика собрана путём выполнения инструментированной копии этого запроса, что создаёт дополнительные накладные расходы.', // by GitHub Copilot
+	'Category' => 'Категория', // by GitHub Copilot
+	'Object' => 'Объект', // by GitHub Copilot
+	'Metric' => 'Метрика', // by GitHub Copilot
+	'Value' => 'Значение', // by GitHub Copilot
+	'Unit' => 'Единица', // by GitHub Copilot
+	'Details' => 'Подробности', // by GitHub Copilot
 	'Time' => 'Время',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'История',

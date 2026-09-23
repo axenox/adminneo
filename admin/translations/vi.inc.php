@@ -95,6 +95,16 @@ return [
 	'Execute' => 'Thực hiện',
 	'Stop on error' => 'Dừng khi có lỗi',
 	'Show only errors' => 'Chỉ hiện lỗi',
+	'Collect runtime statistics' => 'Thu thập thống kê thời gian chạy', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'Chỉ chạy các câu lệnh SELECT chỉ đọc. Việc thu thập thống kê làm tăng chi phí hiệu năng do công cụ đo lường.', // by GitHub Copilot
+	'Runtime statistics' => 'Thống kê thời gian chạy', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'Thống kê được thu thập bằng cách chạy một bản sao của truy vấn này có gắn công cụ đo lường và làm tăng chi phí hiệu năng.', // by GitHub Copilot
+	'Category' => 'Danh mục', // by GitHub Copilot
+	'Object' => 'Đối tượng', // by GitHub Copilot
+	'Metric' => 'Chỉ số', // by GitHub Copilot
+	'Value' => 'Giá trị', // by GitHub Copilot
+	'Unit' => 'Đơn vị', // by GitHub Copilot
+	'Details' => 'Chi tiết', // by GitHub Copilot
 	'Time' => 'Thời gian',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'Lịch sử',

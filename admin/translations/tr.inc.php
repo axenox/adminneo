@@ -101,6 +101,16 @@ return [
 	'Execute' => 'Çalıştır',
 	'Stop on error' => 'Hata oluşursa dur',
 	'Show only errors' => 'Sadece hataları göster',
+	'Collect runtime statistics' => 'Çalışma zamanı istatistiklerini topla', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'Yalnızca verileri değiştirmeyen SELECT ifadelerini çalıştırır. İstatistiklerin toplanması ölçüm araçlarından kaynaklanan ek performans yükü oluşturur.', // by GitHub Copilot
+	'Runtime statistics' => 'Çalışma zamanı istatistikleri', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'İstatistikler bu sorgunun ölçüm araçları eklenmiş bir kopyası çalıştırılarak toplandı ve ek performans yükü oluşturur.', // by GitHub Copilot
+	'Category' => 'Kategori', // by GitHub Copilot
+	'Object' => 'Nesne', // by GitHub Copilot
+	'Metric' => 'Ölçüm', // by GitHub Copilot
+	'Value' => 'Değer', // by GitHub Copilot
+	'Unit' => 'Birim', // by GitHub Copilot
+	'Details' => 'Ayrıntılar', // by GitHub Copilot
 	'Time' => 'Zaman',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'Geçmiş',

@@ -95,6 +95,16 @@ return [
 	'Execute' => 'შესრულება',
 	'Stop on error' => 'გაჩერება შეცდომისას',
 	'Show only errors' => 'მხოლოდ შეცდომები',
+	'Collect runtime statistics' => 'შესრულების სტატისტიკის შეგროვება', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'ასრულებს მხოლოდ მონაცემების წამკითხველ SELECT ოპერატორებს. სტატისტიკის შეგროვება საზომი ინსტრუმენტების გამო დამატებით წარმადობის დანახარჯს იწვევს.', // by GitHub Copilot
+	'Runtime statistics' => 'შესრულების სტატისტიკა', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'სტატისტიკა შეგროვდა ამ მოთხოვნის საზომი ინსტრუმენტებით აღჭურვილი ასლის შესრულებით, რაც დამატებით წარმადობის დანახარჯს იწვევს.', // by GitHub Copilot
+	'Category' => 'კატეგორია', // by GitHub Copilot
+	'Object' => 'ობიექტი', // by GitHub Copilot
+	'Metric' => 'მაჩვენებელი', // by GitHub Copilot
+	'Value' => 'მნიშვნელობა', // by GitHub Copilot
+	'Unit' => 'ერთეული', // by GitHub Copilot
+	'Details' => 'დეტალები', // by GitHub Copilot
 	'Time' => 'დრო',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'ისტორია',

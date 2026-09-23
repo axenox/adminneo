@@ -111,6 +111,16 @@ return [
 	'Execute' => 'Execută',
 	'Stop on error' => 'Se oprește la greșeală',
 	'Show only errors' => 'Arată doar greșeli',
+	'Collect runtime statistics' => 'Colectează statistici de execuție', // by GitHub Copilot
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'Execută numai instrucțiuni SELECT care nu modifică datele. Colectarea statisticilor adaugă costul suplimentar al instrumentării.', // by GitHub Copilot
+	'Runtime statistics' => 'Statistici de execuție', // by GitHub Copilot
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'Statisticile au fost colectate executând o copie instrumentată a acestei interogări și adaugă un cost suplimentar.', // by GitHub Copilot
+	'Category' => 'Categorie', // by GitHub Copilot
+	'Object' => 'Obiect', // by GitHub Copilot
+	'Metric' => 'Metrică', // by GitHub Copilot
+	'Value' => 'Valoare', // by GitHub Copilot
+	'Unit' => 'Unitate', // by GitHub Copilot
+	'Details' => 'Detalii', // by GitHub Copilot
 	'Time' => 'Timp',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'Istoria',
