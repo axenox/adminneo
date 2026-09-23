@@ -92,6 +92,7 @@ When adding new features, that potentially make sense for multiple drivers, make
 | `variables` | Display server variables. |
 | `view` | Create and alter views. |
 | `view_trigger` | Create and alter triggers on views. |
+| `runtime_statistics` | Collect actual execution and I/O statistics for read-only SQL statements. |
 | `materializedview` | Support materialized views. |
 
 ## Directory structure
@@ -125,6 +126,16 @@ The settings route also returns through the main router after rendering instead 
 MS SQL servers using the native SQLSRV extension can set `connectionOptions` in their `config` array. These values are passed to `sqlsrv_connect()` before AdminNeo adds the selected database, UTF-8 character set, non-empty credentials, and first-class `sslEncrypt` or `sslTrustServerCertificate` settings. This supports authentication modes such as `ActiveDirectoryMsi` without changing standalone defaults.
 
 `adminneo-plugins.php` (placed next to the entry point) returns an array of `Plugin` instances.
+
+## Runtime statistics
+
+The SQL command page offers an unchecked **Collect runtime statistics** option for supported
+connections. It is restricted to statements beginning with `SELECT`; `WITH` is deliberately not
+accepted because it can conceal a data-modifying CTE. PostgreSQL, MySQL 8.0.18+ and MariaDB 10.1+ run an
+instrumented copy (`EXPLAIN ANALYZE`/`ANALYZE`), so the UI explicitly warns about the second
+execution and its overhead. The native SQLSRV driver instruments the original MS SQL execution
+with `SET STATISTICS IO/TIME` and always restores both session settings. Statistics are normalized
+as category, object, metric, value, unit and original details.
 
 ## Namespace
 

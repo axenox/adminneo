@@ -6,6 +6,7 @@ and feature-branch merges are listed together with the feature they belong to.
 
 | Feature | Description | Commits |
 | --- | --- | --- |
+| Runtime and I/O statistics | Adds opt-in, read-only actual execution statistics to the SQL command page and normalized driver APIs for MS SQL (SQLSRV), PostgreSQL, MySQL 8.0.18+, and MariaDB 10.1+. | TBD |
 | Scrollable SQL results | Limits custom SQL result tables to the available width and 800 pixels in height, with dedicated horizontal and vertical scrollbars. | [`035cfa83`](https://github.com/axenox/adminneo/commit/035cfa83) |
 | Embedded mode | Adds a configuration-based mode for embedding AdminNeo in another application, prevents mid-render stream flushing from breaking host integrations, resolves default schemas without an external redirect, and lets hosts capture the settings page. | [`50e8653a`](https://github.com/axenox/adminneo/commit/50e8653a3a1d2dd7c2efe23d42d5c12d4f5f14bc), [`c0475494`](https://github.com/axenox/adminneo/commit/c0475494c60b5be558cdd32dd32a933d096877aa), [`2cb2bfd9`](https://github.com/axenox/adminneo/commit/2cb2bfd9), TBD |
 | MS SQL connection options | Passes optional native SQLSRV connection options through to `sqlsrv_connect()`, including credential-free authentication modes such as Azure managed identity. | [`bb85450c`](https://github.com/axenox/adminneo/commit/bb85450c) |

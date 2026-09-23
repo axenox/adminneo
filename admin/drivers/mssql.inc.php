@@ -25,6 +25,15 @@ if (isset($_GET["mssql"])) {
 			/** @var resource|false */
 			protected $multiResult;
 
+			/** @var array */
+			private $runtimeStatisticsMessages = [];
+
+			/** @var bool */
+			private $collectRuntimeStatistics = false;
+
+			/** @var bool */
+			private $warningsReturnAsErrors = true;
+
 			public function getDefaultServerName(): string
 			{
 				return "localhost:1433";
@@ -69,10 +78,13 @@ if (isset($_GET["mssql"])) {
 
 			private function resolveError(): void
 			{
+				$this->errno = 0;
 				$this->error = "";
 
 				foreach (sqlsrv_errors() as $error) {
-					$this->errno = $error["code"];
+					if (!$this->errno || substr($error["SQLSTATE"], 0, 2) != "01") {
+						$this->errno = $error["code"];
+					}
 					$this->error .= "$error[message]\n";
 				}
 
@@ -92,6 +104,7 @@ if (isset($_GET["mssql"])) {
 			function query(string $query, bool $unbuffered = false)
 			{
 				$result = sqlsrv_query($this->connection, $query); // TODO , [], ($unbuffered ? [] : ["Scrollable" => "keyset"])
+				$this->collectRuntimeStatisticsMessages();
 				$this->error = "";
 
 				if (!$result) {
@@ -106,6 +119,7 @@ if (isset($_GET["mssql"])) {
 			public function multiQuery(string $query): bool
 			{
 				$this->multiResult = sqlsrv_query($this->connection, $query);
+				$this->collectRuntimeStatisticsMessages();
 				$this->error = "";
 
 				if (!$this->multiResult) {
@@ -137,7 +151,33 @@ if (isset($_GET["mssql"])) {
 
 			public function nextResult(): bool
 			{
-				return $this->multiResult && sqlsrv_next_result($this->multiResult);
+				$return = $this->multiResult && sqlsrv_next_result($this->multiResult);
+				$this->collectRuntimeStatisticsMessages();
+				return $return;
+			}
+
+			public function startRuntimeStatisticsCollection(): void
+			{
+				$this->runtimeStatisticsMessages = [];
+				$this->warningsReturnAsErrors = sqlsrv_get_config("WarningsReturnAsErrors");
+				sqlsrv_configure("WarningsReturnAsErrors", false);
+				$this->collectRuntimeStatistics = true;
+				sqlsrv_errors(SQLSRV_ERR_ALL);
+			}
+
+			public function finishRuntimeStatisticsCollection(): array
+			{
+				$this->collectRuntimeStatisticsMessages();
+				$this->collectRuntimeStatistics = false;
+				sqlsrv_configure("WarningsReturnAsErrors", $this->warningsReturnAsErrors);
+				return $this->runtimeStatisticsMessages;
+			}
+
+			private function collectRuntimeStatisticsMessages(): void
+			{
+				if ($this->collectRuntimeStatistics) {
+					$this->runtimeStatisticsMessages = array_merge($this->runtimeStatisticsMessages, sqlsrv_errors(SQLSRV_ERR_ALL) ?: []);
+				}
 			}
 		}
 
@@ -512,6 +552,56 @@ AND i.object_id IN (
 		public function quoteBinary(string $string): string
 		{
 			return "0x" . bin2hex($string);
+		}
+
+		public function supportsRuntimeStatistics(): bool
+		{
+			return DRIVER_EXTENSION == "sqlsrv";
+		}
+
+		public function runtimeStatisticsExecuteSeparately(): bool
+		{
+			return false;
+		}
+
+		public function startRuntimeStatistics(): bool
+		{
+			if (!$this->supportsRuntimeStatistics() || !$this->connection->query("SET STATISTICS IO ON; SET STATISTICS TIME ON")) {
+				return false;
+			}
+			$this->connection->startRuntimeStatisticsCollection();
+			return true;
+		}
+
+		public function finishRuntimeStatistics(string $query): array
+		{
+			if (!$this->supportsRuntimeStatistics()) {
+				return [];
+			}
+
+			$messages = $this->connection->finishRuntimeStatisticsCollection();
+			// Always restore both session options, including after a failed user query.
+			$this->connection->query("SET STATISTICS IO OFF; SET STATISTICS TIME OFF");
+			$statistics = [];
+			foreach ($messages as $message) {
+				$details = preg_replace('~^\[Microsoft\]\[ODBC Driver [^]]+ for SQL Server\]\[SQL Server\]\s*~', '', $message["message"] ?? "");
+				if (!preg_match('~(?:logical reads|CPU time|elapsed time)~i', $details)) {
+					continue;
+				}
+				$object = preg_match("~Table '([^']+)'~i", $details, $match) ? $match[1] : null;
+				preg_match_all('~(lob read-ahead reads|lob logical reads|lob physical reads|read-ahead reads|logical reads|physical reads|CPU time|elapsed time)\s*[=:]?\s*(\d+)\s*(ms)?~i', $details, $matches, PREG_SET_ORDER);
+				foreach ($matches as $match) {
+					$statistics[] = [
+						"category" => stripos($match[1], "time") !== false ? "timing" : "I/O",
+						"object" => $object,
+						"metric" => strtolower($match[1]),
+						"value" => (int)$match[2],
+						"unit" => !empty($match[3]) ? "ms" : "pages",
+						"details" => $details,
+					];
+				}
+			}
+			return $statistics;
 		}
 
 		public function begin()
@@ -1483,6 +1573,6 @@ ORDER BY CASE WHEN o.type = 'P' THEN 0 ELSE 1 END, o.name");
 
 	function support(string $feature): bool
 	{
-		return preg_match('~^(check|comment|columns|copy|database|drop_col|dump|fast_status|indexes|descidx|procedure|routine|routine_script|scheme|sql|table|trigger|view|view_trigger)$~', $feature);
+		return preg_match('~^(check|comment|columns|copy|database|drop_col|dump|fast_status|indexes|descidx|procedure|routine|routine_script|scheme|sql|table|trigger|view|view_trigger' . (Driver::get()->supportsRuntimeStatistics() ? '|runtime_statistics' : '') . ')$~', $feature);
 	}
 }

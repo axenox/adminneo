@@ -436,6 +436,52 @@ abstract class Driver
 	}
 
 	/**
+	 * Whether actual runtime statistics can be collected for this connection.
+	 */
+	public function supportsRuntimeStatistics(): bool
+	{
+		return false;
+	}
+
+	/**
+	 * Whether collecting statistics executes an instrumented copy of the query.
+	 */
+	public function runtimeStatisticsExecuteSeparately(): bool
+	{
+		return true;
+	}
+
+	/**
+	 * Enables statistics that must surround the original query execution.
+	 */
+	public function startRuntimeStatistics(): bool
+	{
+		return true;
+	}
+
+	/**
+	 * Returns normalized actual runtime statistics and restores changed session settings.
+	 *
+	 * Each row contains category, object, metric, value, unit and details keys.
+	 */
+	public function finishRuntimeStatistics(string $query): array
+	{
+		return [];
+	}
+
+	/**
+	 * Returns whether a statement is safe for runtime analysis.
+	 *
+	 * Deliberately accept only statements beginning with SELECT. In particular, WITH is not
+	 * accepted because a data-modifying CTE can hide INSERT, UPDATE or DELETE operations.
+	 */
+	public function isRuntimeStatisticsQuery(string $query): bool
+	{
+		$query = preg_replace('~^(?:\s|/\*[\s\S]*?\*/|(?:#|--)[^\n]*\n?)*~', '', $query);
+		return preg_match('~^\(*\s*SELECT\b~i', $query) === 1;
+	}
+
+	/**
 	 * Returns help link for a table.
 	 *
 	 * @param string $name Table name.

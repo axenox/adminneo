@@ -574,6 +574,57 @@ AND NOT a.attisdropped";
 			return $this->connection->warnings();
 		}
 
+		public function supportsRuntimeStatistics(): bool
+		{
+			return !$this->connection->isCockroachDB();
+		}
+
+		public function finishRuntimeStatistics(string $query): array
+		{
+			if (!$this->supportsRuntimeStatistics() || !$this->isRuntimeStatisticsQuery($query)) {
+				return [];
+			}
+
+			$result = $this->connection->query("EXPLAIN (ANALYZE, BUFFERS, TIMING OFF, FORMAT JSON) $query");
+			if (!is_object($result) || !($row = $result->fetchRow())) {
+				return [];
+			}
+			$document = json_decode($row[0], true);
+			$statistics = [];
+			$appendPlan = function (array $node) use (&$appendPlan, &$statistics) {
+				$object = $node["Relation Name"] ?? $node["Node Type"] ?? null;
+				$metrics = [
+					"Actual Rows" => "rows",
+					"Actual Loops" => "loops",
+					"Shared Hit Blocks" => "blocks",
+					"Shared Read Blocks" => "blocks",
+					"Shared Dirtied Blocks" => "blocks",
+					"Shared Written Blocks" => "blocks",
+					"Local Hit Blocks" => "blocks",
+					"Local Read Blocks" => "blocks",
+					"Temp Read Blocks" => "blocks",
+					"Temp Written Blocks" => "blocks",
+				];
+				foreach ($metrics as $metric => $unit) {
+					if (array_key_exists($metric, $node)) {
+						$statistics[] = ["category" => "plan node", "object" => $object, "metric" => $metric, "value" => $node[$metric], "unit" => $unit, "details" => null];
+					}
+				}
+				foreach ($node["Plans"] ?? [] as $child) {
+					$appendPlan($child);
+				}
+			};
+			if (isset($document[0]["Plan"])) {
+				$appendPlan($document[0]["Plan"]);
+			}
+			foreach (["Planning Time", "Execution Time"] as $metric) {
+				if (isset($document[0][$metric])) {
+					$statistics[] = ["category" => "timing", "object" => null, "metric" => $metric, "value" => $document[0][$metric], "unit" => "ms", "details" => null];
+				}
+			}
+			return $statistics;
+		}
+
 		public function tableHelp(string $name, bool $isView = false): ?string
 		{
 			$links = [
@@ -1726,7 +1777,9 @@ AND oid NOT IN (SELECT objid FROM pg_catalog.pg_depend WHERE classid = 'pg_type'
 		}
 
 		return preg_match(
-			'~^(check|columns|comment|copy|database|drop_col|dump|descidx|fast_status|indexes|kill|partial_indexes|routine|routine_fields|scheme|sequence|sql|table|trigger|type|variables|view)$~',
+			'~^(check|columns|comment|copy|database|drop_col|dump|descidx|fast_status|indexes|kill|partial_indexes|routine|routine_fields|scheme|sequence|sql|table|trigger|type|variables|view'
+			. (Driver::get()->supportsRuntimeStatistics() ? '|runtime_statistics' : '')
+			. ')$~',
 			$feature
 		);
 	}

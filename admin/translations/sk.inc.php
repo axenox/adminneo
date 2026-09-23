@@ -111,6 +111,16 @@ return [
 	'Execute' => 'Vykonať',
 	'Stop on error' => 'Zastaviť pri chybe',
 	'Show only errors' => 'Zobraziť iba chyby',
+	'Collect runtime statistics' => 'Zhromažďovať štatistiky behu', // by ChatGPT
+	'Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.' => 'Spúšťa iba SELECT dotazy určené na čítanie. Zhromažďovanie štatistík pridáva réžiu.', // by ChatGPT
+	'Runtime statistics' => 'Štatistiky behu', // by ChatGPT
+	'Statistics were collected by executing an instrumented copy of this query and add overhead.' => 'Štatistiky boli získané spustením inštrumentovanej kópie tohto dotazu a pridávajú réžiu.', // by ChatGPT
+	'Category' => 'Kategória', // by ChatGPT
+	'Object' => 'Objekt', // by ChatGPT
+	'Metric' => 'Metrika', // by ChatGPT
+	'Value' => 'Hodnota', // by ChatGPT
+	'Unit' => 'Jednotka', // by ChatGPT
+	'Details' => 'Podrobnosti', // by ChatGPT
 	'Time' => 'Čas',
 	'%.3f s' => '%.3f s', // sprintf() format for time of the command
 	'History' => 'História',
