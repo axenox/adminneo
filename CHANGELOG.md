@@ -4,17 +4,26 @@ Changelog
 AdminNeo 5.9.0
 --------------
 
-### Fork changes
+### Fork modifications
 
 - SQL command: Add opt-in actual runtime and I/O statistics for read-only queries on MS SQL, PostgreSQL, MySQL 8.0.18+ and MariaDB 10.1+
 
-AdminNeo 5.8.0
---------------
+AdminNeo 5.8.0 (2026-09-15)
+---------------------------
+
+### Fork modifications
+
+- MS SQL: Allow native SQLSRV connection options such as Azure managed identity authentication
+- Settings: Fix an empty page when AdminNeo output is captured by an embedding host
 
 ### Changes
 
+- CSS: Add new Dune theme
+- Settings: Add a theme selector
 - Scroll the navigation panel to the selected table when it is out of view
 - Indicate a scrolled table list in the navigation panel by a separator line
+- Accessibility: Keep focus in floating menu on small screens
+- Accessibility: Add skip links
 - Alter table, Privileges: Do not print a success message if nothing was changed (by @vrana)
 - Alter table, Select: Warn if the number of fields can exceed max_input_vars (by @vrana)
 - Select: Remove asking for the page number after clicking the Page legend (by @vrana)
@@ -22,15 +31,25 @@ AdminNeo 5.8.0
 - Table structure: Unify wording of links and page titles
 - Edit: Disable Save and continue edit after changing a value identifying the row
 - SQL command: Check the "Stop on error" option by default
+- Database schema: Improve design, highlight a clicked table box
+- Database schema: Move table boxes also on touch screens
 - PostgreSQL: Hide table actions and row editing in pg_catalog and pg_toast
 - PostgreSQL: Order NULL last (by @vrana)
+- PostgreSQL: Remove the Truncate Cascade button (by @vrana)
 - MS SQL: Hide table actions and row editing in the sys schema
 - MongoDB, SimpleDB: Sort the list of tables by name
 - Drop compatibility with IIS 5 and with IIS 7.0 before its 2008 FastCGI update (by @vrana)
 - Fix mistranslated texts in all languages (AI reviewed)
+- Update Polish translation (by @Matthaiks)
+- Update Dutch translation (by Maarten Balliauw)
+- Update Malay translation (by @pisyek)
+- Update Catalan translation (by Joan Llosas)
+- Update Serbian translation (by Nikola Radovanović)
+- Update Bulgarian translation (by Deyan Delchev)
 
 ### Bugfixes
 
+- Sanitize the connection id returned by the server (by @vrana, GHSA-qjpp-55x9-q62v, XSS)
 - Fix JavaScript in Safari < 14, Firefox < 79 and Chrome < 85 (regression from 5.7.0)
 - Fix showing and hiding elements in Chrome < 61 and Edge < 17 (regression from 5.2.0)
 - Fix JavaScript error on pages with a sticky table footer in Safari < 12.1 (regression from 5.0.0)
@@ -41,11 +60,12 @@ AdminNeo 5.8.0
 - Editor: Fix JavaScript error on the select page caused by the import form (regression from 5.5.0)
 - Database schema: Fix overlapping table boxes
 - Database schema: Allow dragging a table box also by its name
+- Database schema: Snap a moved table box to the grid
 - MySQL: Fix displaying backward relation links
 - PostgreSQL: Fix editing a record with a GENERATED ALWAYS AS IDENTITY column (fix #205, regression from 5.5.0)
 - PostgreSQL, MS SQL: Highlight primary keys in the database schema (regression from 5.1.0)
 - SQLite: Fix working with binary data through PDO
-- MongoDB: Show the primary key column when altering indexes (regression from 5.5.0) (by @vrana)
+- MongoDB: Show the primary key column when altering indexes (by @vrana, regression from 5.5.0)
 
 (Ported relevant changes from Adminer 6.0.0 • part 3)
 
@@ -315,6 +335,7 @@ AdminNeo 5.4.0 (2026-05-27)
 - PostgreSQL: Fix calling functions with name-less parameters (by @vrana)
 - PostgreSQL: Fix calling functions returning table (by @vrana)
 - PostgreSQL PDO: Fix bytea without primary key (by @vrana)
+- Elasticsearch: Verify response origin (GHSA-m4j3-gq7v-wpp8)
 - FileUploadPlugin: Fix searching in *_path columns
 - Editor: Fix missing token in search anywhere form
 

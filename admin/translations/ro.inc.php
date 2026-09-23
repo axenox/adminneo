@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => '%s trebuie să returneze un array.', // by Claude Fable 5.1
 	'%s and %s must return an object created by %s method.' => '%s și %s trebuie să returneze un obiect creat prin metoda %s.', // by Claude Fable 5.1
 
+	// Accessibility
+	'Skip to main content' => 'Sari la conținutul principal', // by Claude Fable 5.1
+	'Skip to menu' => 'Sari la meniu', // by Claude Fable 5.1
+	'Skip to table list' => 'Sari la lista de tabele', // by Claude Fable 5.1
+
 	// Login
 	'System' => 'Sistem',
 	'Server' => 'Server',
@@ -57,6 +62,7 @@ return [
 	'Refresh' => 'Împrospătează',
 	'Info' => 'Informații', // by Claude Fable 5.1
 	'More information.' => 'Mai multe informații.', // by Claude Fable 5.1
+	'Close' => 'Închide', // by Claude Fable 5.1
 
 	// Privileges
 	'Privileges' => 'Privilegii',
@@ -191,7 +197,6 @@ return [
 	'Check' => 'Controlează',
 	'Repair' => 'Repară',
 	'Truncate' => 'Curăță',
-	'Truncate Cascade' => 'Curăță în cascadă', // by Claude Fable 5.1
 	'Tables have been truncated.' => 'Tabelele au fost curățate.',
 	'Move to other database' => 'Mută în altă bază de date',
 	'Move' => 'Mută',
@@ -423,6 +428,7 @@ return [
 	// Settings
 	'Settings' => 'Setări', // by Claude Fable 5.1
 	'Default' => 'Implicit', // by Claude Fable 5.1
+	'Theme' => 'Temă', // by Claude Fable 5.1
 	'Color scheme' => 'Schema de culori', // by Claude Fable 5.1
 	'By system' => 'După sistem', // by Claude Fable 5.1
 	'Light' => 'Luminoasă', // by Claude Fable 5.1

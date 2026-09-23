@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => '%s musí vracet pole.',
 	'%s and %s must return an object created by %s method.' => '%s a %s musí vracet objekt vytvořený pomocí metody %s.',
 
+	// Accessibility
+	'Skip to main content' => 'Přeskočit na hlavní obsah',
+	'Skip to menu' => 'Přeskočit na menu',
+	'Skip to table list' => 'Přeskočit na seznam tabulek',
+
 	// Login
 	'System' => 'Systém',
 	'Server' => 'Server',
@@ -57,6 +62,7 @@ return [
 	'Refresh' => 'Obnovit',
 	'Info' => 'Info',
 	'More information.' => 'Více informací.',
+	'Close' => 'Zavřít',
 
 	// Privileges
 	'Privileges' => 'Oprávnění',
@@ -201,7 +207,6 @@ return [
 	'Check' => 'Zkontrolovat',
 	'Repair' => 'Opravit',
 	'Truncate' => 'Vyprázdnit',
-	'Truncate Cascade' => 'Vyprázdnit kaskádově',
 	'Tables have been truncated.' => 'Tabulky byly vyprázdněny.',
 	'Move to other database' => 'Přesunout do jiné databáze',
 	'Move' => 'Přesunout',
@@ -433,6 +438,7 @@ return [
 	// Settings
 	'Settings' => 'Nastavení',
 	'Default' => 'Výchozí',
+	'Theme' => 'Motiv',
 	'Color scheme' => 'Barevné schéma',
 	'By system' => 'Dle systému',
 	'Light' => 'Světlé',

@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => '%s jāatgriež masīvs.', // by Claude Fable 5.1
 	'%s and %s must return an object created by %s method.' => '%s un %s jāatgriež objekts, kas izveidots ar metodi %s.', // by Claude Fable 5.1
 
+	// Accessibility
+	'Skip to main content' => 'Pāriet uz galveno saturu', // by Claude Fable 5.1
+	'Skip to menu' => 'Pāriet uz izvēlni', // by Claude Fable 5.1
+	'Skip to table list' => 'Pāriet uz tabulu sarakstu', // by Claude Fable 5.1
+
 	// Login
 	'System' => 'Sistēma',
 	'Server' => 'Serveris',
@@ -57,6 +62,7 @@ return [
 	'Refresh' => 'Atjaunot',
 	'Info' => 'Informācija', // by Claude Fable 5.1
 	'More information.' => 'Vairāk informācijas.', // by Claude Fable 5.1
+	'Close' => 'Aizvērt', // by Claude Fable 5.1
 
 	// Privileges
 	'Privileges' => 'Tiesības',
@@ -191,7 +197,6 @@ return [
 	'Check' => 'Pārbaudīt',
 	'Repair' => 'Salabot',
 	'Truncate' => 'Iztīrīt',
-	'Truncate Cascade' => 'Iztīrīt kaskādēti', // by Claude Fable 5.1
 	'Tables have been truncated.' => 'Tabulas iztīrītas.',
 	'Move to other database' => 'Pārvietot uz citu datubāzi',
 	'Move' => 'Pārvietot',
@@ -423,6 +428,7 @@ return [
 	// Settings
 	'Settings' => 'Iestatījumi', // by Claude Fable 5.1
 	'Default' => 'Noklusētais', // by Claude Fable 5.1
+	'Theme' => 'Motīvs', // by Claude Fable 5.1
 	'Color scheme' => 'Krāsu shēma', // by Claude Fable 5.1
 	'By system' => 'Pēc sistēmas', // by Claude Fable 5.1
 	'Light' => 'Gaišā', // by Claude Fable 5.1

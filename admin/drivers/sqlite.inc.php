@@ -265,7 +265,7 @@ if (isset($_GET["sqlite"])) {
 
 		public function checkConstraints(string $table): array
 		{
-			//! could be inside a comment
+			// TODO could be inside a comment
 			preg_match_all('~ CHECK *(\( *(((?>[^()]*[^() ])|(?1))*) *\))~', $this->connection->getValue("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = " . q($table)), $matches);
 			return array_combine($matches[2], $matches[2]);
 		}
@@ -331,7 +331,7 @@ if (isset($_GET["sqlite"])) {
 	{
 		return (preg_match('~^INTO~', $query) || Connection::get()->getValue("SELECT sqlite_compileoption_used('ENABLE_UPDATE_DELETE_LIMIT')")
 			? limit($query, $where, 1, 0, $separator)
-			: " $query WHERE rowid = (SELECT rowid FROM " . table($table) . $where . $separator . "LIMIT 1)" //! use primary key in tables with WITHOUT rowid
+			: " $query WHERE rowid = (SELECT rowid FROM " . table($table) . $where . $separator . "LIMIT 1)" // TODO use primary key in tables with WITHOUT rowid
 		);
 	}
 
@@ -540,7 +540,7 @@ if (isset($_GET["sqlite"])) {
 
 	function view(string $name): array
 	{
-		//! identifiers may be inside []
+		// TODO identifiers may be inside []
 		return ["select" => preg_replace('~^(?:[^`"[]+|`[^`]*`|"[^"]*")* AS\s+~iU', '', Connection::get()->getValue("SELECT sql FROM sqlite_master WHERE type = 'view' AND name = " . q($name)))];
 	}
 
@@ -570,7 +570,7 @@ if (isset($_GET["sqlite"])) {
 		return true;
 	}
 
-	function create_database(string $db, string $collation): bool
+	function create_database(string $db, ?string $collation): bool
 	{
 		if (file_exists($db)) {
 			Connection::get()->setError(lang('File exists.'));
@@ -861,7 +861,7 @@ if (isset($_GET["sqlite"])) {
 		return true;
 	}
 
-	function truncate_tables(array $tables, bool $cascade = false): bool
+	function truncate_tables(array $tables): bool
 	{
 		return apply_queries("DELETE FROM", $tables);
 	}

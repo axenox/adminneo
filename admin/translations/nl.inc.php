@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => '%s moet een array retourneren.',
 	'%s and %s must return an object created by %s method.' => '%s en %s moeten een object retourneren dat met de methode %s is gemaakt.',
 
+	// Accessibility
+	'Skip to main content' => 'Ga naar hoofdinhoud', // by Claude Fable 5.1
+	'Skip to menu' => 'Ga naar menu', // by Claude Fable 5.1
+	'Skip to table list' => 'Ga naar tabellenlijst', // by Claude Fable 5.1
+
 	// Login
 	'System' => 'Databasesysteem',
 	'Server' => 'Server',
@@ -51,11 +56,12 @@ return [
 	// Settings
 	'Language' => 'Taal',
 
-	'Menu' => 'Menu', // by Claude Fable 5.1
+	'Menu' => 'Menu',
 	'Home' => 'Startpagina',
 	'Refresh' => 'Vernieuwen',
 	'Info' => 'Informatie',
 	'More information.' => 'Meer informatie.',
+	'Close' => 'Sluiten', // by Claude Fable 5.1
 
 	// Privileges
 	'Privileges' => 'Rechten',
@@ -170,7 +176,7 @@ return [
 	'Invalid schema.' => 'Ongeldig schema.',
 
 	// Table list
-	'All' => 'Alles', // checkbox selecting all tables and views // by Claude Fable 5.1
+	'All' => 'Alles', // checkbox selecting all tables and views
 	'Engine' => 'Engine',
 	'engine' => 'engine',
 	'Collation' => 'Collatie',
@@ -186,7 +192,6 @@ return [
 	'Check' => 'Controleer',
 	'Repair' => 'Herstel',
 	'Truncate' => 'Legen',
-	'Truncate Cascade' => 'Cascade legen', // by Claude Fable 5.1
 	'Tables have been truncated.' => 'Tabellen werden geleegd.',
 	'Move to other database' => 'Verplaats naar andere database',
 	'Move' => 'Verplaats',
@@ -252,9 +257,9 @@ return [
 	'Add next' => 'Volgende toevoegen',
 	'Index Type' => 'Index type',
 	'length' => 'lengte',
-	'operator class' => 'operatorklasse', // by Claude Fable 5.1
+	'operator class' => 'operatorklasse',
 	'Algorithm' => 'Algoritme',
-	'Condition' => 'Conditie',
+	'Condition' => 'Voorwaarde',
 
 	// Foreign keys
 	'Foreign keys' => 'Foreign keys',
@@ -267,8 +272,8 @@ return [
 	'Target' => 'Doel',
 	'Add column' => 'Kolom toevoegen',
 	'Alter' => 'Aanpassen',
-	'Alter foreign key' => 'Foreign key aanpassen', // by Claude Fable 5.1
-	'Create foreign key' => 'Foreign key aanmaken', // by Claude Fable 5.1
+	'Alter foreign key' => 'Foreign key aanpassen',
+	'Create foreign key' => 'Foreign key aanmaken',
 	'ON DELETE' => 'ON DELETE',
 	'ON UPDATE' => 'ON UPDATE',
 	'Source and target columns must have the same data type, there must be an index on the target columns and referenced data must exist.' => 'Bron- en doelkolommen moeten van hetzelfde data type zijn, er moet een index bestaan op de gekozen kolommen en er moet gerelateerde data bestaan.',
@@ -331,10 +336,10 @@ return [
 	// Table check constraints
 	'Checks' => 'Checks',
 	'Create check' => 'Check aanmaken',
-	'Alter check' => 'Check wijzigen',
-	'Check has been created.' => 'Check is aangemaakt.',
-	'Check has been altered.' => 'Check is gewijzigd.',
-	'Check has been dropped.' => 'Check is afgebroken.',
+	'Alter check' => 'Check aanpassen',
+	'Check has been created.' => 'Check aangemaakt.',
+	'Check has been altered.' => 'Check aangepast.',
+	'Check has been dropped.' => 'Check verwijderd.',
 
 	// Selection
 	'Select data' => 'Gegevens selecteren',
@@ -352,7 +357,7 @@ return [
 	'Full table scan' => 'Full table scan',
 	'Unable to select the table' => 'Onmogelijk tabel te selecteren',
 	'Search data in tables' => 'Zoeken in database',
-	'All rows on this page' => 'Alle rijen op deze pagina', // by Claude Fable 5.1
+	'All rows on this page' => 'Alle rijen op deze pagina',
 	'No rows.' => 'Geen rijen.',
 	'%d / ' => '%d / ',
 	'%d row(s)' => [
@@ -414,6 +419,7 @@ return [
 	// Settings
 	'Settings' => 'Instellingen',
 	'Default' => 'Standaard',
+	'Theme' => 'Thema', // by Claude Fable 5.1
 	'Color scheme' => 'Kleurenschema',
 	'By system' => 'Systeembased',
 	'Light' => 'Licht',

@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => '%s mora vratiti niz.', // by Claude Fable 5.1
 	'%s and %s must return an object created by %s method.' => '%s i %s moraju vratiti objekat kreiran metodom %s.', // by Claude Fable 5.1
 
+	// Accessibility
+	'Skip to main content' => 'Preskoči na glavni sadržaj', // by Claude Fable 5.1
+	'Skip to menu' => 'Preskoči na meni', // by Claude Fable 5.1
+	'Skip to table list' => 'Preskoči na listu tabela', // by Claude Fable 5.1
+
 	// Login
 	'System' => 'Sistem',
 	'Server' => 'Server',
@@ -57,6 +62,7 @@ return [
 	'Refresh' => 'Osveži',
 	'Info' => 'Informacije', // by Claude Fable 5.1
 	'More information.' => 'Više informacija.', // by Claude Fable 5.1
+	'Close' => 'Zatvori', // by Claude Fable 5.1
 
 	// Privileges
 	'Privileges' => 'Dozvole',
@@ -191,7 +197,6 @@ return [
 	'Check' => 'Provjeri',
 	'Repair' => 'Popravi',
 	'Truncate' => 'Isprazni',
-	'Truncate Cascade' => 'Isprazni kaskadno', // by Claude Fable 5.1
 	'Tables have been truncated.' => 'Tabele su ispražnjene.',
 	'Move to other database' => 'Premijesti u drugu bazu podataka',
 	'Move' => 'Premijesti',
@@ -423,6 +428,7 @@ return [
 	// Settings
 	'Settings' => 'Podešavanja', // by Claude Fable 5.1
 	'Default' => 'Podrazumijevano', // by Claude Fable 5.1
+	'Theme' => 'Tema', // by Claude Fable 5.1
 	'Color scheme' => 'Šema boja', // by Claude Fable 5.1
 	'By system' => 'Prema sistemu', // by Claude Fable 5.1
 	'Light' => 'Svijetla', // by Claude Fable 5.1

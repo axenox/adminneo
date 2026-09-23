@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => '%s måste returnera en array.', // by Claude Fable 5.1
 	'%s and %s must return an object created by %s method.' => '%s och %s måste returnera ett objekt skapat av metoden %s.', // by Claude Fable 5.1
 
+	// Accessibility
+	'Skip to main content' => 'Hoppa till huvudinnehåll', // by Claude Fable 5.1
+	'Skip to menu' => 'Hoppa till meny', // by Claude Fable 5.1
+	'Skip to table list' => 'Hoppa till tabellista', // by Claude Fable 5.1
+
 	// Login
 	'System' => 'System',
 	'Server' => 'Server',
@@ -56,6 +61,7 @@ return [
 	'Refresh' => 'Ladda om',
 	'Info' => 'Info', // by Claude Fable 5.1
 	'More information.' => 'Mer information.', // by Claude Fable 5.1
+	'Close' => 'Stäng', // by Claude Fable 5.1
 
 	// Privileges
 	'Privileges' => 'Privilegier',
@@ -186,7 +192,6 @@ return [
 	'Check' => 'Kolla',
 	'Repair' => 'Reparera',
 	'Truncate' => 'Avkorta',
-	'Truncate Cascade' => 'Avkorta (kaskad)', // by Claude Fable 5.1
 	'Tables have been truncated.' => 'Tabeller har blivit avkortade.',
 	'Move to other database' => 'Flytta till en annan databas',
 	'Move' => 'Flytta',
@@ -414,6 +419,7 @@ return [
 	// Settings
 	'Settings' => 'Inställningar', // by Claude Fable 5.1
 	'Default' => 'Standard', // by Claude Fable 5.1
+	'Theme' => 'Tema', // by Claude Fable 5.1
 	'Color scheme' => 'Färgtema', // by Claude Fable 5.1
 	'By system' => 'Enligt systemet', // by Claude Fable 5.1
 	'Light' => 'Ljust', // by Claude Fable 5.1

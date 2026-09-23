@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => '%s:n täytyy palauttaa taulukko.', // by Claude Fable 5.1
 	'%s and %s must return an object created by %s method.' => '%s:n ja %s:n täytyy palauttaa olio, joka on luotu metodilla %s.', // by Claude Fable 5.1
 
+	// Accessibility
+	'Skip to main content' => 'Siirry pääsisältöön', // by Claude Fable 5.1
+	'Skip to menu' => 'Siirry valikkoon', // by Claude Fable 5.1
+	'Skip to table list' => 'Siirry taululuetteloon', // by Claude Fable 5.1
+
 	// Login
 	'System' => 'Järjestelmä',
 	'Server' => 'Palvelin',
@@ -53,6 +58,7 @@ return [
 	'Refresh' => 'Virkistä',
 	'Info' => 'Tiedot', // by Claude Fable 5.1
 	'More information.' => 'Lisätietoja.', // by Claude Fable 5.1
+	'Close' => 'Sulje', // by Claude Fable 5.1
 
 	// Privileges
 	'Privileges' => 'Oikeudet',
@@ -180,7 +186,6 @@ return [
 	'Check' => 'Tarkista',
 	'Repair' => 'Korjaa',
 	'Truncate' => 'Tyhjennä',
-	'Truncate Cascade' => 'Tyhjennä (cascade)', // by Claude Fable 5.1
 	'Tables have been truncated.' => 'Taulujen sisältö on tyhjennetty.',
 	'Move to other database' => 'Siirrä toiseen tietokantaan',
 	'Move' => 'Siirrä',
@@ -402,6 +407,7 @@ return [
 	// Settings
 	'Settings' => 'Asetukset', // by Claude Fable 5.1
 	'Default' => 'Oletus', // by Claude Fable 5.1
+	'Theme' => 'Teema', // by Claude Fable 5.1
 	'Color scheme' => 'Väriteema', // by Claude Fable 5.1
 	'By system' => 'Järjestelmän mukaan', // by Claude Fable 5.1
 	'Light' => 'Vaalea', // by Claude Fable 5.1

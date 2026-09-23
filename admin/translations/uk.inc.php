@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => '%s повинен повертати масив.', // by Claude Fable 5.1
 	'%s and %s must return an object created by %s method.' => '%s і %s повинні повертати об\'єкт, створений методом %s.', // by Claude Fable 5.1
 
+	// Accessibility
+	'Skip to main content' => 'Перейти до основного вмісту', // by Claude Fable 5.1
+	'Skip to menu' => 'Перейти до меню', // by Claude Fable 5.1
+	'Skip to table list' => 'Перейти до списку таблиць', // by Claude Fable 5.1
+
 	// Login
 	'System' => 'Система Бази Даних',
 	'Server' => 'Сервер',
@@ -57,6 +62,7 @@ return [
 	'Refresh' => 'Оновити',
 	'Info' => 'Інформація', // by Claude Fable 5.1
 	'More information.' => 'Детальніше.', // by Claude Fable 5.1
+	'Close' => 'Закрити', // by Claude Fable 5.1
 
 	// Privileges
 	'Privileges' => 'Привілеї',
@@ -191,7 +197,6 @@ return [
 	'Check' => 'Перевірити',
 	'Repair' => 'Виправити',
 	'Truncate' => 'Очистити',
-	'Truncate Cascade' => 'Очистити каскадно', // by Claude Fable 5.1
 	'Tables have been truncated.' => 'Таблиці було очищено.',
 	'Move to other database' => 'Перенести до іншої бази даних',
 	'Move' => 'Перенести',
@@ -423,6 +428,7 @@ return [
 	// Settings
 	'Settings' => 'Налаштування', // by Claude Fable 5.1
 	'Default' => 'За замовчуванням', // by Claude Fable 5.1
+	'Theme' => 'Тема', // by Claude Fable 5.1
 	'Color scheme' => 'Кольорова схема', // by Claude Fable 5.1
 	'By system' => 'Як у системі', // by Claude Fable 5.1
 	'Light' => 'Світла', // by Claude Fable 5.1

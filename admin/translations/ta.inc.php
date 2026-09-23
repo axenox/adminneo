@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => '%s ஒரு அணியை (array) திருப்பி அளிக்க வேண்டும்.', // by Claude Fable 5.1
 	'%s and %s must return an object created by %s method.' => '%s ம‌ற்றும் %s, %s முறையால் உருவாக்கப்பட்ட ஒரு பொருளை (object) திருப்பி அளிக்க வேண்டும்.', // by Claude Fable 5.1
 
+	// Accessibility
+	'Skip to main content' => 'முதன்மை உள்ளடக்கத்திற்குச் செல்', // by Claude Fable 5.1
+	'Skip to menu' => 'பட்டிக்குச் செல்', // by Claude Fable 5.1
+	'Skip to table list' => 'அட்டவணைப் பட்டியலுக்குச் செல்', // by Claude Fable 5.1
+
 	// Login
 	'System' => 'சிஸ்ட‌ம் (System)',
 	'Server' => 'வ‌ழ‌ங்கி (Server)',
@@ -56,6 +61,7 @@ return [
 	'Refresh' => 'புதுப்பி (Refresh)',
 	'Info' => 'த‌க‌வ‌ல்', // by Claude Fable 5.1
 	'More information.' => 'மேலும் த‌க‌வ‌ல்.', // by Claude Fable 5.1
+	'Close' => 'மூடு', // by Claude Fable 5.1
 
 	// Privileges
 	'Privileges' => 'ச‌லுகைக‌ள் / சிற‌ப்புரிமைக‌ள்',
@@ -186,7 +192,6 @@ return [
 	'Check' => 'ப‌ரிசோதி',
 	'Repair' => 'ப‌ழுது பார்',
 	'Truncate' => 'குறை (Truncate)',
-	'Truncate Cascade' => 'அடுக்கு குறை (Truncate Cascade)', // by Claude Fable 5.1
 	'Tables have been truncated.' => 'அட்ட‌வ‌ணை குறைக்க‌ப்ப‌ட்ட‌து (truncated).',
 	'Move to other database' => 'ம‌ற்ற‌ த‌க‌வ‌ல் தள‌த்திற்க்கு ந‌க‌ர்த்து',
 	'Move' => 'ந‌க‌ர்த்து',
@@ -414,6 +419,7 @@ return [
 	// Settings
 	'Settings' => 'அமைப்புக‌ள்', // by Claude Fable 5.1
 	'Default' => 'இய‌ல்பு', // by Claude Fable 5.1
+	'Theme' => 'தீம்', // by Claude Fable 5.1
 	'Color scheme' => 'வ‌ண்ண‌ அமைப்பு', // by Claude Fable 5.1
 	'By system' => 'சிஸ்ட‌ம் ப‌டி', // by Claude Fable 5.1
 	'Light' => 'வெளிர்', // by Claude Fable 5.1

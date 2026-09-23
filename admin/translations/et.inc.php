@@ -16,6 +16,11 @@ return [
 	'%s must return an array.' => '%s peab tagastama massiivi.', // by Claude Fable 5.1
 	'%s and %s must return an object created by %s method.' => '%s ja %s peavad tagastama objekti, mis on loodud meetodiga %s.', // by Claude Fable 5.1
 
+	// Accessibility
+	'Skip to main content' => 'Liigu põhisisu juurde', // by Claude Fable 5.1
+	'Skip to menu' => 'Liigu menüü juurde', // by Claude Fable 5.1
+	'Skip to table list' => 'Liigu tabelite loendi juurde', // by Claude Fable 5.1
+
 	// Login
 	'System' => 'Andmebaasimootor',
 	'Server' => 'Server',
@@ -53,6 +58,7 @@ return [
 	'Refresh' => 'Uuenda',
 	'Info' => 'Info', // by Claude Fable 5.1
 	'More information.' => 'Rohkem infot.', // by Claude Fable 5.1
+	'Close' => 'Sulge', // by Claude Fable 5.1
 
 	// Privileges
 	'Privileges' => 'Õigused',
@@ -177,7 +183,6 @@ return [
 	'Check' => 'Kontrolli',
 	'Repair' => 'Paranda',
 	'Truncate' => 'Tühjenda',
-	'Truncate Cascade' => 'Tühjenda kaskaadis', // by Claude Fable 5.1
 	'Tables have been truncated.' => 'Valitud tabelid on edukalt tühjendatud.', // by Claude Fable 5.1
 	'Move to other database' => 'Liiguta teise andmebaasi',
 	'Move' => 'Liiguta',
@@ -396,6 +401,7 @@ return [
 	// Settings
 	'Settings' => 'Seaded', // by Claude Fable 5.1
 	'Default' => 'Vaikimisi', // by Claude Fable 5.1
+	'Theme' => 'Teema', // by Claude Fable 5.1
 	'Color scheme' => 'Värviskeem', // by Claude Fable 5.1
 	'By system' => 'Süsteemi järgi', // by Claude Fable 5.1
 	'Light' => 'Hele', // by Claude Fable 5.1
