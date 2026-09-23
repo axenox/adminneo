@@ -31,6 +31,9 @@ if (isset($_GET["mssql"])) {
 			/** @var bool */
 			private $collectRuntimeStatistics = false;
 
+			/** @var bool */
+			private $warningsReturnAsErrors = true;
+
 			public function getDefaultServerName(): string
 			{
 				return "localhost:1433";
@@ -75,10 +78,13 @@ if (isset($_GET["mssql"])) {
 
 			private function resolveError(): void
 			{
+				$this->errno = 0;
 				$this->error = "";
 
 				foreach (sqlsrv_errors() as $error) {
-					$this->errno = $error["code"];
+					if (!$this->errno || substr($error["SQLSTATE"], 0, 2) != "01") {
+						$this->errno = $error["code"];
+					}
 					$this->error .= "$error[message]\n";
 				}
 
@@ -153,6 +159,8 @@ if (isset($_GET["mssql"])) {
 			public function startRuntimeStatisticsCollection(): void
 			{
 				$this->runtimeStatisticsMessages = [];
+				$this->warningsReturnAsErrors = sqlsrv_get_config("WarningsReturnAsErrors");
+				sqlsrv_configure("WarningsReturnAsErrors", false);
 				$this->collectRuntimeStatistics = true;
 				sqlsrv_errors(SQLSRV_ERR_ALL);
 			}
@@ -161,6 +169,7 @@ if (isset($_GET["mssql"])) {
 			{
 				$this->collectRuntimeStatisticsMessages();
 				$this->collectRuntimeStatistics = false;
+				sqlsrv_configure("WarningsReturnAsErrors", $this->warningsReturnAsErrors);
 				return $this->runtimeStatisticsMessages;
 			}
 
@@ -575,7 +584,7 @@ AND i.object_id IN (
 			$this->connection->query("SET STATISTICS IO OFF; SET STATISTICS TIME OFF");
 			$statistics = [];
 			foreach ($messages as $message) {
-				$details = $message["message"] ?? "";
+				$details = preg_replace('~^\[Microsoft\]\[ODBC Driver [^]]+ for SQL Server\]\[SQL Server\]\s*~', '', $message["message"] ?? "");
 				if (!preg_match('~(?:logical reads|CPU time|elapsed time)~i', $details)) {
 					continue;
 				}
