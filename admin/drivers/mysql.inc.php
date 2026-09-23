@@ -509,6 +509,50 @@ AND t.ENGINE REGEXP " . q('InnoDB|IBMDB2I' . ($this->connection->isMinVersion("5
 			);
 		}
 
+		public function supportsRuntimeStatistics(): bool
+		{
+			return ($this->connection->isMariaDB() && $this->connection->isMinVersion("10.1"))
+				|| (!$this->connection->isMariaDB() && $this->connection->isMinVersion("8.0.18"));
+		}
+
+		public function finishRuntimeStatistics(string $query): array
+		{
+			if (!$this->supportsRuntimeStatistics() || !$this->isRuntimeStatisticsQuery($query)) {
+				return [];
+			}
+
+			$result = $this->connection->query(($this->connection->isMariaDB() ? "ANALYZE " : "EXPLAIN ANALYZE ") . $query);
+			if (!is_object($result)) {
+				return [];
+			}
+
+			$statistics = [];
+			while ($row = $result->fetchAssoc()) {
+				$details = implode(" | ", array_map(function ($key, $value) {
+					return "$key: $value";
+				}, array_keys($row), array_values($row)));
+				if ($this->connection->isMariaDB()) {
+					foreach (["r_rows" => "rows", "r_loops" => "loops", "r_total_time_ms" => "ms"] as $metric => $unit) {
+						if (array_key_exists($metric, $row)) {
+							$statistics[] = ["category" => "execution plan", "object" => $row["table"] ?? null, "metric" => $metric, "value" => $row[$metric], "unit" => $unit, "details" => $details];
+						}
+					}
+				} else {
+					$text = reset($row);
+					preg_match_all('~actual time=([0-9.]+)\.\.([0-9.]+) rows=([0-9]+) loops=([0-9]+)~i', $text, $matches, PREG_SET_ORDER);
+					foreach ($matches as $match) {
+						foreach (["first row time" => [$match[1], "ms"], "last row time" => [$match[2], "ms"], "actual rows" => [$match[3], "rows"], "actual loops" => [$match[4], "loops"]] as $metric => $value) {
+							$statistics[] = ["category" => "execution plan", "object" => null, "metric" => $metric, "value" => $value[0], "unit" => $value[1], "details" => $details];
+						}
+					}
+					if (!$matches) {
+						$statistics[] = ["category" => "execution plan", "object" => null, "metric" => "actual execution", "value" => null, "unit" => null, "details" => $details];
+					}
+				}
+			}
+			return $statistics;
+		}
+
 		public function warnings(): ?string
         {
 			$result = $this->connection->query("SHOW WARNINGS");
@@ -1599,6 +1643,7 @@ WHERE ROUTINE_SCHEMA = DATABASE() AND ROUTINE_TYPE = '$type' AND ROUTINE_NAME = 
 			. (Connection::get()->isMinVersion(Connection::get()->isMariaDB() ? "10.2.1" : "8.0.16") ? '|check' : '')
 			// MySQL 8 reads table stats from the data dictionary; MariaDB still opens all tables.
 			. (!Connection::get()->isMariaDB() && Connection::get()->isMinVersion("8") ? '|fast_status' : '')
+			. (((Connection::get()->isMariaDB() && Connection::get()->isMinVersion("10.1")) || (!Connection::get()->isMariaDB() && Connection::get()->isMinVersion("8.0.18"))) ? '|runtime_statistics' : '')
 			. ')$~',
 			$feature
 		);

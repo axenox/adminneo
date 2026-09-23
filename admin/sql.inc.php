@@ -158,15 +158,21 @@ if ($_POST) {
 								flush_output(); // can take a long time - show the running query
 							}
 							$start = microtime(true);
-							//! don't allow changing of character_set_results, convert encoding of displayed query
-							if (Connection::get()->multiQuery($q) && is_object($connection2) && preg_match("~^$space*+USE\\b~i", $q)) {
-								$connection2->query($q);
+							$collect_statistics = !empty($_POST["runtime_statistics"]) && Driver::get()->supportsRuntimeStatistics() && Driver::get()->isRuntimeStatisticsQuery($q);
+							if ($collect_statistics && !Driver::get()->runtimeStatisticsExecuteSeparately()) {
+								$collect_statistics = Driver::get()->startRuntimeStatistics();
 							}
+							$statement_succeeded = false;
+							try {
+								//! don't allow changing of character_set_results, convert encoding of displayed query
+								if (Connection::get()->multiQuery($q) && is_object($connection2) && preg_match("~^$space*+USE\\b~i", $q)) {
+									$connection2->query($q);
+								}
 
-							do {
-								$result = Connection::get()->storeResult();
+								do {
+									$result = Connection::get()->storeResult();
 
-								if (Connection::get()->getError()) {
+									if (Connection::get()->getError()) {
 									echo ($_POST["only_errors"] ? $print : "");
 									echo "<p class='error'>", lang('Error in query'),
 										(!empty(Connection::get()->getErrno()) ? " (" . Connection::get()->getErrno() . ")" : ""),
@@ -176,7 +182,7 @@ if ($_POST) {
 									if ($_POST["error_stops"]) {
 										break 2;
 									}
-								} else {
+									} else {
 									$time = " <span class='time'>(" . format_time($start) . ")</span>";
 									// 1000 - maximum length of encoded URL in IE is 2083 characters
 									$edit_link = (strlen($q) < 1000 ? " <a href='" . h(ME) . "sql=" . urlencode(trim($q)) . "'>" . icon("edit") . lang('Edit') . "</a>" : "");
@@ -267,8 +273,28 @@ if ($_POST) {
 									}
 								}
 
-								$start = microtime(true);
-							} while (Connection::get()->nextResult());
+									$start = microtime(true);
+								} while (Connection::get()->nextResult());
+								$statement_succeeded = !Connection::get()->getError();
+							} finally {
+								$statistics = ($collect_statistics && (!Driver::get()->runtimeStatisticsExecuteSeparately() || $statement_succeeded))
+									? Driver::get()->finishRuntimeStatistics($q)
+									: [];
+							}
+
+							if ($collect_statistics) {
+								if ($statistics && !$_POST["only_errors"]) {
+									echo "<div class='runtime-statistics'><h3>" . lang('Runtime statistics') . "</h3>";
+									if (Driver::get()->runtimeStatisticsExecuteSeparately()) {
+										echo "<p class='message'>" . lang('Statistics were collected by executing an instrumented copy of this query and add overhead.') . "</p>\n";
+									}
+									echo "<table class='nowrap'><thead><tr><th>" . lang('Category') . "<th>" . lang('Object') . "<th>" . lang('Metric') . "<th>" . lang('Value') . "<th>" . lang('Unit') . "<th>" . lang('Details') . "</thead><tbody>\n";
+									foreach ($statistics as $statistic) {
+										echo "<tr><td>" . h($statistic['category']) . "<td>" . h($statistic['object']) . "<td>" . h($statistic['metric']) . "<td>" . h($statistic['value']) . "<td>" . h($statistic['unit']) . "<td>" . h($statistic['details']) . "\n";
+									}
+									echo "</tbody></table></div>\n";
+								}
+							}
 						}
 
 						$query = substr($query, $offset);
@@ -342,6 +368,9 @@ if (!isset($_GET["import"])) {
 
 echo checkbox("error_stops", 1, ($_POST ? $_POST["error_stops"] : ($_GET["error_stops"] ?? true)), lang('Stop on error'));
 echo checkbox("only_errors", 1, ($_POST ? $_POST["only_errors"] : isset($_GET["import"]) || $_GET["only_errors"]), lang('Show only errors'));
+if (!isset($_GET["import"]) && Driver::get()->supportsRuntimeStatistics()) {
+	echo checkbox("runtime_statistics", 1, !empty($_POST["runtime_statistics"]), lang('Collect runtime statistics'), lang('Runs only read-only SELECT statements. Statistics collection adds instrumentation overhead.'));
+}
 echo input_token();
 echo "</p>\n";
 

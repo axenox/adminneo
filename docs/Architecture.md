@@ -92,6 +92,7 @@ When adding new features, that potentially make sense for multiple drivers, make
 | `variables` | Display server variables. |
 | `view` | Create and alter views. |
 | `view_trigger` | Create and alter triggers on views. |
+| `runtime_statistics` | Collect actual execution and I/O statistics for read-only SQL statements. |
 | `materializedview` | Support materialized views. |
 
 ## Directory structure
@@ -121,6 +122,16 @@ When adding new features, that potentially make sense for multiple drivers, make
 Host applications that capture AdminNeo output can enable `embeddedMode`. AdminNeo then suppresses progressive output flushing so the host retains control of its HTTP headers. It also selects a driver's default schema in-process because routing parameters supplied by a host may not exist in the external request URI and therefore cannot be preserved by a redirect. Completed dump requests return to the host instead of terminating the PHP request with `exit`, and the router omits their HTML page footer. The option is disabled by default, preserving standalone and compiled behavior.
 
 `adminneo-plugins.php` (placed next to the entry point) returns an array of `Plugin` instances.
+
+## Runtime statistics
+
+The SQL command page offers an unchecked **Collect runtime statistics** option for supported
+connections. It is restricted to statements beginning with `SELECT`; `WITH` is deliberately not
+accepted because it can conceal a data-modifying CTE. PostgreSQL, MySQL 8.0.18+ and MariaDB 10.1+ run an
+instrumented copy (`EXPLAIN ANALYZE`/`ANALYZE`), so the UI explicitly warns about the second
+execution and its overhead. The native SQLSRV driver instruments the original MS SQL execution
+with `SET STATISTICS IO/TIME` and always restores both session settings. Statistics are normalized
+as category, object, metric, value, unit and original details.
 
 ## Namespace
 
