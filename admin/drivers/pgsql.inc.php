@@ -1778,7 +1778,7 @@ AND oid NOT IN (SELECT objid FROM pg_catalog.pg_depend WHERE classid = 'pg_type'
 
 		return preg_match(
 			'~^(check|columns|comment|copy|database|drop_col|dump|descidx|fast_status|indexes|kill|partial_indexes|routine|routine_fields|scheme|sequence|sql|table|trigger|type|variables|view'
-			. ($this->supportsRuntimeStatistics() ? '|runtime_statistics' : '')
+			. (Driver::get()->supportsRuntimeStatistics() ? '|runtime_statistics' : '')
 			. ')$~',
 			$feature
 		);

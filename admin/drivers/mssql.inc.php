@@ -97,7 +97,7 @@ if (isset($_GET["mssql"])) {
 
 			function query(string $query, bool $unbuffered = false)
 			{
-				result = sqlsrv_query($this->connection, $query); // TODO , [], ($unbuffered ? [] : ["Scrollable" => "keyset"])
+				$result = sqlsrv_query($this->connection, $query); // TODO , [], ($unbuffered ? [] : ["Scrollable" => "keyset"])
 				$this->collectRuntimeStatisticsMessages();
 				$this->error = "";
 
@@ -1564,6 +1564,6 @@ ORDER BY CASE WHEN o.type = 'P' THEN 0 ELSE 1 END, o.name");
 
 	function support(string $feature): bool
 	{
-		return preg_match('~^(check|comment|columns|copy|database|drop_col|dump|fast_status|indexes|descidx|procedure|routine|routine_script|scheme|sql|table|trigger|view|view_trigger' . ($this->supportsRuntimeStatistics() ? '|runtime_statistics' : '') . ')$~', $feature);
+		return preg_match('~^(check|comment|columns|copy|database|drop_col|dump|fast_status|indexes|descidx|procedure|routine|routine_script|scheme|sql|table|trigger|view|view_trigger' . (Driver::get()->supportsRuntimeStatistics() ? '|runtime_statistics' : '') . ')$~', $feature);
 	}
 }
