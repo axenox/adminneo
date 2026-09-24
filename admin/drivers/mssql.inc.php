@@ -588,15 +588,26 @@ AND i.object_id IN (
 				if (!preg_match('~(?:logical reads|CPU time|elapsed time)~i', $details)) {
 					continue;
 				}
+				if (preg_match('~(?:CPU time|elapsed time)~i', $details)) {
+					$statistics[] = [
+						"category" => "Timing",
+						"object" => null,
+						"metric" => stripos($details, "compile time") !== false ? "Compile" : "Execution",
+						"value" => null,
+						"unit" => null,
+						"details" => preg_replace('~\s++~', ' ', trim($details)),
+					];
+					continue;
+				}
 				$object = preg_match("~Table '([^']+)'~i", $details, $match) ? $match[1] : null;
-				preg_match_all('~(lob read-ahead reads|lob logical reads|lob physical reads|read-ahead reads|logical reads|physical reads|CPU time|elapsed time)\s*[=:]?\s*(\d+)\s*(ms)?~i', $details, $matches, PREG_SET_ORDER);
+				preg_match_all('~(lob read-ahead reads|lob logical reads|lob physical reads|read-ahead reads|logical reads|physical reads)\s*[=:]?\s*(\d+)~i', $details, $matches, PREG_SET_ORDER);
 				foreach ($matches as $match) {
 					$statistics[] = [
-						"category" => stripos($match[1], "time") !== false ? "timing" : "I/O",
+						"category" => "I/O",
 						"object" => $object,
 						"metric" => strtolower($match[1]),
 						"value" => (int)$match[2],
-						"unit" => !empty($match[3]) ? "ms" : "pages",
+						"unit" => "pages",
 						"details" => $details,
 					];
 				}

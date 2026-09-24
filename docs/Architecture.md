@@ -135,7 +135,7 @@ accepted because it can conceal a data-modifying CTE. PostgreSQL, MySQL 8.0.18+ 
 instrumented copy (`EXPLAIN ANALYZE`/`ANALYZE`), so the UI explicitly warns about the second
 execution and its overhead. The native SQLSRV driver instruments the original MS SQL execution
 with `SET STATISTICS IO/TIME` and always restores both session settings. Statistics are normalized
-as category, object, metric, value, unit and original details.
+as category, object, metric, value, unit and driver-specific details.
 
 ## Namespace
 
