@@ -7,6 +7,7 @@ AdminNeo 5.9.0
 ### Fork modifications
 
 - SQL command: Add opt-in actual runtime and I/O statistics for read-only queries on MS SQL, PostgreSQL, MySQL 8.0.18+ and MariaDB 10.1+
+- SQL command: Give wide runtime statistics and execution plan tables dedicated horizontal scrollbars
 
 AdminNeo 5.8.0 (2026-09-15)
 ---------------------------

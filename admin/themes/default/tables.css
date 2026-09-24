@@ -244,6 +244,19 @@ th:hover .column {
 	margin-inline: 20px;
 }
 
+.runtime-statistics > .scrollable, .explain > .scrollable {
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+.runtime-statistics > .scrollable > table, .explain > .scrollable > table {
+	margin-block: 0;
+}
+
+.runtime-statistics > .scrollable thead, .explain > .scrollable thead {
+	top: 0;
+}
+
 /* Keep custom SQL result tables within reach of their query actions and editor. */
 .table-result > .scrollable {
 	max-width: 100%;

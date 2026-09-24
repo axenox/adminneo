@@ -288,11 +288,11 @@ if ($_POST) {
 									if (Driver::get()->statsNeedSeparateQuery()) {
 										echo "<p class='message'>" . lang('Statistics were collected by executing an instrumented copy of this query and add overhead.') . "</p>\n";
 									}
-									echo "<table class='nowrap'><thead><tr><th>" . lang('Category') . "<th>" . lang('Object') . "<th>" . lang('Metric') . "<th>" . lang('Value') . "<th>" . lang('Unit') . "<th>" . lang('Details') . "</thead><tbody>\n";
+									echo "<div class='scrollable'><table class='nowrap'><thead><tr><th>" . lang('Category') . "<th>" . lang('Object') . "<th>" . lang('Metric') . "<th>" . lang('Value') . "<th>" . lang('Unit') . "<th>" . lang('Details') . "</thead><tbody>\n";
 									foreach ($statistics as $statistic) {
 										echo "<tr><td>" . h($statistic['category']) . "<td>" . h($statistic['object']) . "<td>" . h($statistic['metric']) . "<td>" . h($statistic['value']) . "<td>" . h($statistic['unit']) . "<td>" . h($statistic['details']) . "\n";
 									}
-									echo "</tbody></table></div>\n";
+									echo "</tbody></table></div></div>\n";
 								}
 							}
 						}
