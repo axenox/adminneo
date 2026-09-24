@@ -554,28 +554,28 @@ AND i.object_id IN (
 			return "0x" . bin2hex($string);
 		}
 
-		public function supportsRuntimeStatistics(): bool
+		public function supportsStats(): bool
 		{
 			return DRIVER_EXTENSION == "sqlsrv";
 		}
 
-		public function runtimeStatisticsExecuteSeparately(): bool
+		public function statsNeedSeparateQuery(): bool
 		{
 			return false;
 		}
 
-		public function startRuntimeStatistics(): bool
+		public function statsStart(): bool
 		{
-			if (!$this->supportsRuntimeStatistics() || !$this->connection->query("SET STATISTICS IO ON; SET STATISTICS TIME ON")) {
+			if (!$this->supportsStats() || !$this->connection->query("SET STATISTICS IO ON; SET STATISTICS TIME ON")) {
 				return false;
 			}
 			$this->connection->startRuntimeStatisticsCollection();
 			return true;
 		}
 
-		public function finishRuntimeStatistics(string $query): array
+		public function statsFinish(string $query): array
 		{
-			if (!$this->supportsRuntimeStatistics()) {
+			if (!$this->supportsStats()) {
 				return [];
 			}
 
@@ -1573,6 +1573,6 @@ ORDER BY CASE WHEN o.type = 'P' THEN 0 ELSE 1 END, o.name");
 
 	function support(string $feature): bool
 	{
-		return preg_match('~^(check|comment|columns|copy|database|drop_col|dump|fast_status|indexes|descidx|procedure|routine|routine_script|scheme|sql|table|trigger|view|view_trigger' . (Driver::get()->supportsRuntimeStatistics() ? '|runtime_statistics' : '') . ')$~', $feature);
+		return preg_match('~^(check|comment|columns|copy|database|drop_col|dump|fast_status|indexes|descidx|procedure|routine|routine_script|scheme|sql|table|trigger|view|view_trigger' . (Driver::get()->supportsStats() ? '|runtime_statistics' : '') . ')$~', $feature);
 	}
 }

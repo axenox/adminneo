@@ -438,7 +438,7 @@ abstract class Driver
 	/**
 	 * Whether actual runtime statistics can be collected for this connection.
 	 */
-	public function supportsRuntimeStatistics(): bool
+	public function supportsStats(): bool
 	{
 		return false;
 	}
@@ -446,7 +446,7 @@ abstract class Driver
 	/**
 	 * Whether collecting statistics executes an instrumented copy of the query.
 	 */
-	public function runtimeStatisticsExecuteSeparately(): bool
+	public function statsNeedSeparateQuery(): bool
 	{
 		return true;
 	}
@@ -454,7 +454,7 @@ abstract class Driver
 	/**
 	 * Enables statistics that must surround the original query execution.
 	 */
-	public function startRuntimeStatistics(): bool
+	public function statsStart(): bool
 	{
 		return true;
 	}
@@ -464,7 +464,7 @@ abstract class Driver
 	 *
 	 * Each row contains category, object, metric, value, unit and details keys.
 	 */
-	public function finishRuntimeStatistics(string $query): array
+	public function statsFinish(string $query): array
 	{
 		return [];
 	}

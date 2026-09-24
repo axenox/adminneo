@@ -509,15 +509,15 @@ AND t.ENGINE REGEXP " . q('InnoDB|IBMDB2I' . ($this->connection->isMinVersion("5
 			);
 		}
 
-		public function supportsRuntimeStatistics(): bool
+		public function supportsStats(): bool
 		{
 			return ($this->connection->isMariaDB() && $this->connection->isMinVersion("10.1"))
 				|| (!$this->connection->isMariaDB() && $this->connection->isMinVersion("8.0.18"));
 		}
 
-		public function finishRuntimeStatistics(string $query): array
+		public function statsFinish(string $query): array
 		{
-			if (!$this->supportsRuntimeStatistics() || !$this->isRuntimeStatisticsQuery($query)) {
+			if (!$this->supportsStats() || !$this->isRuntimeStatisticsQuery($query)) {
 				return [];
 			}
 
