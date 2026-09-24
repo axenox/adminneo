@@ -882,7 +882,11 @@ WHERE c.object_id = " . q($table_id)) as $row
 			$length = "";
 			if (preg_match("~char|binary~", $type)) {
 				$maxLength = intval($row["max_length"]);
-				$length = ($maxLength == -1 ? "max" : $maxLength / ($type[0] == 'n' ? 2 : 1));
+				if ($maxLength == -1) {
+					$type .= "(max)";
+				} else {
+					$length = $maxLength / ($type[0] == 'n' ? 2 : 1);
+				}
 			} elseif ($type == "decimal") {
 				$length = "$row[precision],$row[scale]";
 			}

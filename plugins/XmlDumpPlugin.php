@@ -24,7 +24,7 @@ class XmlDumpPlugin extends Plugin
 		return ['xml' => 'XML'];
 	}
 
-	public function sendDumpHeaders(string $identifier, bool $multiTable = false): ?string
+	public function sendDumpFormatHeaders(string $identifier, bool $multiTable = false): ?string
 	{
 		if ($_POST["format"] != "xml") {
 			return null;

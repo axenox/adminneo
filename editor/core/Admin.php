@@ -520,11 +520,16 @@ class Admin extends Origin
 		return ['csv' => 'CSV,', 'csv;' => 'CSV;', 'tsv' => 'TSV'];
 	}
 
-	public function sendDumpHeaders(string $identifier, bool $multiTable = false): string
+	public function sendDumpFormatHeaders(string $identifier, bool $multiTable = false): string
 	{
 		header("Content-Type: text/csv; charset=utf-8");
 
 		return "csv";
+	}
+
+	public function sendDumpOutputHeaders(string $identifier, string $extension): void
+	{
+		//
 	}
 
 	public function dumpTable(string $table, string $style, int $viewType = 0): void

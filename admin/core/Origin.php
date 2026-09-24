@@ -756,14 +756,24 @@ abstract class Origin extends Plugin
 		return show_status();
 	}
 
-	public abstract function getDumpOutputs(): array;
-
 	public abstract function getDumpFormats(): array;
 
-	public abstract function sendDumpHeaders(string $identifier, bool $multiTable = false): string;
+	public abstract function sendDumpFormatHeaders(string $identifier, bool $multiTable = false): string;
+
+	public abstract function getDumpOutputs(): array;
+
+	public abstract function sendDumpOutputHeaders(string $identifier, string $extension): void;
 
 	/**
-	 * Exports database structure.
+	 * @deprecated Use sendDumpFormatHeaders() instead.
+	 */
+	public function sendDumpHeaders(string $identifier, bool $multiTable = false): ?string
+	{
+		return null;
+	}
+
+	/**
+	 * Exports database structure. Called for each exported database after it is selected, before its tables.
 	 */
 	public function dumpDatabase(string $database): void
 	{
