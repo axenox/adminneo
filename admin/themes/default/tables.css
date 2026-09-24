@@ -260,7 +260,7 @@ th:hover .column {
 /* Keep custom SQL result tables within reach of their query actions and editor. */
 .table-result > .scrollable {
 	max-width: 100%;
-	max-height: 800px;
+	max-height: calc(100vh - 220px);
 	overflow: auto;
 }
 
