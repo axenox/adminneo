@@ -1,10 +1,13 @@
-AdminNeo
-==========
+Axenox SQL admin
+===============
 
-**AdminNeo** is a full-featured database management tool written in PHP. It consists of a single file ready to deploy 
-to the target server. As a companion, **EditorNeo** offers data manipulation for end-users.
+**Axenox SQL admin** is a fork of [AdminNeo](https://www.adminneo.org/), a full-featured database management tool
+written in PHP. It is designed to be embedded in other PHP applications, particularly the ExFace / Accenture Power UI
+no-code platform. As a companion, **EditorNeo** offers data manipulation for end-users.
 
-AdminNeo is based on the [Adminer](https://www.adminer.org/) project by Jakub Vrána.
+Full credit goes to the **AdminNeo authors and contributors** and to **Jakub Vrána and the Adminer contributors**:
+AdminNeo is based on the [Adminer](https://www.adminer.org/) project. This fork builds on their work and aims to stay
+compatible with upstream updates.
 
 | <img src="https://raw.githubusercontent.com/adminneo-org/adminneo/refs/heads/main/docs/images/screenshot-select.webp" alt="Screenshot - Select data"/> | <img src="https://raw.githubusercontent.com/adminneo-org/adminneo/refs/heads/main/docs/images/screenshot-structure.webp" alt="Screenshot - Table structure"/> |
 |--------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -25,46 +28,55 @@ AdminNeo is based on the [Adminer](https://www.adminer.org/) project by Jakub Vr
 - MongoDB, SimpleDB
 - Elasticsearch (beta), ClickHouse (alpha)
 
-Installation
-------------
+Embedded mode
+-------------
 
-Just a few steps to start using AdminNeo:
-- Download the latest release from [adminneo.org/download](https://www.adminneo.org/download).
-- Upload it to your HTTP server with PHP.
-- Take the appropriate [security measures](https://www.adminneo.org/download#security).
-- Enjoy 😉
+The main difference from upstream AdminNeo is an optional **embedded mode**. It allows the tool to operate at a
+sub-URL behind a PHP facade or middleware instead of requiring a standalone PHP endpoint. The host application
+can route requests, supply database connection settings, and capture the rendered response, including when the UI
+is displayed in an iframe.
 
-AdminNeo can be also [configured](https://www.adminneo.org/configuration) and extended by
-[plugins](https://www.adminneo.org/plugins) or [customizations](https://www.adminneo.org/customizations).
-For accessing a database that does not support a password, see [further instructions](https://www.adminneo.org/password).
+Enable the `embeddedMode` configuration option for this integration. It prevents progressive output flushing from
+interfering with the host's response headers, selects default schemas without an external redirect, and returns
+completed exports to the host instead of terminating the PHP request. Embedded mode is disabled by default, so
+standalone usage remains available.
 
-Requirements
-------------
+In Power UI, the `axenox/ide` package provides the `IDEFacade` integration: it resolves the database connection and
+configures AdminNeo so users do not need to log in to the database tool separately. Other PHP hosts can provide
+their own integration. See [architecture and configuration](docs/Architecture.md#configuration) and
+[plugin hooks](docs/Hooks.md) for the integration points.
 
-- PHP 5.4+ with enabled sessions, modern web browser.
-- Running AdminNeo from the source code requires PHP 7.1+.
+Functional differences
+----------------------
 
-It is also recommended to install [OpenSSL PHP extension](https://www.php.net/manual/en/book.openssl.php) for improved
-security of stored login information.
+Beyond embedding, this fork focuses on database design and maintenance, especially for MS SQL, MySQL/MariaDB,
+and PostgreSQL. Highlights include:
 
-Migrating from older versions
------------------------------
+- **Copy tables and views:** PostgreSQL and MS SQL copy implementations, a copy button on the structure page,
+  and an option to copy structure without data.
+- **More complete MS SQL tooling:** list, edit, call, and export functions and stored procedures; read full view
+  definitions; and remove dependent constraints when dropping columns or tables.
+- **Migration-friendly schema changes:** optional explicitly named constraints through `useNamedConstraints`.
+- **Query diagnostics:** opt-in runtime and I/O statistics for supported MS SQL (SQLSRV), PostgreSQL, MySQL, and
+  MariaDB connections, plus scrollable SQL result tables. Availability and execution overhead depend on the driver
+  and server version; see [runtime statistics](docs/Architecture.md#runtime-statistics).
+- **Integration and visualization extensions:** regex-based foreign-key discovery, a tree-viewer plugin, and a
+  replaceable schema renderer.
+- **Driver improvements:** faster alter-table forms for MS SQL and PostgreSQL, MS SQL binary UUID handling, and
+  custom SQLSRV connection options such as Azure managed identity authentication.
 
-Version 5 has been significantly redesigned and refactored. Unfortunately, this has resulted in many changes that break
-backward compatibility.
-
-A complete list of changes can be found in the [Upgrade Guide](https://www.adminneo.org/upgrade).
-
-Docker
-------
-
-The official Docker image is available on [Docker Hub](https://hub.docker.com/r/adminneoorg/adminneo). Follow the
-instructions on the Docker page to get started.
+See the [complete list of fork-specific changes](docs/Changes_in_this_fork.md) for details and related commi
 
 Documentation
 -------------
 
-See the [documentation index](docs/index.md) for architecture, plugin hooks, security, and fork-specific changes.
+- [AdminNeo website and documentation](https://www.adminneo.org/) — upstream features, downloads, and guides.
+- [Upstream configuration](https://www.adminneo.org/configuration) and [plugins](https://www.adminneo.org/plugins).
+- [Our docs folder](docs/) and [documentation index](docs/index.md) — documentation maintained for this fork.
+- [Architecture and configuration](docs/Architecture.md) — routing, drivers, and embedded mode.
+- [Plugin hooks](docs/Hooks.md) — extension points for integrations.
+- [Fork-specific changes](docs/Changes_in_this_fork.md) — the full feature-oriented change log.
+- [Security](docs/security.md) — security guidance.
 
 Main project files
 ------------------
