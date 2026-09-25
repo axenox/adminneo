@@ -380,6 +380,7 @@ if (!$columns && support("table")) {
 			}
 
 			$names = [];
+			$numbers = [];
 			$functions = [];
 			reset($select);
 			$rank = 1;
@@ -393,14 +394,20 @@ if (!$columns && support("table")) {
 					if ($name != "") {
 						$rank++;
 						$names[$key] = $name;
+
+						// An array of numbers is printed as a text, so it is not aligned to the right.
+						$numbers[$key] = ($field && preg_match(number_type(), $field["type"]) && !preg_match('~\[~', $field["full_type"])) ||
+							preg_match('~^(CHAR_LENGTH|ROUND|FLOOR|CEIL|UNIX_TIMESTAMP|TIME_TO_SEC|COUNT|SUM)\(~', (string)current($select));
+
 						$column = idf_escape($key);
 						$href = remove_from_uri('(order|desc)[^=]*|page') . '&order%5B0%5D=' . urlencode($key);
 						$desc = "&desc%5B0%5D=1";
 						$order_column = $order[0] ?? "";
 						$sort_column = preg_replace('~ DESC( NULLS LAST)?$~', '', $order_column);
 						$sorted = ($sort_column == $column || $sort_column == $key); // $sort_column == $key - COUNT(*)
-						echo "<th id='th[" . h(bracket_escape($key)) . "]'"
-							. ($sorted ? " aria-sort='" . ($sort_column == $order_column ? "ascending" : "descending") . "'" : "") . ">";
+						echo "<th id='th[" . h(bracket_escape($key)) . "]'" .
+							($numbers[$key] ? " class='number'" : "") .
+							($sorted ? " aria-sort='" . ($sort_column == $order_column ? "ascending" : "descending") . "'" : "") . ">";
 						$fun = apply_sql_function($val["fun"] ?? null, $name); // TODO columns looking like functions
 						$sortable = isset($field["privileges"]["order"]) || ($val["fun"] ?? null);
 						if ($sortable) {
@@ -532,9 +539,7 @@ if (!$columns && support("table")) {
 						$type = ($column && preg_match('~^(AVG|MIN|MAX)\((.+)\)~', $column, $matches) ? $fields[idf_unescape($matches[2])]["type"] : ($field["type"] ?? null));
 						$money = $type == "money" || ($column && preg_match('~^SUM\((.+)\)~', $column, $matches) && $fields[idf_unescape($matches[1])]["type"]) == "money";
 						$text = $type && preg_match('~text|json|lob~', $type);
-						$numeric_type = ($type && preg_match(number_type(), $type)) ||
-							($column && preg_match('~^(CHAR_LENGTH|ROUND|FLOOR|CEIL|UNIX_TIMESTAMP|TIME_TO_SEC|COUNT|SUM)\(~', $column));
-						$class = $numeric_type && ($null_val || is_numeric(strip_tags($html)) || $money) ? "class='number'" : "";
+						$class = $numbers[$key] && ($null_val || is_numeric(strip_tags($html)) || $money) ? "class='number'" : "";
 						echo "<td id='$id' $class";
 						if (($_GET["modify"] && $editable && !$null_val) || $posted !== null) {
 							$editing_fields = true;

@@ -49,6 +49,7 @@ function adminneo_instance()
 		new \AdminNeo\ZipOutputPlugin(),
 		new \AdminNeo\JsonDumpPlugin(),
 		new \AdminNeo\XmlDumpPlugin(),
+		new \AdminNeo\MarkdownDumpPlugin(),
 //		new \AdminNeo\SqlLogPlugin(),
 //		new \AdminNeo\TinyMcePlugin("../externals/tinymce/tinymce.min.js"),
 		new \AdminNeo\FileUploadPlugin("../compiled/upload"),

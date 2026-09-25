@@ -899,6 +899,10 @@ function dump_headers(string $identifier, bool $multi_table = false): string
 	$identifier = friendly_url($identifier) . date("-Ymd-His");
 
 	$extension = Admin::get()->sendDumpHeaders($identifier, $multi_table);
+	if ($extension === null) {
+		$extension = Admin::get()->sendDumpFormatHeaders($identifier, $multi_table);
+	}
+	Admin::get()->sendDumpOutputHeaders($identifier, $extension);
 
 	$output = $_POST["output"];
 	if ($output != "text") {

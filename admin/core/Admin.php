@@ -950,6 +950,37 @@ class Admin extends Origin
 	}
 
 	/**
+	 * Returns export format options.
+	 *
+	 * @return string[] Empty to disable export.
+	 */
+	public function getDumpFormats(): array
+	{
+		return (support("dump") ? ['sql' => 'SQL'] : []) + ['csv' => 'CSV,', 'csv;' => 'CSV;', 'tsv' => 'TSV'];
+	}
+
+	/**
+	 * Sends headers specific to the export format.
+	 *
+	 * @return string File extension.
+	 */
+	public function sendDumpFormatHeaders(string $identifier, bool $multiTable = false): string
+	{
+		// Multiple CSVs are packed to TAR.
+		$extension = (str_contains($_POST["format"], "sql") ? "sql" : ($multiTable ? "tar" : "csv"));
+
+		if ($extension == "tar") {
+			header("Content-Type: application/x-tar");
+		} elseif ($extension == "sql" || $_POST["output"] == "text") {
+			header("Content-Type: text/plain; charset=utf-8");
+		} else {
+			header("Content-Type: text/csv; charset=utf-8");
+		}
+
+		return $extension;
+	}
+
+	/**
 	 * Returns export output options.
 	 *
 	 * @return string[]
@@ -969,43 +1000,21 @@ class Admin extends Origin
 	}
 
 	/**
-	 * Returns export format options.
+	 * Sends headers specific to the export output, e.g. starts the compression.
 	 *
-	 * @return string[] Empty to disable export.
+	 * @param string $extension File extension returned by sendDumpFormatHeaders().
 	 */
-	public function getDumpFormats(): array
+	public function sendDumpOutputHeaders(string $identifier, string $extension): void
 	{
-		return (support("dump") ? ['sql' => 'SQL'] : []) + ['csv' => 'CSV,', 'csv;' => 'CSV;', 'tsv' => 'TSV'];
-	}
-
-	/**
-	 * Sends headers for export.
-	 *
-	 * @return string File extension.
-	 */
-	public function sendDumpHeaders(string $identifier, bool $multiTable = false): string
-	{
-		$output = $_POST["output"];
-
-		// Multiple CSVs are packed to TAR.
-		$extension = (str_contains($_POST["format"], "sql") ? "sql" : ($multiTable ? "tar" : "csv"));
-
-		if ($output == "gz") {
+		if ($_POST["output"] == "gz") {
+			// Applies to all formats including the ones added by plugins.
 			header("Content-Type: application/x-gzip");
 
 			ob_start(function (string $string): string {
 				// ob_start() callback receives an optional parameter $phase but gzencode() accepts optional parameter $level
 				return gzencode($string);
 			}, 1e6);
-		} elseif ($extension == "tar") {
-			header("Content-Type: application/x-tar");
-		} elseif ($extension == "sql" || $output == "text") {
-			header("Content-Type: text/plain; charset=utf-8");
-		} else {
-			header("Content-Type: text/csv; charset=utf-8");
 		}
-
-		return $extension;
 	}
 
 	/**

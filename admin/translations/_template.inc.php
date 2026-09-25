@@ -435,4 +435,5 @@ return [
 	'Data table' => 'Xx',
 	'Edit form' => 'Xx',
 	'Ask %s' => 'Xx %s',
+	'Views' => 'Xx',
 ];

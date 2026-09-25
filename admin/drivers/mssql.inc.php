@@ -554,28 +554,28 @@ AND i.object_id IN (
 			return "0x" . bin2hex($string);
 		}
 
-		public function supportsRuntimeStatistics(): bool
+		public function supportsStats(): bool
 		{
 			return DRIVER_EXTENSION == "sqlsrv";
 		}
 
-		public function runtimeStatisticsExecuteSeparately(): bool
+		public function statsNeedSeparateQuery(): bool
 		{
 			return false;
 		}
 
-		public function startRuntimeStatistics(): bool
+		public function statsStart(): bool
 		{
-			if (!$this->supportsRuntimeStatistics() || !$this->connection->query("SET STATISTICS IO ON; SET STATISTICS TIME ON")) {
+			if (!$this->supportsStats() || !$this->connection->query("SET STATISTICS IO ON; SET STATISTICS TIME ON")) {
 				return false;
 			}
 			$this->connection->startRuntimeStatisticsCollection();
 			return true;
 		}
 
-		public function finishRuntimeStatistics(string $query): array
+		public function statsFinish(string $query): array
 		{
-			if (!$this->supportsRuntimeStatistics()) {
+			if (!$this->supportsStats()) {
 				return [];
 			}
 
@@ -588,15 +588,26 @@ AND i.object_id IN (
 				if (!preg_match('~(?:logical reads|CPU time|elapsed time)~i', $details)) {
 					continue;
 				}
+				if (preg_match('~(?:CPU time|elapsed time)~i', $details)) {
+					$statistics[] = [
+						"category" => "Timing",
+						"object" => null,
+						"metric" => stripos($details, "compile time") !== false ? "Compile" : "Execution",
+						"value" => null,
+						"unit" => null,
+						"details" => preg_replace('~\s++~', ' ', trim($details)),
+					];
+					continue;
+				}
 				$object = preg_match("~Table '([^']+)'~i", $details, $match) ? $match[1] : null;
-				preg_match_all('~(lob read-ahead reads|lob logical reads|lob physical reads|read-ahead reads|logical reads|physical reads|CPU time|elapsed time)\s*[=:]?\s*(\d+)\s*(ms)?~i', $details, $matches, PREG_SET_ORDER);
+				preg_match_all('~(lob read-ahead reads|lob logical reads|lob physical reads|read-ahead reads|logical reads|physical reads)\s*[=:]?\s*(\d+)~i', $details, $matches, PREG_SET_ORDER);
 				foreach ($matches as $match) {
 					$statistics[] = [
-						"category" => stripos($match[1], "time") !== false ? "timing" : "I/O",
+						"category" => "I/O",
 						"object" => $object,
 						"metric" => strtolower($match[1]),
 						"value" => (int)$match[2],
-						"unit" => !empty($match[3]) ? "ms" : "pages",
+						"unit" => "pages",
 						"details" => $details,
 					];
 				}
@@ -871,7 +882,11 @@ WHERE c.object_id = " . q($table_id)) as $row
 			$length = "";
 			if (preg_match("~char|binary~", $type)) {
 				$maxLength = intval($row["max_length"]);
-				$length = ($maxLength == -1 ? "max" : $maxLength / ($type[0] == 'n' ? 2 : 1));
+				if ($maxLength == -1) {
+					$type .= "(max)";
+				} else {
+					$length = $maxLength / ($type[0] == 'n' ? 2 : 1);
+				}
 			} elseif ($type == "decimal") {
 				$length = "$row[precision],$row[scale]";
 			}
@@ -1573,6 +1588,6 @@ ORDER BY CASE WHEN o.type = 'P' THEN 0 ELSE 1 END, o.name");
 
 	function support(string $feature): bool
 	{
-		return preg_match('~^(check|comment|columns|copy|database|drop_col|dump|fast_status|indexes|descidx|procedure|routine|routine_script|scheme|sql|table|trigger|view|view_trigger' . (Driver::get()->supportsRuntimeStatistics() ? '|runtime_statistics' : '') . ')$~', $feature);
+		return preg_match('~^(check|comment|columns|copy|database|drop_col|dump|fast_status|indexes|descidx|procedure|routine|routine_script|scheme|sql|table|trigger|view|view_trigger' . (Driver::get()->supportsStats() ? '|runtime_statistics' : '') . ')$~', $feature);
 	}
 }

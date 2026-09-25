@@ -471,4 +471,5 @@ return [
 	'Data table' => 'Datová tabulka',
 	'Edit form' => 'Editační formulář',
 	'Ask %s' => 'Zeptat se %s',
+	'Views' => 'Pohledy',
 ];

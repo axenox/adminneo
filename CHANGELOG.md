@@ -6,7 +6,21 @@ AdminNeo 5.9.0
 
 ### Fork modifications
 
+- MS SQL: Correctly read and edit `(max)` string and binary columns
 - SQL command: Add opt-in actual runtime and I/O statistics for read-only queries on MS SQL, PostgreSQL, MySQL 8.0.18+ and MariaDB 10.1+
+- SQL command: Give wide runtime statistics and execution plan tables dedicated horizontal scrollbars
+- SQL command: Keep the main result table scrollbar within the viewport
+
+### Changes
+
+- Add MarkdownDumpPlugin - export of database structure and data to Markdown format
+
+### Bugfixes
+
+- Select: Align titles of numeric columns to the right
+- Export: Fix gzip compression for formats added by plugins
+- PostgreSQL, MS SQL: Fix foreign key statements printed into non-SQL export formats
+- PostgreSQL: Fix missing check constraints in export of all schemas
 
 AdminNeo 5.8.0 (2026-09-15)
 ---------------------------

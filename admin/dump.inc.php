@@ -67,8 +67,8 @@ SET foreign_key_checks = 0;
 	$style = $_POST["db_style"];
 
 	foreach ($databases as $db) {
-		Admin::get()->dumpDatabase($db);
 		if (Connection::get()->selectDatabase($db)) {
+			Admin::get()->dumpDatabase($db);
 			if ($is_sql) {
 				if ($style) {
 					echo create_database_sql($db, $style);
@@ -187,7 +187,7 @@ SET foreign_key_checks = 0;
 					}
 
 					// add FKs after creating tables (except in MySQL which uses SET FOREIGN_KEY_CHECKS=0)
-					if ($_POST["table_style"] && function_exists('AdminNeo\foreign_keys_sql')) {
+					if ($is_sql && $_POST["table_style"] && function_exists('AdminNeo\foreign_keys_sql')) {
 						foreach ($tables_status as $name => $table_status) {
 							$table = (DB == "" || $_GET["ns"] === "" || in_array($name, (array) $_POST["tables"]));
 							if ($table && !is_view($table_status)) {

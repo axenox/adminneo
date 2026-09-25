@@ -574,14 +574,14 @@ AND NOT a.attisdropped";
 			return $this->connection->warnings();
 		}
 
-		public function supportsRuntimeStatistics(): bool
+		public function supportsStats(): bool
 		{
 			return !$this->connection->isCockroachDB();
 		}
 
-		public function finishRuntimeStatistics(string $query): array
+		public function statsFinish(string $query): array
 		{
-			if (!$this->supportsRuntimeStatistics() || !$this->isRuntimeStatisticsQuery($query)) {
+			if (!$this->supportsStats() || !$this->isRuntimeStatisticsQuery($query)) {
 				return [];
 			}
 
@@ -1778,7 +1778,7 @@ AND oid NOT IN (SELECT objid FROM pg_catalog.pg_depend WHERE classid = 'pg_type'
 
 		return preg_match(
 			'~^(check|columns|comment|copy|database|drop_col|dump|descidx|fast_status|indexes|kill|partial_indexes|routine|routine_fields|scheme|sequence|sql|table|trigger|type|variables|view'
-			. (Driver::get()->supportsRuntimeStatistics() ? '|runtime_statistics' : '')
+			. (Driver::get()->supportsStats() ? '|runtime_statistics' : '')
 			. ')$~',
 			$feature
 		);

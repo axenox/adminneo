@@ -28,7 +28,7 @@ class Bz2OutputPlugin extends Plugin
 		return function_exists('bzopen') ? ['bz2' => 'bzip2'] : [];
 	}
 
-	public function sendDumpHeaders(string $identifier, bool $multiTable = false): ?string
+	public function sendDumpOutputHeaders(string $identifier, string $extension): ?bool
 	{
 		if ($_POST["output"] == "bz2") {
 			$this->filename = tempnam("", "bz2");
