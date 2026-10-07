@@ -28,7 +28,7 @@ if (!function_exists(__NAMESPACE__ . '\\adminneo_named_constraint_name')) {
 }
 
 $TABLE = $_GET["foreign"];
-$name = $_GET["name"];
+$name = $_GET["name"] ?? "";
 $row = $_POST;
 
 if ($_POST && !$_POST["add"] && !$_POST["change"] && !$_POST["change-js"]) {
