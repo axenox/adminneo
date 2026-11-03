@@ -6,6 +6,7 @@ AdminNeo 5.9 (2026-11-01)
 
 ### Fork modifications
 
+- Embedded mode: Fix blank database-list and invalid database/schema pages
 - Foreign keys: Fix creation without a name parameter when named constraints are enabled
 - MS SQL: Keep separate `(max)` string and binary choices in the column type dropdown
 - SQL command: Add opt-in actual runtime and I/O statistics for read-only queries on MS SQL, PostgreSQL, MySQL 8.0.18+ and MariaDB 10.1+

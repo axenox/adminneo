@@ -123,6 +123,8 @@ Host applications that capture AdminNeo output can enable `embeddedMode`. AdminN
 
 The settings route also returns through the main router after rendering instead of terminating the PHP process. This lets embedding hosts finish their output-buffer capture while keeping the route isolated from database connection initialization.
 
+In embedded mode, connection initialization returns after rendering the database list or an invalid database/schema page. It sets `$connection_page_finished` so the source router returns without rendering a second page or footer. In compiled builds the return ends the inlined router directly. Standalone mode keeps its existing process termination.
+
 MS SQL servers using the native SQLSRV extension can set `connectionOptions` in their `config` array. These values are passed to `sqlsrv_connect()` before AdminNeo adds the selected database, UTF-8 character set, non-empty credentials, and first-class `sslEncrypt` or `sslTrustServerCertificate` settings. This supports authentication modes such as `ActiveDirectoryMsi` without changing standalone defaults.
 
 `adminneo-plugins.php` (placed next to the entry point) returns an array of `Plugin` instances.

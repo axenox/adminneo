@@ -34,7 +34,11 @@ if (isset($_GET["settings"])) {
 	return;
 }
 
+$connection_page_finished = false;
 include "include/connect.inc.php";
+if ($connection_page_finished) {
+	return;
+}
 
 if (isset($_GET["select"]) && ($_POST["edit"] || $_POST["clone"]) && !$_POST["save"]) {
 	$_GET["edit"] = $_GET["select"];

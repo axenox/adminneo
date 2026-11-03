@@ -121,6 +121,11 @@ if (!(DB != "" ?
 	echo '<p class="links"><a href="' . h(ME) . 'database=">' . icon("database-add") . lang('Create database') . "</a>\n";
 
 	page_footer("db");
+	if (Admin::get()->getConfig()->isEmbeddedModeEnabled()) {
+		// Stop routing without terminating the host's output capture.
+		$connection_page_finished = true;
+		return;
+	}
 	exit;
 }
 
@@ -142,6 +147,10 @@ if (support("scheme")) {
 			header("HTTP/1.1 404 Not Found");
 			page_header(lang('Schema') . ": " . h($_GET["ns"]), true);
 			page_footer("ns");
+			if (Admin::get()->getConfig()->isEmbeddedModeEnabled()) {
+				$connection_page_finished = true;
+				return;
+			}
 			exit;
 		}
 	}
