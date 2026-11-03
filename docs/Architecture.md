@@ -129,6 +129,20 @@ MS SQL servers using the native SQLSRV extension can set `connectionOptions` in 
 
 `adminneo-plugins.php` (placed next to the entry point) returns an array of `Plugin` instances.
 
+### Host error handling
+
+The bootstrap error handler suppresses expected missing-array-key warnings and
+notices. Other diagnostics are forwarded to the PHP error handler registered
+before bootstrap, if one exists. Without a host handler, PHP's default error
+handling still applies. Hosts must respect `error_reporting()` and the `@`
+operator in their handler.
+
+The ExFace IDE installs a workbench logging bridge before launching AdminNeo and
+restores the previous host handler and reporting mask when execution returns or
+throws. Core's logger handles native fatal errors at shutdown. See
+[IDE error logging](../../ide/Docs/Development/AdminNeo/SQL_admin_errors.md) for logging levels,
+streaming limitations and test coverage.
+
 ## MS SQL column types
 
 Column metadata uses upstream's base type and separate length, for example

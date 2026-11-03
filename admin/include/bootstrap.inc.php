@@ -3,11 +3,16 @@
 namespace AdminNeo;
 
 error_reporting(E_ALL & ~E_DEPRECATED);
-set_error_handler(function ($errno, $error) {
+$previous_error_handler = null;
+$previous_error_handler = set_error_handler(function ($errno, $error, $file, $line) use (&$previous_error_handler) {
 	// "Undefined array key" mutes $_GET["q"] if there's no ?q=
 	// "Undefined offset" and "Undefined index" are older messages for the same thing.
-	return (bool)preg_match('~^Undefined (array key|offset|index)~', $error);
-}, E_WARNING | E_NOTICE); // warning since PHP 8.0
+	if (($errno & (E_WARNING | E_NOTICE)) && preg_match('~^Undefined (array key|offset|index)~', $error)) {
+		return true;
+	}
+	// Embedded hosts may provide logging; returning false alone bypasses their handler.
+	return $previous_error_handler ? $previous_error_handler($errno, $error, $file, $line) : false;
+}); // Handle all levels so embedded hosts also receive user errors and deprecations.
 
 include __DIR__ . "/debug.inc.php";
 include __DIR__ . "/coverage.inc.php";
