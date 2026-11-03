@@ -49,6 +49,7 @@ return [
 	'Session support must be enabled.' => 'Sokongan sesi perlu diaktifkan.',
 	'Session expired, please login again.' => 'Sesi telah luput, sila log masuk kembali.',
 	'%s version: %s through PHP extension %s' => 'Versi %s: %s melalui sambungan PHP %s',
+	'%s requires at least %s.' => '%s memerlukan sekurang-kurangnya %s.', // e.g. 'AdminNeo requires at least Elasticsearch 7.' // by Claude Fable 5.1
 
 	// Settings
 	'Language' => 'Bahasa',
@@ -136,6 +137,7 @@ return [
 	'save' => 'simpan',
 	'Format' => 'Format',
 	'Data' => 'Data',
+	'Copy as <span>%s</span>' => 'Salin sebagai <span>%s</span>', // by Claude Fable 5.1
 
 	// Databases
 	'Database' => 'Pangkalan data',
@@ -197,7 +199,7 @@ return [
 
 	// Tables
 	'Tables' => 'Jadual',
-	'Tables and views' => 'Jadual dan pandangan',
+	'Tables and views' => 'Jadual dan paparan', // by Claude Opus 5.5
 	'Table' => 'Jadual',
 	'No tables.' => 'Tiada jadual.',
 	'Alter table' => 'Ubah jadual',
@@ -217,6 +219,7 @@ return [
 	'Options' => 'Pilihan',
 	'Comment' => 'Komen',
 	'Default value' => 'Nilai lalai',
+	'default value' => 'nilai lalai',
 	'Drop' => 'Jatuh',
 	'Drop %s?' => 'Jatuhkan %s?',
 	'Are you sure?' => 'Anda pasti?',
@@ -228,7 +231,7 @@ return [
 	'Maximum number of allowed fields exceeded. Please increase %s.' => 'Bilangan medan telah melebihi had yang dibenarkan. Sila tingkatkan %s.',
 
 	// Views
-	'View' => 'Papar',
+	'View' => 'Paparan', // by Claude Opus 5.5
 	'Materialized view' => 'Paparan termaterialisasi', // by Claude Fable 5.1
 	'View has been dropped.' => 'Paparan telah dijatuhkan.',
 	'View has been altered.' => 'Paparan telah diubah.',
@@ -315,6 +318,7 @@ return [
 	'Create type' => 'Buat jenis',
 	'Type has been dropped.' => 'Jenis telah dijatuhkan.',
 	'Type has been created.' => 'Jenis telah dibuat.',
+	'Type has been altered.' => 'Jenis telah diubah.', // by Claude Opus 5.5
 	'Alter type' => 'Ubah jenis',
 
 	// Triggers
@@ -395,6 +399,7 @@ return [
 	'Lists' => 'Senarai',
 	'Network' => 'Rangkaian',
 	'Geometry' => 'Geometri',
+	'Ranges' => 'Julat', // by Claude Fable 5.1
 	'Relations' => 'Hubungan',
 
 	// Editor - data values
@@ -438,4 +443,5 @@ return [
 	'Data table' => 'Jadual data', // by Claude Fable 5.1
 	'Edit form' => 'Borang ubah', // by Claude Fable 5.1
 	'Ask %s' => 'Tanya %s', // by Claude Fable 5.1
+	'Views' => 'Paparan', // by Claude Opus 5.5
 ];

@@ -1,13 +1,13 @@
 Changelog
 =========
 
-AdminNeo 5.9.0
---------------
+AdminNeo 5.9 (2026-11-01)
+-------------------------
 
 ### Fork modifications
 
 - Foreign keys: Fix creation without a name parameter when named constraints are enabled
-- MS SQL: Correctly read and edit `(max)` string and binary columns
+- MS SQL: Keep separate `(max)` string and binary choices in the column type dropdown
 - SQL command: Add opt-in actual runtime and I/O statistics for read-only queries on MS SQL, PostgreSQL, MySQL 8.0.18+ and MariaDB 10.1+
 - SQL command: Give wide runtime statistics and execution plan tables dedicated horizontal scrollbars
 - SQL command: Keep the main result table scrollbar within the viewport
@@ -15,13 +15,76 @@ AdminNeo 5.9.0
 ### Changes
 
 - Add MarkdownDumpPlugin - export of database structure and data to Markdown format
+- Add ClaudeSqlPlugin - AI prompt in SQL command generating the queries with Anthropic Claude
+- Table structure: Show generated columns in SQL syntax
+- Table structure: Copy table structure to clipboard in a selected export format
+- Unify import and export icons
+- Export: Disable structure and data options for formats that do not support them
+- Export: Compress gzip output into a single stream instead of concatenated chunks
+- Navigation: Move the focus between the tables filter and the tables list by arrow keys
+- Alter view, routine and type: Use a transaction instead of a temporary object in PostgreSQL, SQLite, MS SQL (by @vrana)
+- Compiler: Compress translations with the English translation as a dictionary to reduce size (by @vrana)
+- MySQL: Show warnings count of each query in SQL command
+- PostgreSQL: Support range types (by @vrana)
+- PostgreSQL: Show composite, domain and range types next to enums (by @vrana)
+- PostgreSQL: Alter and rename user defined types (by @vrana)
+- PostgreSQL: Add values to an enum type without re-creating it (by @vrana)
+- PostgreSQL: Export all user defined types (by @vrana)
+- Elasticsearch: The driver is no longer beta, it works with Elasticsearch 7, 8 and 9 (by @vrana)
 
 ### Bugfixes
 
+- Select: Disallow modifying data by the SQL operator (CSRF) (by @vrana)
 - Select: Align titles of numeric columns to the right
+- Select: Fix error with an empty limit (regression from 5.3.0)
+- Select: Do not search in integer and decimal columns for dates and other values that are not numbers
+- Select: Compare numbers searched by IN with text and other non-numeric columns as strings
+- Select: Fix searching by IN for decimal and negative numbers
+- Select: Do not reformat JSON values in search conditions
+- Select: Do not search in date and timestamp columns for invalid dates or dates followed by other text
+- Select: Report an unknown column in search instead of a fatal error (by @vrana, regression from 4.9.2)
 - Export: Fix gzip compression for formats added by plugins
+- Edit: Fix JavaScript error for blob fields with file upload
+- Edit: Do not save invalid JSON values as null with enabled jsonValuesAutoFormat
+- Editor: Compact JSON values on saving with enabled jsonValuesAutoFormat like in AdminNeo
+- SQL command: Show error of a later query in a batch
+- SQL command: Rollback an unfinished transaction so that it doesn't break the following queries (by @vrana)
+- Fix parse error of the compiled file in PHP 5 (regression from 5.6.0)
+- Alter table: Fix toggling of column comments (regression from 5.8.0)
+- Alter routine: Fix altering a routine with a name longer than 42 characters (by @vrana)
+- MySQL: Fix lost charset introducers and parameters starting with "_" in routine definitions (issue #197)
+- MySQL: Fix exhausted memory in export of big tables (issue #211, regression from 5.1.0)
+- MySQL: Fix displaying multiple results of SQL command with the PDO extension
+- MySQL: Fix length of routine parameters with unsigned or zerofill, support MySQL < 8 again (by @vrana, regression from 5.5.0)
+- MySQL: Fix error on searching in all columns of a table with bit columns
 - PostgreSQL, MS SQL: Fix foreign key statements printed into non-SQL export formats
 - PostgreSQL: Fix missing check constraints in export of all schemas
+- PostgreSQL: Do not mark identity columns as Auto increment
+- PostgreSQL: Fix editing values of user defined enums containing an apostrophe or a backslash
+- PostgreSQL: Fix exporting enum values containing an apostrophe
+- PostgreSQL: Fix editing and deleting all rows sharing the value of a partial index (regression from 5.5.0)
+- PostgreSQL: Fix errors on searching in all columns of uuid, network, time, array and other types
+- PostgreSQL: Fix searching by regular expression in non-text columns
+- PostgreSQL: Fix searching by IN in bit and money columns
+- Elasticsearch: Fix searching data in all tables (regression from 5.1.0)
+- Elasticsearch: Fix searching text in all columns of an index with long, short or byte fields
+- Elasticsearch: Fix searching in all columns with the must operators
+- Elasticsearch: Search values with accented letters also in keyword fields
+- MS SQL: Fix reading and editing of varchar(max) and similar columns
+- MS SQL: Read complete view definitions from the selected schema (by @kabachello)
+- MS SQL, Oracle: Fix transactions, e.g. a failed import or renaming a view
+- SQLite: Disallow ATTACH and VACUUM INTO prefixed by BOM (by @vrana, GHSA-ggh8-3chg-48w7)
+- SQLite: Disallow ATTACH and VACUUM INTO prefixed by a semicolon (GHSA-q5vv-mh5m-fxvm)
+- SQLite: Disallow ATTACH and VACUUM INTO in export of SQL command (GHSA-66c7-5wxm-rfgj)
+- SQLite: Deny writing files by an authorizer (PHP 8.0+, PDO PHP 8.5+) (by @vrana)
+- SQLite: Skip empty queries in SQL command instead of reporting an error
+- SQLite: Fix reading of generated columns defined on one line or without GENERATED ALWAYS keywords
+- MongoDB, SimpleDB: Show a message after creating a table (regression from 5.8.0)
+- PDO: Fix fatal error on a database error without an error number (regression from 5.1.0)
+- TableLoginPlugin: Restrict sending database credentials only to allowed server (GHSA-rgjx-wcgv-pw7g)
+- GeminiSqlPlugin: Fix JavaScript syntax error in older browsers
+
+(Ported relevant changes from Adminer 6.0.0 • part 4)
 
 AdminNeo 5.8.0 (2026-09-15)
 ---------------------------
@@ -77,7 +140,7 @@ AdminNeo 5.8.0 (2026-09-15)
 - Database schema: Allow dragging a table box also by its name
 - Database schema: Snap a moved table box to the grid
 - MySQL: Fix displaying backward relation links
-- PostgreSQL: Fix editing a record with a GENERATED ALWAYS AS IDENTITY column (fix #205, regression from 5.5.0)
+- PostgreSQL: Fix editing a record with a GENERATED ALWAYS AS IDENTITY column (issue #205, regression from 5.5.0)
 - PostgreSQL, MS SQL: Highlight primary keys in the database schema (regression from 5.1.0)
 - SQLite: Fix working with binary data through PDO
 - MongoDB: Show the primary key column when altering indexes (by @vrana, regression from 5.5.0)
@@ -96,7 +159,7 @@ AdminNeo 5.7.1 (2026-08-27)
 - Escape `<` in strings printed to JavaScript, a name containing `<!--<script>` broke the page
 - Alter table: Edit multiline column comments in a textarea (by @vrana)
 - Alter table: Do not rewrite newlines in multiline column and table comments
-- Edit: Fix losing the value of nullable enum fields (fix #203, regression from 5.7.0)
+- Edit: Fix losing the value of nullable enum fields (issue #203, regression from 5.7.0)
 - Edit: Fix JavaScript error when changing the function of enum, set and bool fields (regression from 5.7.0)
 - PostgreSQL, SQLite, MS SQL: Fix reading a multiline default value
 
@@ -128,8 +191,8 @@ AdminNeo 5.7.0 (2026-08-24)
 
 - Escape index type, algorithm and length (XSS) (by @vrana)
 - Escape values of table status and event schedule (XSS) (by @vrana)
-- Fix embedding to a page with already started session (fix #199)
-- Fix presetting foreign keys in edit form (fix #200, regression from 5.6.0)
+- Fix embedding to a page with already started session (issue #199)
+- Fix presetting foreign keys in edit form (issue #200, regression from 5.6.0)
 - Editor: Fix displaying relation links (regression from 5.2.0)
 - Select: Fix the number of selected rows after going back in history (by @vrana)
 - Edit: Keep values of columns with special characters in name after error (by @vrana)
@@ -173,7 +236,7 @@ AdminNeo 5.6.0 (2026-08-16)
 - Support disabled set_time_limit() and ini_set() (by @vrana)
 - Do not export foreign key constraints if the table structure is not exported
 - MariaDB: Allow setting password with password validation plugin (by @vrana)
-- PostgreSQL: Fix data-only export failing to import due to foreign key violations (fix #192)
+- PostgreSQL: Fix data-only export failing to import due to foreign key violations (issue #192)
 - PostgreSQL: Restart sequences in a data-only export if auto increment values are exported
 - SQLite: Preserve STRICT and WITHOUT ROWID in alter table (by @vrana)
 - SQLite: Do not treat INTEGER PRIMARY KEY without AUTOINCREMENT as auto increment (by @vrana)
@@ -210,7 +273,7 @@ AdminNeo 5.5.1 (2026-07-20)
 - MySQL: Fix routine fields length (by @vrana, regression from 5.5.0)
 - MySQL: Do not export IN in FUNCTION parameters (by @vrana, regression from 5.5.0)
 - MySQL: Allow connecting to socket without hostname (by @magnusvin, regression from 5.5.0)
-- MySQL: Fix database version in URL links to documentation (fix #194, regression from 5.1.0)
+- MySQL: Fix database version in URL links to documentation (issue #194, regression from 5.1.0)
 - MariaDB: Fix form for changing user password (regression from 5.1.0)
 - MariaDB: Speed up getting checks (by @vrana, regression from 5.4.2)
 - MariaDB, PostgreSQL: Use CREATE OR REPLACE FUNCTION if possible (by @vrana)
@@ -313,7 +376,7 @@ AdminNeo 5.4.1 (2026-06-07)
 - PostgreSQL: Fix exporting whole databases (regression from 5.1.0)
 - MongoDB: Fix displaying selection table (regression from 5.4.0)
   MongoDB: Fix edit form when inserting the first record (regression from 5.0.0)
-- MongoDB: Fix authenticating user restricted to one database (fix #177)
+- MongoDB: Fix authenticating user restricted to one database (issue #177)
 - MongoDB: Fix detecting of JSON values
 - MongoDB: Fix saving NULL and "NULL" values
 

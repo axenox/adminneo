@@ -53,6 +53,7 @@ return [
 	'Session support must be enabled.' => 'Sesiunile trebuie să fie pornite.',
 	'Session expired, please login again.' => 'Timpul sesiunii a expirat, rog să vă conectați din nou.',
 	'%s version: %s through PHP extension %s' => 'Versiunea %s: %s cu extensia PHP %s',
+	'%s requires at least %s.' => '%s necesită cel puțin %s.', // e.g. 'AdminNeo requires at least Elasticsearch 7.' // by Claude Fable 5.1
 
 	// Settings
 	'Language' => 'Limba',
@@ -156,6 +157,7 @@ return [
 	'save' => 'salvează',
 	'Format' => 'Format',
 	'Data' => 'Date',
+	'Copy as <span>%s</span>' => 'Copiază ca <span>%s</span>', // by Claude Fable 5.1
 
 	// Databases
 	'Database' => 'Baza de date',
@@ -237,6 +239,7 @@ return [
 	'Options' => 'Acțiune',
 	'Comment' => 'Comentariu',
 	'Default value' => 'Valoare implicită', // by Claude Fable 5.1
+	'default value' => 'valoare implicită', // by Claude Opus 5.5
 	'Drop' => 'Șterge',
 	'Drop %s?' => 'Ștergeți %s?', // by Claude Fable 5.1
 	'Are you sure?' => 'Sunteți sigur(ă)?',
@@ -339,6 +342,7 @@ return [
 	'Create type' => 'Crează tip noi',
 	'Type has been dropped.' => 'Tiipul a fost șters.',
 	'Type has been created.' => 'Crează tip nou.',
+	'Type has been altered.' => 'Tipul a fost modificat.', // by Claude Opus 5
 	'Alter type' => 'Modifică tip',
 
 	// Triggers
@@ -428,6 +432,7 @@ return [
 	'Lists' => 'Liste',
 	'Network' => 'Rețea',
 	'Geometry' => 'Geometrie',
+	'Ranges' => 'Intervale', // by Claude Fable 5.1
 	'Relations' => 'Relații',
 
 	// Editor - data values
@@ -471,4 +476,5 @@ return [
 	'Data table' => 'Tabelul de date', // by Claude Fable 5.1
 	'Edit form' => 'Formular de editare', // by Claude Fable 5.1
 	'Ask %s' => 'Întreabă %s', // by Claude Fable 5.1
+	'Views' => 'Reprezentări', // by Claude Opus 5.5
 ];

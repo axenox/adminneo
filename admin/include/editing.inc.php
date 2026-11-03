@@ -197,6 +197,10 @@ function json_row($key, $val = null): void {
 */
 function edit_type($key, $field, $collations, $foreign_keys = [], $extra_types = []): void {
 	$type = $field["type"] ?? null;
+	if (DIALECT == "mssql" && strcasecmp($field["length"] ?? "", "max") == 0 && isset(Driver::get()->getTypes()[$type . "(max)"])) {
+		$type .= "(max)";
+		$field["length"] = "";
+	}
 	?>
 <td><select name="<?php echo h($key); ?>[type]" class="type" aria-labelledby="label-type"><?php
 $driverTypes = Driver::get()->getTypes();
@@ -213,7 +217,7 @@ echo optionlist(array_merge($extra_types, $structured_types), $type);
 	echo (!($field["length"] ?? null) && preg_match('~var(char|binary)$~', $type) ? " class='input required'" : " class='input'");
 ?> aria-labelledby="label-length"><td class="options"><?php
 	echo ($collations ?
-		"<select name='" . h($key) . "[collation]'" . option_types($type, '(char|text|enum|set)$') .
+		"<select name='" . h($key) . "[collation]'" . option_types($type, '(char(\(max\))?|text|enum|set)$') .
 			'><option value="">(' . lang('collation') . ')' . optionlist($collations, $field["collation"] ?? null) . '</select>' :
 		'');
 	// ^$ - the type is not known yet
@@ -255,11 +259,16 @@ function option_types(?string $type, string $types): string
 * @return string
 */
 function process_length($length) {
+	// MS SQL: varchar(max), nvarchar(max), varbinary(max).
+	if (preg_match('~^\s*\(?\s*max\s*\)?\s*$~i', $length)) {
+		return "(max)";
+	}
+
 	$enumLengthPattern = Driver::EnumLengthPattern;
 
 	return (preg_match("~^\\s*\\(?\\s*$enumLengthPattern(?:\\s*,\\s*$enumLengthPattern)*+\\s*\\)?\\s*\$~", $length) && preg_match_all("~$enumLengthPattern~", $length, $matches)
 		? "(" . implode(",", $matches[0]) . ")"
-		: preg_replace('~^[0-9].*~', '(\0)', preg_replace('~[^-0-9,+()[\]]~', '', $length))
+		: preg_replace('~^[-+.0-9].*~', '(\0)', preg_replace('~[^-0-9,.+()[\]]~', '', $length))
 	);
 }
 
@@ -269,6 +278,10 @@ function process_length($length) {
 * @return string
 */
 function process_type($field, $collate = "COLLATE") {
+	if (DIALECT == "mssql" && preg_match('~^(varchar|nvarchar|varbinary)\(max\)$~i', $field["type"], $match)) {
+		$field["type"] = $match[1];
+		$field["length"] = "max";
+	}
 	return " $field[type]"
 		. process_length($field["length"])
 		. (preg_match(number_type(), $field["type"]) && in_array($field["unsigned"], Driver::get()->getUnsigned()) ? " $field[unsigned]" : "")
@@ -424,7 +437,7 @@ function edit_fields(array $fields, array $collations, $type = "TABLE", $foreign
 		echo "<tr", ($display ? "" : " hidden"), ">\n";
 
 		if (support("move_col")) {
-			echo "<th class='handle jsonly'>", icon_solo("handle"), "</td>";
+			echo "<th class='handle jsonly'>", icon_solo("handle"), "</th>";
 		}
 		if ($type == "PROCEDURE") {
 			echo "<td>", html_select("fields[$i][inout]", Driver::get()->getInOut(), $field["inout"]), "</td>\n";
@@ -590,9 +603,9 @@ function grant($grant, array $privileges, $columns, $on, $user) {
 /** Drop old object and create a new one. Redirect in success.
 * @param string drop old object query
 * @param string create new object query
-* @param string drop new object query
-* @param string create test object query
-* @param string drop test object query
+* @param string drop new object query, used if DDL is not transactional
+* @param string create test object query, used if DDL is not transactional
+* @param string drop test object query, used if DDL is not transactional
 * @param string
 * @param string
 * @param string
@@ -605,6 +618,10 @@ function drop_create($drop, $create, $drop_created, $test, $drop_test, $location
 		query_redirect($drop, $location, $message_drop);
 	} elseif ($old_name == "") {
 		query_redirect($create, $location, $message_create);
+	} elseif (support("transaction_ddl")) {
+		Driver::get()->begin();
+		queries_redirect($location, $message_alter, queries($drop) && queries($create) && Driver::get()->commit());
+		Driver::get()->rollback(); // After queries_redirect() to not overwrite error.
 	} elseif ($old_name != $new_name) {
 		$created = queries($create);
 		queries_redirect($location, $message_alter, $created && queries($drop));

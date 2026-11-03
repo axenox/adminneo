@@ -49,6 +49,7 @@ return [
 	'Session support must be enabled.' => 'সেশন সমর্থন সক্রিয় করা আবশ্যক।',
 	'Session expired, please login again.' => 'সেশনের মেয়াদ শেষ হয়েছে, আবার লগইন করুন।',
 	'%s version: %s through PHP extension %s' => 'ভার্সন %s: %s, %s PHP এক্সটেনশনের মধ্য দিয়ে',
+	'%s requires at least %s.' => '%s-এর জন্য কমপক্ষে %s প্রয়োজন।', // e.g. 'AdminNeo requires at least Elasticsearch 7.' // by Claude Fable 5.1
 
 	// Settings
 	'Language' => 'ভাষা',
@@ -139,6 +140,7 @@ return [
 	'save' => 'সংরক্ষণ',
 	'Format' => 'বিন্যাস',
 	'Data' => 'ডাটা',
+	'Copy as <span>%s</span>' => '<span>%s</span> হিসাবে কপি করুন', // by Claude Fable 5.1
 
 	// Databases
 	'Database' => 'ডাটাবেজ',
@@ -220,6 +222,7 @@ return [
 	'Options' => 'বিকল্পসমূহ',
 	'Comment' => 'মন্তব্য',
 	'Default value' => 'ডিফল্ট মান',
+	'default value' => 'ডিফল্ট মান',
 	'Drop' => 'মুছে ফেলো',
 	'Drop %s?' => '%s ড্রপ করবেন?',
 	'Are you sure?' => 'আপনি কি নিশ্চিত?',
@@ -318,6 +321,7 @@ return [
 	'Create type' => 'ধরণ তৈরী করুন',
 	'Type has been dropped.' => 'ধরণ মুছে ফেলা হয়েছে।',
 	'Type has been created.' => 'ধরণ তৈরি করা হয়েছে।',
+	'Type has been altered.' => 'ধরণ পরিবর্তন করা হয়েছে।', // by Claude Opus 5.5
 	'Alter type' => 'ধরণ পরিবর্তন করুন',
 
 	// Triggers
@@ -401,6 +405,7 @@ return [
 	'Lists' => 'তালিকা',
 	'Network' => 'নেটওয়ার্ক',
 	'Geometry' => 'জ্যামিতি',
+	'Ranges' => 'রেঞ্জ', // by Claude Fable 5.1
 	'Relations' => 'সম্পর্ক',
 
 	// Editor - data values
@@ -444,4 +449,5 @@ return [
 	'Data table' => 'ডাটা টেবিল', // by Claude Fable 5.1
 	'Edit form' => 'সম্পাদনা ফর্ম', // by Claude Fable 5.1
 	'Ask %s' => '%s-কে জিজ্ঞাসা করুন', // by Claude Fable 5.1
+	'Views' => 'ভিউ সমূহ', // by Claude Opus 5.5
 ];

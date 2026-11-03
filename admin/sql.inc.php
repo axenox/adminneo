@@ -1,9 +1,29 @@
 <?php
 namespace AdminNeo;
 
-$settings = Admin::get()->getSettings();
+/**
+ * Returns the name of an SQLite command which could write a file.
+ *
+ * @param string $space Regular expression matching whitespace and comments.
+ * @return ?string Null if the query is allowed.
+ */
+function get_unsupported_query(string $query, string $space): ?string
+{
+	// PHP doesn't support setting SQLITE_LIMIT_ATTACHED, an error of preg_match() is also denied.
+	// SQLite skips leading semicolons as empty statements, they start the query with a custom DELIMITER.
+	if (DIALECT != "sqlite" || preg_match("~^(?:$space|;)*+(ATTACH|VACUUM\\b.*\\bINTO)\\b~is", $query, $match) === 0) {
+		return null;
+	}
 
-if ($_POST["export"]) {
+	return preg_match('~ATTACH~i', $match[1] ?? "") ? 'ATTACH' : 'VACUUM INTO';
+}
+
+$settings = Admin::get()->getSettings();
+$line_comment = Driver::get()->lineComment();
+$space = "(?:\\s|\xEF\xBB\xBF|/\\*[\s\S]*?\\*/|(?:$line_comment)[^\n]*\n?|--\r?\n)"; // BOM - SQLite skips it
+
+// An unsupported query is reported by the SQL command page.
+if ($_POST["export"] && !get_unsupported_query($_POST["query"], $space)) {
 	$settings->updateParameters([
 		"exportFormat" => $_POST["format"],
 		"exportOutput" => $_POST["output"],
@@ -26,7 +46,6 @@ stop_session();
 
 $title = isset($_GET["import"]) ? lang('Import') : lang('SQL command');
 page_header($title, [$title]);
-$line_comment = "--" . (DIALECT == "sql" ? " " : "");
 
 if ($_POST) {
 	$fp = false;
@@ -62,11 +81,11 @@ if ($_POST) {
 			}
 		}
 
-		$space = "(?:\\s|/\\*[\s\S]*?\\*/|(?:#|$line_comment)[^\n]*\n?|--\r?\n)";
 		$delimiter = ";";
 		$delimiter_length = 1;
 		$offset = 0;
 		$empty = true;
+		$copy = false; // PostgreSQL COPY ... FROM stdin
 
 		// connection for exploring indexes and EXPLAIN (to not replace FOUND_ROWS()) // TODO PDO - silent error
 		$connection2 = connect();
@@ -79,11 +98,11 @@ if ($_POST) {
 
 		$commands = 0;
 		$errors = [];
-		$parse = '[\'"' . (DIALECT == "sql" ? '`#' : (DIALECT == "sqlite" ? '`[' : (DIALECT == "mssql" ? '[' : ''))) .
+		$parse = '[\'"' . (DIALECT == "sql" ? '`' : (DIALECT == "sqlite" ? '`[' : (DIALECT == "mssql" ? '[' : ''))) .
 			']|/\*|' . $line_comment . '|$' . (DIALECT == "pgsql" ? '|\$([a-zA-Z]\w*)?\$' : '');
 		$total_start = microtime(true);
-		$dump_format = Admin::get()->getDumpFormats();
-		unset($dump_format["sql"]);
+		$data_formats = Admin::get()->getDataDumpFormats();
+		unset($data_formats["sql"]);
 
 		while ($query != "") {
 			if (!$offset && preg_match("~^$space*+DELIMITER\\s+(\\S+)~i", $query, $match)) {
@@ -98,7 +117,8 @@ if ($_POST) {
 				$query = substr($query, strlen($match[0]));
 			} elseif (!$offset && DIALECT == "pgsql" && preg_match("~^($space*+COPY\\s+)[^;]+\\s+FROM\\s+stdin;~i", $query, $match)) {
 				$delimiter = "\n\\\\\\.\r?\n";
-				$delimiter_length = 3;
+				$delimiter_length = 3; // Pass "\n\\." to PostgreSQL COPY.
+				$copy = true;
 				$offset = strlen($match[0]);
 			} else {
 				preg_match("($delimiter\\s*|$parse)", $query, $match, PREG_OFFSET_CAPTURE, $offset); // always matches
@@ -120,7 +140,7 @@ if ($_POST) {
 							$pattern .= '\*/';
 						} elseif ($found == '[') {
 							$pattern .= ']';
-						} elseif (preg_match("~^$line_comment|^#~", $found)) {
+						} elseif (preg_match("~^(?:$line_comment)~", $found)) {
 							$pattern .= "\n";
 						} else {
 							$pattern .= preg_quote($found) . ($c_style_escapes ? "|\\\\." : "");
@@ -139,15 +159,18 @@ if ($_POST) {
 							}
 						}
 
+					} elseif (DIALECT == "sqlite" && preg_match("~^(?:$space|;)*+\$~", substr($query, 0, $pos + $delimiter_length))) {
+						// SQLite doesn't create any statement from whitespace, comments and semicolons and reports it as an error.
+						$query = substr($query, $offset);
+						$offset = 0;
 					} else { // end of a query
 						$empty = false;
 						$q = substr($query, 0, $pos + $delimiter_length);
 						$commands++;
 						$print = "<pre id='sql-$commands'><code class='jush-" . DIALECT . "'>" . Admin::get()->formatSqlCommandQuery(trim($q)) . "</code></pre>\n";
-						if (DIALECT == "sqlite" && preg_match("~^$space*+(ATTACH|VACUUM\\b.*\\bINTO)\\b~is", $q, $match) !== 0) {
-							// PHP doesn't support setting SQLITE_LIMIT_ATTACHED
+						if ($unsupported = get_unsupported_query($q, $space)) {
 							echo $print;
-							echo "<p class='error'>" . lang('%s queries are not supported.', preg_match('~ATTACH~i', $match[1]) ? 'ATTACH' : 'VACUUM INTO') . "\n";
+							echo "<p class='error'>" . lang('%s queries are not supported.', $unsupported) . "\n";
 							$errors[] = " <a href='#sql-$commands'>$commands</a>";
 							if ($_POST["error_stops"]) {
 								break;
@@ -189,9 +212,19 @@ if ($_POST) {
 									$query_info = Connection::get()->getQueryInfo();
 									$affected = Connection::get()->getAffectedRows(); // getting warnings overwrites this
 
-									$warnings = ($_POST["only_errors"] ? null : Driver::get()->warnings());
+									// SHOW WARNINGS can't run while the results of further queries are pending, only the count is known.
+									$more_results = Connection::get()->hasMoreResults();
+									$warnings = ($_POST["only_errors"] || $more_results ? null : Driver::get()->warnings());
+									$warnings_count = ($more_results ? Connection::get()->getWarningsCount() : 0);
 									$warnings_id = "warnings-$commands";
-									$warnings_link = $warnings ? "<a href='#$warnings_id' class='toggle'>" . lang('Warnings') . icon_chevron_down() . "</a>" : null;
+
+									if ($warnings) {
+										$warnings_link = "<a href='#$warnings_id' class='toggle'>" . lang('Warnings') . icon_chevron_down() . "</a>";
+									} elseif ($warnings_count) {
+										$warnings_link = "<span>" . lang('Warnings') . ": $warnings_count</span>";
+									} else {
+										$warnings_link = null;
+									}
 
 									$explain = $orgtables = null;
 									$explain_id = "explain-$commands";
@@ -257,7 +290,7 @@ if ($_POST) {
 
 									if ($export) {
 										echo "<form id='$export_id' action='' method='post' class='hidden'><p>\n";
-										echo html_select("format", $dump_format, $settings->getParameter("exportFormat"));
+										echo html_select("format", $data_formats, $settings->getParameter("exportFormat"));
 										echo html_select("output", Admin::get()->getDumpOutputs(), $settings->getParameter("exportOutput")) . " ";
 										echo input_hidden("query", $q);
 										echo input_token();
@@ -299,6 +332,11 @@ if ($_POST) {
 
 						$query = substr($query, $offset);
 						$offset = 0;
+						if ($copy) { // The COPY delimiter is valid only for the single query.
+							$delimiter = ";";
+							$delimiter_length = 1;
+							$copy = false;
+						}
 					}
 
 				}
@@ -307,12 +345,21 @@ if ($_POST) {
 
 		if ($empty) {
 			echo "<p class='message'>" . lang('No commands to execute.') . "\n";
-		} elseif ($_POST["only_errors"]) {
-			$ok_count = $commands - count($errors);
-			echo "<p class='" . ($ok_count ? "message" : "error") . "'>" . lang('%d query(s) executed OK.', $commands - count($errors));
-			echo " <span class='time'>(" . format_time($total_start) . ")</span>\n";
-		} elseif ($errors && $commands > 1) {
-			echo "<p class='error'>" . lang('Error in query') . ": " . implode("", $errors) . "\n";
+		} else {
+			$in_transaction = Connection::get()->inTransaction(); // ROLLBACK doesn't report whether it did anything.
+			Driver::get()->rollback(); // An unfinished transaction would break the following queries (e.g. in the menu).
+			if ($in_transaction) {
+				// Print it also with only_errors, the data was discarded.
+				echo "<pre><code class='jush-" . DIALECT . "'>ROLLBACK -- AdminNeo</code></pre>\n";
+			}
+
+			if ($_POST["only_errors"]) {
+				$ok_count = $commands - count($errors);
+				echo "<p class='" . ($ok_count ? "message" : "error") . "'>" . lang('%d query(s) executed OK.', $commands - count($errors));
+				echo " <span class='time'>(" . format_time($total_start) . ")</span>\n";
+			} elseif ($errors && $commands > 1) {
+				echo "<p class='error'>" . lang('Error in query') . ": " . implode("", $errors) . "\n";
+			}
 		}
 		// TODO MS SQL - SET SHOWPLAN_ALL OFF
 
@@ -387,7 +434,7 @@ if (!isset($_GET["import"]) && $history) {
 		$key = key($history);
 		list($q, $time, $elapsed) = $val;
 
-		echo " <pre><code class='jush-" . DIALECT . "'>", truncate_utf8(preg_replace('~\s+~', ' ', ltrim(preg_replace("~^(#|$line_comment).*~m", '', $q)))), "</code></pre>";
+		echo " <pre><code class='jush-" . DIALECT . "'>", truncate_utf8(preg_replace('~\s+~', ' ', ltrim(preg_replace("~^(?:$line_comment).*~m", '', $q)))), "</code></pre>";
 		echo '<p class="links">';
 		echo "<a href='" . h(ME . "sql=&history=$key") . "'>" . icon("edit") . lang('Edit') . "</a>";
 		echo " <span class='time' title='" . @date('Y-m-d', $time) . "'>" . @date("H:i:s", $time) . // @ - time zone may be not set

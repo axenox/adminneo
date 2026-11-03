@@ -49,6 +49,7 @@ return [
 	'Session support must be enabled.' => 'ჩართული უნდა იყოს სესია.',
 	'Session expired, please login again.' => 'სესიის მოქმედების დრო ამოიწურა, გაიარეთ ხელახალი ავტორიზაცია.',
 	'%s version: %s through PHP extension %s' => 'ვერსია %s: %s PHP-გაფართოება %s',
+	'%s requires at least %s.' => '%s-ს სჭირდება მინიმუმ %s.', // e.g. 'AdminNeo requires at least Elasticsearch 7.' // by Claude Fable 5.1
 
 	// Settings
 	'Language' => 'ენა',
@@ -136,6 +137,7 @@ return [
 	'save' => 'შენახვა',
 	'Format' => 'ფორმატი',
 	'Data' => 'ინფორმაცია',
+	'Copy as <span>%s</span>' => 'კოპირება როგორც <span>%s</span>', // by Claude Fable 5.1
 
 	// Databases
 	'Database' => 'ბაზა',
@@ -217,6 +219,7 @@ return [
 	'Options' => 'მოქმედება',
 	'Comment' => 'კომენტარები',
 	'Default value' => 'სტანდარტული მნიშვნელობა',
+	'default value' => 'სტანდარტული მნიშვნელობა',
 	'Drop' => 'წაშლა',
 	'Drop %s?' => 'წაიშალოს %s?',
 	'Are you sure?' => 'ნამდვილად?',
@@ -228,7 +231,7 @@ return [
 	'Maximum number of allowed fields exceeded. Please increase %s.' => 'მიღწეულია დაშვებული ველების მაქსიმალური რაოდენობა, გაზარდეთ %s.',
 
 	// Views
-	'View' => 'ნახვა',
+	'View' => 'წარმოდგენა', // by Claude Opus 5.5
 	'Materialized view' => 'მატერიალური ხედი',
 	'View has been dropped.' => 'წარმოდგენა წაიშალა.',
 	'View has been altered.' => 'წარმოდგენა შეიცვალა.',
@@ -315,6 +318,7 @@ return [
 	'Create type' => 'სახეობის შექმნა',
 	'Type has been dropped.' => 'სახეობა წაიშალა.',
 	'Type has been created.' => 'სახეობა შეიქმნა.',
+	'Type has been altered.' => 'სახეობა შეიცვალა.', // by Claude Opus 5.5
 	'Alter type' => 'სახეობის შეცვლა',
 
 	// Triggers
@@ -392,6 +396,7 @@ return [
 	'Lists' => 'სია',
 	'Network' => 'ქსელი',
 	'Geometry' => 'გეომეტრია',
+	'Ranges' => 'დიაპაზონები', // by Claude Fable 5.1
 	'Relations' => 'ურთიერთობა',
 
 	// Editor - data values
@@ -435,4 +440,5 @@ return [
 	'Data table' => 'ინფორმაციის ცხრილი', // by Claude Fable 5.1
 	'Edit form' => 'შეცვლის ფორმა', // by Claude Fable 5.1
 	'Ask %s' => 'ჰკითხეთ %s-ს', // by Claude Fable 5.1
+	'Views' => 'წარმოდგენები', // by Claude Opus 5.5
 ];

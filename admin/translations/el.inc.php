@@ -52,6 +52,7 @@ return [
 	'Session support must be enabled.' => 'Πρέπει να είναι ενεργοποιημένη η υποστήριξη συνεδριών.',
 	'Session expired, please login again.' => 'Η συνεδρία έληξε, παρακαλώ συνδεθείτε ξανά.',
 	'%s version: %s through PHP extension %s' => '%s έκδοση: %s μέσω επέκτασης PHP %s',
+	'%s requires at least %s.' => 'Το %s απαιτεί τουλάχιστον %s.', // e.g. 'AdminNeo requires at least Elasticsearch 7.' // by Claude Fable 5.1
 
 	// Settings
 	'Language' => 'Γλώσσα',
@@ -151,6 +152,7 @@ return [
 	'save' => 'αποθήκευση',
 	'Format' => 'Μορφή',
 	'Data' => 'Δεδομένα',
+	'Copy as <span>%s</span>' => 'Αντιγραφή ως <span>%s</span>', // by Claude Fable 5.1
 
 	// Databases
 	'Database' => 'Βάση Δεδομένων', // by Claude Fable 5.1
@@ -232,6 +234,7 @@ return [
 	'Options' => 'Επιλογές',
 	'Comment' => 'Σχόλιο',
 	'Default value' => 'Προεπιλεγμένη τιμή',
+	'default value' => 'προεπιλεγμένη τιμή',
 	'Drop' => 'Διαγραφή',
 	'Drop %s?' => 'Διαγραφή %s;', // by Claude Fable 5.1
 	'Are you sure?' => 'Είστε σίγουρος;',
@@ -333,6 +336,7 @@ return [
 	'Create type' => 'Δημιουργία τύπου',
 	'Type has been dropped.' => 'Ο τύπος διαγράφηκε.',
 	'Type has been created.' => 'Ο τύπος δημιουργήθηκε.',
+	'Type has been altered.' => 'Ο τύπος τροποποιήθηκε.', // by Claude Opus 5
 	'Alter type' => 'Τροποποίηση τύπου',
 
 	// Triggers
@@ -419,6 +423,7 @@ return [
 	'Lists' => 'Λίστες',
 	'Network' => 'Δίκτυο',
 	'Geometry' => 'Γεωμετρία',
+	'Ranges' => 'Εύρη', // by Claude Fable 5.1
 	'Relations' => 'Συσχετήσεις',
 
 	// Editor - data values
@@ -462,4 +467,5 @@ return [
 	'Data table' => 'Πίνακας δεδομένων', // by Claude Fable 5.1
 	'Edit form' => 'Φόρμα επεξεργασίας', // by Claude Fable 5.1
 	'Ask %s' => 'Ρωτήστε το %s', // by Claude Fable 5.1
+	'Views' => 'Προβολές', // by Claude Opus 5.5
 ];

@@ -709,8 +709,9 @@ abstract class Origin extends Plugin
 		$flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | ($pretty ? JSON_PRETTY_PRINT : 0);
 
 		if (preg_match('~^jsonb?$~', $fieldType)) {
-			if ($value != null && $pretty !== null && $this->config->isJsonValuesAutoFormat()) {
-				$value = json_encode(json_decode($value), $flags);
+			// Keep invalid JSON as it is, json_decode() returns null for it.
+			if ($value != null && $pretty !== null && $this->config->isJsonValuesAutoFormat() && ($json = json_decode($value)) !== null) {
+				$value = json_encode($json, $flags);
 			}
 
 			return true;
@@ -756,7 +757,66 @@ abstract class Origin extends Plugin
 		return show_status();
 	}
 
-	public abstract function getDumpFormats(): array;
+	/**
+	 * Returns export format options.
+	 *
+	 * Each format is defined either by its name, which means the format supports both structure and data, or by
+	 * an array with keys:
+	 * - "name" (string) Displayed name, defaults to the format identifier.
+	 * - "structure" (bool) The format supports export of database and table structure, defaults to false.
+	 * - "data" (bool) The format supports export of table data, defaults to false.
+	 *
+	 * @return string[]|array[] Format identifier => name or definition. Empty to disable export.
+	 */
+	public function getDumpFormats(): array
+	{
+		return [
+			'csv' => ['name' => 'CSV,', 'data' => true],
+			'csv;' => ['name' => 'CSV;', 'data' => true],
+			'tsv' => ['name' => 'TSV', 'data' => true],
+		];
+	}
+
+	/**
+	 * Returns export format options for database and table structure.
+	 *
+	 * @return string[]
+	 */
+	public function getStructureDumpFormats(): array
+	{
+		return $this->filterDumpFormats("structure");
+	}
+
+	/**
+	 * Returns export format options for table data.
+	 *
+	 * @return string[]
+	 */
+	public function getDataDumpFormats(): array
+	{
+		return $this->filterDumpFormats("data");
+	}
+
+	/**
+	 * Returns export format options for given type.
+	 *
+	 * @param string $type "structure" or "data"
+	 *
+	 * @return string[]
+	 */
+	private function filterDumpFormats(string $type): array
+	{
+		$formats = [];
+		foreach (self::get()->getDumpFormats() as $format => $definition) {
+			if (is_string($definition)) {
+				$formats[$format] = $definition;
+			} elseif ($definition[$type] ?? false) {
+				$formats[$format] = $definition["name"] ?? $format;
+			}
+		}
+
+		return $formats;
+	}
 
 	public abstract function sendDumpFormatHeaders(string $identifier, bool $multiTable = false): string;
 

@@ -52,6 +52,7 @@ return [
 	'Session support must be enabled.' => 'Session support skal være slået til.',
 	'Session expired, please login again.' => 'Sessionen er udløbet - Log venligst ind igen.',
 	'%s version: %s through PHP extension %s' => '%s version: %s via PHP-udvidelse %s',
+	'%s requires at least %s.' => '%s kræver mindst %s.', // e.g. 'AdminNeo requires at least Elasticsearch 7.' // by Claude Fable 5.1
 
 	// Settings
 	'Language' => 'Sprog',
@@ -148,6 +149,7 @@ return [
 	'save' => 'Gem',
 	'Format' => 'Format',
 	'Data' => 'Data',
+	'Copy as <span>%s</span>' => 'Kopier som <span>%s</span>', // by Claude Fable 5.1
 
 	// Databases
 	'Database' => 'Database',
@@ -229,6 +231,7 @@ return [
 	'Options' => 'Valg',
 	'Comment' => 'Kommentarer',
 	'Default value' => 'Standardværdi', // by Claude Fable 5.1
+	'default value' => 'standardværdi', // by Claude Opus 5.5
 	'Drop' => 'Drop',
 	'Drop %s?' => 'Drop %s?', // by Claude Fable 5.1
 	'Are you sure?' => 'Er du sikker?',
@@ -330,6 +333,7 @@ return [
 	'Create type' => 'Opret type',
 	'Type has been dropped.' => 'Typen er slettet.',
 	'Type has been created.' => 'Typen er oprettet.',
+	'Type has been altered.' => 'Typen er ændret.', // by Claude Opus 5
 	'Alter type' => 'Ændre type',
 
 	// Triggers
@@ -416,6 +420,7 @@ return [
 	'Lists' => 'Lister',
 	'Network' => 'Netværk',
 	'Geometry' => 'Geometri',
+	'Ranges' => 'Intervaller', // by Claude Fable 5.1
 	'Relations' => 'Relationer',
 
 	// Editor - data values
@@ -459,4 +464,5 @@ return [
 	'Data table' => 'Datatabel', // by Claude Fable 5.1
 	'Edit form' => 'Redigeringsformular', // by Claude Fable 5.1
 	'Ask %s' => 'Spørg %s', // by Claude Fable 5.1
+	'Views' => 'Views', // by Claude Opus 5.5
 ];

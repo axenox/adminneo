@@ -52,6 +52,7 @@ return [
 	'Session support must be enabled.' => 'عليك تفعيل نظام الجلسات.',
 	'Session expired, please login again.' => 'إنتهت الجلسة، من فضلك أعد تسجيل الدخول.',
 	'%s version: %s through PHP extension %s' => 'النسخة %s : %s عن طريق إمتداد ال PHP %s',
+	'%s requires at least %s.' => '%s يتطلب %s على الأقل.', // e.g. 'AdminNeo requires at least Elasticsearch 7.' // by Claude Fable 5.1
 
 	// Settings
 	'Language' => 'اللغة',
@@ -142,6 +143,7 @@ return [
 	'save' => 'حفظ',
 	'Format' => 'الصيغة',
 	'Data' => 'معلومات',
+	'Copy as <span>%s</span>' => 'نسخ كـ <span>%s</span>', // by Claude Fable 5.1
 
 	// Databases
 	'Database' => 'قاعدة بيانات',
@@ -223,6 +225,7 @@ return [
 	'Options' => 'خيارات',
 	'Comment' => 'تعليق',
 	'Default value' => 'القيمة الافتراضية', // by Claude Fable 5.1
+	'default value' => 'القيمة الافتراضية', // by Claude Opus 5.5
 	'Drop' => 'حذف',
 	'Drop %s?' => 'حذف %s؟', // by Claude Fable 5.1
 	'Are you sure?' => 'هل أنت متأكد؟',
@@ -321,6 +324,7 @@ return [
 	'Create type' => 'إنشاء نوع',
 	'Type has been dropped.' => 'تم حذف النوع.',
 	'Type has been created.' => 'تم إنشاء النوع.',
+	'Type has been altered.' => 'تم تعديل النوع.', // by Claude Opus 5.5
 	'Alter type' => 'تعديل نوع',
 
 	// Triggers
@@ -398,6 +402,7 @@ return [
 	'Lists' => 'قوائم',
 	'Network' => 'شبكة',
 	'Geometry' => 'هندسة',
+	'Ranges' => 'نطاقات', // by Claude Fable 5.1
 	'Relations' => 'علاقات',
 
 	// Editor - data values
@@ -441,4 +446,5 @@ return [
 	'Data table' => 'جدول البيانات', // by Claude Fable 5.1
 	'Edit form' => 'استمارة التعديل', // by Claude Fable 5.1
 	'Ask %s' => 'اسأل %s', // by Claude Fable 5.1
+	'Views' => 'العروض', // by Claude Opus 5.5
 ];

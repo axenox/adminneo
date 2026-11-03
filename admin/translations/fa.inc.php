@@ -49,6 +49,7 @@ return [
 	'Session support must be enabled.' => 'پشتیبانی از نشست بایستی فعال گردد.',
 	'Session expired, please login again.' => 'نشست پایان یافته، لطفا دوباره وارد شوید.',
 	'%s version: %s through PHP extension %s' => 'نسخه %s : %s توسعه پی اچ پی %s',
+	'%s requires at least %s.' => '%s حداقل به %s نیاز دارد.', // e.g. 'AdminNeo requires at least Elasticsearch 7.' // by Claude Fable 5.1
 
 	// Settings
 	'Language' => 'زبان',
@@ -136,6 +137,7 @@ return [
 	'save' => 'ذخیره',
 	'Format' => 'قالب', // by Claude Fable 5.1
 	'Data' => 'داده',
+	'Copy as <span>%s</span>' => 'کپی به صورت <span>%s</span>', // by Claude Fable 5.1
 
 	// Databases
 	'Database' => 'پایگاه داده',
@@ -217,6 +219,7 @@ return [
 	'Options' => 'اختیارات',
 	'Comment' => 'توضیح',
 	'Default value' => 'مقدار پیش فرض',
+	'default value' => 'مقدار پیش فرض',
 	'Drop' => 'حذف',
 	'Drop %s?' => '%s حذف شود؟', // by Claude Fable 5.1
 	'Are you sure?' => 'مطمئن هستید؟',
@@ -315,6 +318,7 @@ return [
 	'Create type' => 'ایجاد نوع',
 	'Type has been dropped.' => 'نوع حذف شد.',
 	'Type has been created.' => 'نوع ایجاد شد.',
+	'Type has been altered.' => 'نوع ویرایش شد.', // by Claude Opus 5.5
 	'Alter type' => 'ویرایش نوع',
 
 	// Triggers
@@ -392,6 +396,7 @@ return [
 	'Lists' => 'لیستها',
 	'Network' => 'شبکه',
 	'Geometry' => 'هندسه',
+	'Ranges' => 'بازه‌ها', // by Claude Fable 5.1
 	'Relations' => 'رابطه ها',
 
 	// Editor - data values
@@ -435,4 +440,5 @@ return [
 	'Data table' => 'جدول داده', // by Claude Fable 5.1
 	'Edit form' => 'فرم ویرایش', // by Claude Fable 5.1
 	'Ask %s' => 'از %s بپرسید', // by Claude Fable 5.1
+	'Views' => 'نمایه ها', // by Claude Opus 5.5
 ];

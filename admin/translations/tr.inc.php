@@ -49,6 +49,7 @@ return [
 	'Session support must be enabled.' => 'Oturum desteği etkin olmalıdır.',
 	'Session expired, please login again.' => 'Oturum süresi doldu, lütfen tekrar giriş yapın.',
 	'%s version: %s through PHP extension %s' => '%s sürüm: %s, %s PHP eklentisi ile',
+	'%s requires at least %s.' => '%s için en az %s gereklidir.', // e.g. 'AdminNeo requires at least Elasticsearch 7.' // by Claude Fable 5.1
 
 	// Settings
 	'Language' => 'Dil',
@@ -145,6 +146,7 @@ return [
 	'save' => 'kaydet',
 	'Format' => 'Biçim',
 	'Data' => 'Veri',
+	'Copy as <span>%s</span>' => '<span>%s</span> olarak kopyala', // by Claude Fable 5.1
 
 	// Databases
 	'Database' => 'Veri Tabanı',
@@ -226,6 +228,7 @@ return [
 	'Options' => 'Seçenekler',
 	'Comment' => 'Yorum',
 	'Default value' => 'Varsayılan değer',
+	'default value' => 'varsayılan değer',
 	'Drop' => 'Sil',
 	'Drop %s?' => 'Sil %s?',
 	'Are you sure?' => 'Emin misiniz?',
@@ -327,6 +330,7 @@ return [
 	'Create type' => 'Tür oluştur',
 	'Type has been dropped.' => 'Tür silindi.',
 	'Type has been created.' => 'Tür oluşturuldu.',
+	'Type has been altered.' => 'Tür değiştirildi.', // by Claude Opus 5
 	'Alter type' => 'Türü değiştir',
 
 	// Triggers
@@ -410,6 +414,7 @@ return [
 	'Lists' => 'Listeler',
 	'Network' => 'Ağ',
 	'Geometry' => 'Geometri',
+	'Ranges' => 'Aralıklar', // by Claude Fable 5.1
 	'Relations' => 'İlişkiler',
 
 	// Editor - data values
@@ -453,4 +458,5 @@ return [
 	'Data table' => 'Veri tablosu', // by Claude Fable 5.1
 	'Edit form' => 'Düzenleme formu', // by Claude Fable 5.1
 	'Ask %s' => '%s uygulamasına sor', // by Claude Fable 5.1
+	'Views' => 'Görünümler', // by Claude Opus 5.5
 ];

@@ -31,17 +31,15 @@ function page_header(string $title, $breadcrumb = []): void
 	$service_title = strip_tags(Admin::get()->getServiceTitle());
 
 	$title_page = $title . $server_part . " - " . ($service_title != "" ? $service_title : "AdminNeo");
-	?>
-<!DOCTYPE html>
-<html lang='<?= Locale::get()->getLanguage(); ?>' dir='<?= lang('ltr'); ?>' class='<?= lang('ltr'); ?> nojs'>
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<meta name="robots" content="noindex, nofollow">
-	<meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-	<title><?= $title_page; ?></title>
+	echo "<!DOCTYPE html>\n";
+	echo "<html lang='", Locale::get()->getLanguage(), "' dir='", lang('ltr'), "' class='", lang('ltr'), " nojs'>\n";
+	echo "<head>\n";
+	echo "<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>\n";
+	echo "<meta name='robots' content='noindex, nofollow'>\n";
+	echo "<meta name='viewport' content='width=device-width, initial-scale=1'>\n";
+	echo "<title>$title_page</title>\n";
 
-	<?php
 	$color_variant = validate_color_variant(Admin::get()->getConfig()->getColorVariant());
 
 	echo "<link rel='stylesheet' href='", link_files("default-$color_variant.css", [
@@ -114,6 +112,8 @@ function page_header(string $title, $breadcrumb = []): void
 		"scripts/editing.js",
 		"scripts/fieldsEditing.js", // !admin
 		"scripts/help.js", // !admin
+		"scripts/clipboard.js", // !admin
+		"scripts/dump.js", // !admin
 		"scripts/schema.js", // !admin
 	]));
 
@@ -123,17 +123,14 @@ function page_header(string $title, $breadcrumb = []): void
 
 	Admin::get()->printFavicons();
 	Admin::get()->printToHead();
-	?>
-</head>
-<body>
-<script<?php echo nonce(); ?>>
+
+	echo "</head>\n";
+	echo "<body>\n";
+
 	// The event handlers and the <html> classes are registered by functions.js.
-	const offlineMessage = '<?php echo js_escape(lang('You are offline.')); ?>';
-	const thousandsSeparator = '<?php echo js_escape(lang(',')); ?>';
-</script>
+	echo script("const offlineMessage = '" . js_escape(lang('You are offline.')) . "';\n" .
+		"const thousandsSeparator = '" . js_escape(lang(',')) . "';");
 
-
-<?php
 	echo "<div id='help' class='jush-" . DIALECT . " jsonly hidden'></div>";
 	echo script("initHelpPopup();");
 
@@ -157,7 +154,7 @@ function page_header(string $title, $breadcrumb = []): void
 
 		echo "<li><a href='" . h(HOME_URL) . "' title='", lang('Home'), "'>", icon_solo("home"), "</a></li>";
 
-		$server_name = h(Admin::get()->getServerName(SERVER ?? ""));
+		$server_name = h(Admin::get()->getServerName((string) SERVER));
 
 		if ($breadcrumb === false) {
 			echo "<li>$server_name</li>";
@@ -400,7 +397,7 @@ function page_footer(?string $missing = null): void
 	}
 	echo "</div>";
 
-    if ($missing != "auth") {
+	if ($missing != "auth") {
 		Admin::get()->printLogout();
 	}
 	echo "</div>\n"; // footer

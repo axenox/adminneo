@@ -117,7 +117,7 @@ if (isset($_GET["mysql"])) {
 
 			public function query(string $query, bool $unbuffered = false)
 			{
-				$result = $this->mysqli->query($query);
+				$result = $this->mysqli->query($query, ($unbuffered ? MYSQLI_USE_RESULT : MYSQLI_STORE_RESULT));
 
 				return is_object($result) ? new MySqlResult($result) : $result;
 			}
@@ -125,6 +125,11 @@ if (isset($_GET["mysql"])) {
 			public function getQueryInfo(): ?string
 			{
 				return $this->mysqli->info;
+			}
+
+			public function getWarningsCount(): int
+			{
+				return $this->mysqli->warning_count;
 			}
 
 			public function multiQuery(string $query): bool
@@ -142,9 +147,15 @@ if (isset($_GET["mysql"])) {
 				return new MySqlResult($result);
 			}
 
+			public function hasMoreResults(): bool
+			{
+				return $this->mysqli->more_results();
+			}
+
 			public function nextResult(): bool
 			{
-				return $this->mysqli->more_results() && $this->mysqli->next_result();
+				// The server stops executing the queries after an error, more_results() then returns false.
+				return $this->mysqli->more_results() && ($this->mysqli->next_result() || $this->mysqli->errno);
 			}
 		}
 
@@ -197,6 +208,11 @@ if (isset($_GET["mysql"])) {
 				$dsn = "mysql:charset=utf8" . ($host != "" ? ";host=$host" : "") . ($port ? (is_numeric($port) ? ";port=" : ";unix_socket=") . $port : "");
 
 				$options = [PDO::MYSQL_ATTR_LOCAL_INFILE => false];
+
+				// The attribute can be set only when connecting and it is available since PHP 5.5.21 and 5.6.5.
+				if (isset($_GET["select"]) && defined('\PDO::MYSQL_ATTR_MULTI_STATEMENTS')) {
+					$options[PDO::MYSQL_ATTR_MULTI_STATEMENTS] = false; // Connection::isUntrusted() is not known here yet.
+				}
 
 				$key = Admin::get()->getConfig()->getSslKey();
 				if ($key) {
@@ -553,6 +569,14 @@ AND t.ENGINE REGEXP " . q('InnoDB|IBMDB2I' . ($this->connection->isMinVersion("5
 			return $statistics;
 		}
 
+		public function isSearchable(array $where, array $field): bool
+		{
+			// Bit columns are compared with a binary literal, e.g. b'101', other values would cause an error. IN compares them with numbers.
+			return $field["type"] != "bit"
+				|| preg_match('~IN$|NULL$|^(FIND_IN_SET|SQL)$~', $where["op"])
+				|| ($where["op"] != "LIKE %%" && preg_match('~^[01]+$~', $where["val"]));
+		}
+
 		public function warnings(): ?string
         {
 			$result = $this->connection->query("SHOW WARNINGS");
@@ -637,6 +661,11 @@ AND t.ENGINE REGEXP " . q('InnoDB|IBMDB2I' . ($this->connection->isMinVersion("5
 				$c_style = (strpos($sql_mode, 'NO_BACKSLASH_ESCAPES') === false);
 			}
 			return $c_style;
+		}
+
+		public function lineComment(): string
+		{
+			return "#|-- "; // MySQL requires a space after --.
 		}
 
 		public function engines(): array
@@ -867,6 +896,18 @@ WHERE TABLE_SCHEMA = DATABASE() " . ($name != "" ? "AND TABLE_NAME = " . q($name
 	}
 
 	/**
+	 * Parses type declaration.
+	 *
+	 * @return array{string, string, string} [type, length, unsigned]
+	 */
+	function parse_type(string $full_type): array
+	{
+		preg_match('~^([^( ]+)(?:\((.+)\))?( unsigned)?( zerofill)?$~', $full_type, $matches);
+
+		return [$matches[1], $matches[2] ?? "", ltrim(($matches[3] ?? "") . ($matches[4] ?? ""))];
+	}
+
+	/**
 	 * Returns information about fields.
 	 *
 	 * @return array{field:string, full_type:string, type:string, length:int, unsigned:string, default:string,
@@ -890,11 +931,11 @@ WHERE TABLE_SCHEMA = DATABASE() " . ($name != "" ? "AND TABLE_NAME = " . q($name
 
 			// https://mariadb.com/kb/en/library/show-columns/, https://github.com/vrana/adminer/pull/359#pullrequestreview-276677186
 			preg_match('~^(VIRTUAL|PERSISTENT|STORED)~', $extra, $generated);
-			preg_match('~^([^( ]+)(?:\((.+)\))?( unsigned)?( zerofill)?$~', $type, $type_matches);
+			list($type_name, $length, $unsigned) = parse_type($type);
 
 			$default = $maria && $row["COLUMN_DEFAULT"] == "NULL" ? null : $row["COLUMN_DEFAULT"];
 			if ($default !== null) {
-				$is_text = preg_match('~(text|json)~', $type_matches[1]);
+				$is_text = preg_match('~(text|json)~', $type_name);
 
 				// MariaDB: texts are escaped with slashes, chars with double apostrophe.
 				// MySQL: default value a'b of text column is stored as _utf8mb4\'a\\\'b\'.
@@ -908,7 +949,7 @@ WHERE TABLE_SCHEMA = DATABASE() " . ($name != "" ? "AND TABLE_NAME = " . q($name
 				}
 
 				// MySQL: Convert binary default value.
-				if (!$maria && preg_match('~binary~', $type_matches[1]) && preg_match('~^0x(\w*)$~', $default, $matches)) {
+				if (!$maria && preg_match('~binary~', $type_name) && preg_match('~^0x(\w*)$~', $default, $matches)) {
 					$default = pack("H*", $matches[1]);
 				}
 			}
@@ -924,13 +965,13 @@ WHERE TABLE_SCHEMA = DATABASE() " . ($name != "" ? "AND TABLE_NAME = " . q($name
 			$return[$field] = [
 				"field" => $field,
 				"full_type" => $type,
-				"type" => $type_matches[1],
-				"length" => $type_matches[2],
-				"unsigned" => ltrim($type_matches[3] . $type_matches[4]),
+				"type" => $type_name,
+				"length" => $length,
+				"unsigned" => $unsigned,
 				"default" => ($generated ? $generated_expression : $default),
 				"null" => ($row["IS_NULLABLE"] == "YES"),
 				"auto_increment" => ($extra == "auto_increment"),
-				"on_update" => (preg_match('~\bon update (\w+)~i', $extra, $type_matches) ? $type_matches[1] : ""), // TODO available since MySQL 5.1.23
+				"on_update" => (preg_match('~\bon update (\w+)~i', $extra, $matches) ? $matches[1] : ""), // TODO available since MySQL 5.1.23
 				"collation" => $row["COLLATION_NAME"],
 				"privileges" => array_flip(explode(",", $row["PRIVILEGES"])) + ["where" => 1, "order" => 1],
 				"comment" => $row["COLUMN_COMMENT"],
@@ -1385,25 +1426,46 @@ ORDER BY ORDINAL_POSITION";
 			return [];
 		}
 
-		$fields = get_rows("SELECT
-	PARAMETER_NAME field,
-	DATA_TYPE type,
-	REGEXP_REPLACE(DTD_IDENTIFIER, '^[^(]+\\\\(?|\\\\)$', '') length,
-	REGEXP_REPLACE(DTD_IDENTIFIER, '^[^ ]+ ', '') `unsigned`,
-	1 `null`,
-	DTD_IDENTIFIER full_type,
-	" . ($type == "FUNCTION" ? "''" : "PARAMETER_MODE") . " `inout`,
-	CHARACTER_SET_NAME collation
+		$rows = get_rows("SELECT PARAMETER_NAME, DTD_IDENTIFIER, PARAMETER_MODE, CHARACTER_SET_NAME
 FROM information_schema.PARAMETERS
 WHERE SPECIFIC_SCHEMA = DATABASE() AND ROUTINE_TYPE = '$type' AND SPECIFIC_NAME = " . q($name) . "
 ORDER BY ORDINAL_POSITION");
 
+		$fields = [];
+		foreach ($rows as $row) {
+			$full_type = $row["DTD_IDENTIFIER"];
+			list($type_name, $length, $unsigned) = parse_type($full_type);
+
+			$fields[] = [
+				"field" => $row["PARAMETER_NAME"],
+				"type" => $type_name,
+				"length" => $length,
+				"unsigned" => $unsigned,
+				"null" => true,
+				"full_type" => $full_type,
+				"inout" => ($type == "FUNCTION" ? "" : $row["PARAMETER_MODE"]), // FUNCTION parameters are always IN
+				"collation" => $row["CHARACTER_SET_NAME"],
+			];
+		}
+
 		$return = Connection::get()->query("SELECT
 	ROUTINE_COMMENT comment,
-	CONCAT(IF(IS_DETERMINISTIC = 'YES', 'DETERMINISTIC\\n', ''), IF(SQL_DATA_ACCESS != 'CONTAINS SQL', CONCAT(SQL_DATA_ACCESS, '\\n'), ''), ROUTINE_DEFINITION) definition,
+	CONCAT(IF(IS_DETERMINISTIC = 'YES', 'DETERMINISTIC\\n', ''), IF(SQL_DATA_ACCESS != 'CONTAINS SQL', CONCAT(SQL_DATA_ACCESS, '\\n'), '')) characteristics,
+	ROUTINE_DEFINITION definition,
 	'SQL' language
 FROM information_schema.ROUTINES
 WHERE ROUTINE_SCHEMA = DATABASE() AND ROUTINE_TYPE = '$type' AND ROUTINE_NAME = " . q($name))->fetchAssoc();
+
+		// ROUTINE_DEFINITION lacks charset introducers (and identifiers starting with '_' in old MariaDB), take the original body.
+		$create = Connection::get()->getValue("SHOW CREATE $type " . idf_escape($name), 2);
+		$string = "'(?:[^'\\\\]|\\\\.)*'";
+		$token = '`[^`]*`|"(?:[^"\\\]|\\\.)*"|$string|/\*.*?\*/|/';
+		$characteristic = "    (?:[A-Z ]+|COMMENT (?:$string)+)\\n";
+		if ($create && preg_match("~^(?:[^(`\"'/]++|$token)*?(\\((?:[^()`\"'/]++|$token|(?1))*+\\))(?: RETURNS [^\\n]*)?\\n(?:$characteristic)*~s", $create, $match)) {
+			$return['definition'] = substr($create, strlen($match[0]));
+		}
+		$return['definition'] = $return['characteristics'] . $return['definition'];
+		unset($return['characteristics']);
 
 		if ($fields && $fields[0]['field'] == '') {
 			$return['returns'] = array_shift($fields);
@@ -1633,7 +1695,7 @@ WHERE ROUTINE_SCHEMA = DATABASE() AND ROUTINE_TYPE = '$type' AND ROUTINE_NAME = 
 	 * Checks whether a feature is supported.
 	 *
 	 * @param literal-string $feature check|comment|copy|database|descidx|drop_col|dump|event|fast_status|indexes|kill|materializedview|
-	 * privileges|move_col|procedure|processlist|routine|routine_fields|routine_script|scheme|sequence|status|table|trigger|type|variables|view|view_trigger
+	 * privileges|move_col|procedure|processlist|routine|routine_fields|routine_script|scheme|sequence|status|table|transaction_ddl|trigger|type|variables|view|view_trigger
 	 */
 	function support(string $feature): bool
 	{

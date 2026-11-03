@@ -26,7 +26,7 @@ compatible with upstream updates.
 
 - MySQL, MariaDB, PostgreSQL, MS SQL, SQLite, Oracle
 - MongoDB, SimpleDB
-- Elasticsearch (beta), ClickHouse (alpha)
+- Elasticsearch, ClickHouse (alpha)
 
 Embedded mode
 -------------
@@ -54,8 +54,8 @@ and PostgreSQL. Highlights include:
 
 - **Copy tables and views:** PostgreSQL and MS SQL copy implementations, a copy button on the structure page,
   and an option to copy structure without data.
-- **More complete MS SQL tooling:** list, edit, call, and export functions and stored procedures; read full view
-  definitions; and remove dependent constraints when dropping columns or tables.
+- **More complete MS SQL tooling:** list, edit, call, and export functions and stored procedures; retain separate
+  `(max)` column type choices; and remove dependent constraints when dropping columns or tables.
 - **Migration-friendly schema changes:** optional explicitly named constraints through `useNamedConstraints`.
 - **Query diagnostics:** opt-in runtime and I/O statistics for supported MS SQL (SQLSRV), PostgreSQL, MySQL, and
   MariaDB connections, plus scrollable SQL result tables. Availability and execution overhead depend on the driver

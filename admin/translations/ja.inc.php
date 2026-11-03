@@ -49,6 +49,7 @@ return [
 	'Session support must be enabled.' => 'セッションを有効にしてください。',
 	'Session expired, please login again.' => 'セッションの期限切れ。ログインし直してください。',
 	'%s version: %s through PHP extension %s' => '%sバージョン：%s、 PHP拡張機能 %s',
+	'%s requires at least %s.' => '%s には %s 以上が必要です。', // e.g. 'AdminNeo requires at least Elasticsearch 7.' // by Claude Fable 5.1
 
 	// Settings
 	'Language' => '言語',
@@ -136,6 +137,7 @@ return [
 	'save' => '保存',
 	'Format' => '形式',
 	'Data' => 'データ',
+	'Copy as <span>%s</span>' => '<span>%s</span> としてコピー', // by Claude Fable 5.1
 
 	// Databases
 	'Database' => 'データベース',
@@ -217,6 +219,7 @@ return [
 	'Options' => '設定',
 	'Comment' => 'コメント',
 	'Default value' => '既定値',
+	'default value' => '既定値',
 	'Drop' => '削除',
 	'Drop %s?' => '%s を削除しますか？',
 	'Are you sure?' => '実行しますか？',
@@ -315,6 +318,7 @@ return [
 	'Create type' => 'ユーザー定義型作成',
 	'Type has been dropped.' => 'ユーザー定義型を削除しました。',
 	'Type has been created.' => 'ユーザー定義型を追加しました。',
+	'Type has been altered.' => 'ユーザー定義型を変更しました。', // by Claude Opus 5
 	'Alter type' => 'ユーザー定義型変更',
 
 	// Triggers
@@ -392,6 +396,7 @@ return [
 	'Lists' => 'リスト',
 	'Network' => 'ネットワーク型',
 	'Geometry' => 'ジオメトリ型',
+	'Ranges' => '範囲型', // by Claude Fable 5.1
 	'Relations' => '関係',
 
 	// Editor - data values
@@ -435,4 +440,5 @@ return [
 	'Data table' => 'データテーブル', // by Claude Fable 5.1
 	'Edit form' => '編集フォーム', // by Claude Fable 5.1
 	'Ask %s' => '%s に聞く',
+	'Views' => 'ビュー', // by Claude Opus 5.5
 ];

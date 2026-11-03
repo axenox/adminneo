@@ -332,6 +332,9 @@ function hidden_fields_get(): void
 	if (sid()) {
 		echo input_hidden(session_name(), session_id());
 	}
+	if ($_GET["ext"]) {
+		echo input_hidden("ext", $_GET["ext"]);
+	}
 	if (SERVER !== null) {
 		echo input_hidden(DRIVER, SERVER);
 	}
@@ -415,8 +418,10 @@ function input($field, $value, $function, bool $autofocus = false): void {
 		$function = null;
 	}
 
-	if (in_array($field["type"], Driver::get()->getUserTypes())) {
-		$enums = type_values($types[$field["type"]]);
+	// Fields of a schemaless table created in edit.inc.php have no type.
+	$type_id = Driver::get()->getUserTypeId($field["type"] ?? "");
+	if ($type_id) {
+		$enums = type_values($type_id);
 		if ($enums) {
 			$field["type"] = "enum";
 			$field["length"] = $enums;
@@ -474,7 +479,10 @@ function input($field, $value, $function, bool $autofocus = false): void {
 		echo "<input type='file' name='fields-$name'>";
 	} elseif ($is_json) {
 		echo "<textarea $attrs cols='50' rows='12' class='jush-json'>" . h($value) . '</textarea>';
-	} elseif (($text = preg_match('~text|lob|memo|json~i', $field["type"])) || preg_match("~\n~", $value)) {
+	} elseif (
+		($text = preg_match('~text|lob|memo|json~i', $field["type"]) || (preg_match('~char|binary~', $field["type"]) && $field["length"] == "max")) ||
+		preg_match("~\n~", $value)
+	) {
 		if ($text && DIALECT != "sqlite") {
 			$attrs .= " cols='50' rows='12'";
 		} else {
@@ -492,7 +500,7 @@ function input($field, $value, $function, bool $autofocus = false): void {
 		}
 		// type='date' and type='time' display localized value which may be confusing, type='datetime' uses 'T' as date and time separator
 		echo "<input class='input'"
-			. ((!$has_function || $function === "") && preg_match('~(?<!o)int(?!er)~', $field["type"]) && !preg_match('~\[]~', $field["full_type"]) ? " type='number'" : "")
+			. ((!$has_function || $function === "") && preg_match('~^' . int_type() . '$~', $field["type"]) && !preg_match('~\[]~', $field["full_type"]) ? " type='number'" : "")
 			. ($function != "now" ? " value='" . h($value) . "'" : " data-last-value='" . h($value) . "'")
 			. ($maxlength ? " data-maxlength='$maxlength'" : "")
 			. (preg_match('~char|binary~', $field["type"]) && $maxlength > 20 ? " size='44'" : "")
@@ -567,6 +575,11 @@ function process_input($field) {
 			return false; // TODO report errors
 		}
 		return $value;
+	}
+
+	// Compact formatted JSON values. Values in search conditions are kept as they are.
+	if ($function != "SQL" && isset($field["full_type"])) {
+		Admin::get()->detectJson($field["full_type"], $value, false);
 	}
 
 	return Admin::get()->processFieldInput($field, $value, $function);

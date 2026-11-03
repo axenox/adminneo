@@ -49,6 +49,7 @@ return [
 	'Session support must be enabled.' => 'Sessioonid peavad olema lubatud.',
 	'Session expired, please login again.' => 'Sessioon on aegunud, palun logige uuesti sisse.',
 	'%s version: %s through PHP extension %s' => '%s versioon: %s, kasutatud PHP moodul: %s',
+	'%s requires at least %s.' => '%s nõuab vähemalt %s.', // e.g. 'AdminNeo requires at least Elasticsearch 7.' // by Claude Fable 5.1
 
 	// Settings
 	'Language' => 'Keel',
@@ -142,6 +143,7 @@ return [
 	'save' => 'salvesta failina',
 	'Format' => 'Formaat',
 	'Data' => 'Andmed',
+	'Copy as <span>%s</span>' => 'Kopeeri kui <span>%s</span>', // by Claude Fable 5.1
 
 	// Databases
 	'Database' => 'Andmebaas',
@@ -223,6 +225,7 @@ return [
 	'Options' => 'Valikud',
 	'Comment' => 'Kommentaar',
 	'Default value' => 'Vaikeväärtus', // by Claude Fable 5.1
+	'default value' => 'vaikeväärtus', // by Claude Opus 5.5
 	'Drop' => 'Kustuta',
 	'Drop %s?' => 'Kustuta %s?', // by Claude Fable 5.1
 	'Are you sure?' => 'Kas oled kindel?',
@@ -234,7 +237,7 @@ return [
 	'Maximum number of allowed fields exceeded. Please increase %s.' => 'Maksimaalne väljade arv ületatud. Palun suurendage %s.',
 
 	// Views
-	'View' => 'Vaata',
+	'View' => 'Vaade', // by Claude Opus 5.5
 	'Materialized view' => 'Materialiseeritud vaade', // by Claude Fable 5.1
 	'View has been dropped.' => 'Vaade (VIEW) on edukalt kustutatud.',
 	'View has been altered.' => 'Vaade (VIEW) on edukalt muudetud.',
@@ -321,6 +324,7 @@ return [
 	'Create type' => 'Loo tüüp',
 	'Type has been dropped.' => 'Tüüp on edukalt kustutatud.',
 	'Type has been created.' => 'Tüüp on edukalt loodud.',
+	'Type has been altered.' => 'Tüüp on edukalt muudetud.', // by Claude Opus 5.5
 	'Alter type' => 'Muuda tüüpi',
 
 	// Triggers
@@ -401,6 +405,7 @@ return [
 	'Lists' => 'Listid',
 	'Network' => 'Võrk (network)',
 	'Geometry' => 'Geomeetria',
+	'Ranges' => 'Vahemikud', // by Claude Fable 5.1
 	'Relations' => 'Seosed',
 
 	// Editor - data values
@@ -444,4 +449,5 @@ return [
 	'Data table' => 'Andmetabel', // by Claude Fable 5.1
 	'Edit form' => 'Muutmisvorm', // by Claude Fable 5.1
 	'Ask %s' => 'Küsi %s käest', // by Claude Fable 5.1
+	'Views' => 'Vaated', // by Claude Opus 5.5
 ];

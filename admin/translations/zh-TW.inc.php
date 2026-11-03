@@ -49,6 +49,7 @@ return [
 	'Session support must be enabled.' => 'Session 必須被啟用。',
 	'Session expired, please login again.' => 'Session 已過期，請重新登入。',
 	'%s version: %s through PHP extension %s' => '%s 版本：%s 透過 PHP 擴充模組 %s',
+	'%s requires at least %s.' => '%s 需要 %s 或更新版本。', // e.g. 'AdminNeo requires at least Elasticsearch 7.' // by Claude Fable 5.1
 
 	// Settings
 	'Language' => '語言',
@@ -136,6 +137,7 @@ return [
 	'save' => '儲存',
 	'Format' => '格式',
 	'Data' => '資料',
+	'Copy as <span>%s</span>' => '複製為 <span>%s</span>', // by Claude Fable 5.1
 
 	// Databases
 	'Database' => '資料庫',
@@ -217,6 +219,7 @@ return [
 	'Options' => '選項',
 	'Comment' => '註解',
 	'Default value' => '預設值',
+	'default value' => '預設值',
 	'Drop' => '刪除',
 	'Drop %s?' => '刪除 %s?',
 	'Are you sure?' => '你確定嗎？',
@@ -315,6 +318,7 @@ return [
 	'Create type' => '建立類型',
 	'Type has been dropped.' => '已刪除類型。',
 	'Type has been created.' => '已建立類型。',
+	'Type has been altered.' => '已修改類型。', // by Claude Opus 5
 	'Alter type' => '修改類型',
 
 	// Triggers
@@ -392,6 +396,7 @@ return [
 	'Lists' => '列表',
 	'Network' => '網路',
 	'Geometry' => '幾何',
+	'Ranges' => '範圍', // by Claude Fable 5.1
 	'Relations' => '關聯',
 
 	// Editor - data values
@@ -435,4 +440,5 @@ return [
 	'Data table' => '資料表格', // by Claude Fable 5.1
 	'Edit form' => '編輯表單', // by Claude Fable 5.1
 	'Ask %s' => '詢問 %s', // by Claude Fable 5.1
+	'Views' => '檢視表', // by Claude Opus 5.5
 ];

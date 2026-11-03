@@ -49,6 +49,7 @@ return [
 	'Session support must be enabled.' => 'חובה להפעיל תמיכה בסשן',
 	'Session expired, please login again.' => 'תם זמן ההפעלה, אנא התחבר שוב',
 	'%s version: %s through PHP extension %s' => '%s גרסה: %s דרך תוסף PHP %s',
+	'%s requires at least %s.' => '%s דורש לפחות %s', // e.g. 'AdminNeo requires at least Elasticsearch 7.' // by Claude Fable 5.1
 
 	// Settings
 	'Language' => 'שפה',
@@ -136,6 +137,7 @@ return [
 	'save' => 'שמור',
 	'Format' => 'פורמט',
 	'Data' => 'נתונים',
+	'Copy as <span>%s</span>' => 'העתק בתור <span>%s</span>', // by Claude Fable 5.1
 
 	// Databases
 	'Database' => 'מסד נתונים',
@@ -217,6 +219,7 @@ return [
 	'Options' => 'אפשרויות',
 	'Comment' => 'הערה',
 	'Default value' => 'ערך ברירת מחדל',
+	'default value' => 'ערך ברירת מחדל',
 	'Drop' => 'השלך',
 	'Drop %s?' => 'להשליך את %s?', // by Claude Fable 5.1
 	'Are you sure?' => 'האם אתה בטוח?',
@@ -228,7 +231,7 @@ return [
 	'Maximum number of allowed fields exceeded. Please increase %s.' => 'הגעת למספר השדות המרבי. בבקשה הגדל את %s',
 
 	// Views
-	'View' => 'הצג',
+	'View' => 'תצוגה', // by Claude Opus 5.5
 	'Materialized view' => 'תצוגה ממומשת', // by Claude Fable 5.1
 	'View has been dropped.' => 'התצוגה הושלכה',
 	'View has been altered.' => 'התצוגה שונתה',
@@ -315,6 +318,7 @@ return [
 	'Create type' => 'צור סוג',
 	'Type has been dropped.' => 'הסוג הושלך',
 	'Type has been created.' => 'הסוג נוצר',
+	'Type has been altered.' => 'הסוג שונה', // by Claude Opus 5.5
 	'Alter type' => 'שנה סוג',
 
 	// Triggers
@@ -392,6 +396,7 @@ return [
 	'Lists' => 'רשימות',
 	'Network' => 'רשת',
 	'Geometry' => 'גיאומטריה',
+	'Ranges' => 'טווחים', // by Claude Fable 5.1
 	'Relations' => 'הקשרים',
 
 	// Editor - data values
@@ -435,4 +440,5 @@ return [
 	'Data table' => 'טבלת נתונים', // by Claude Fable 5.1
 	'Edit form' => 'טופס עריכה', // by Claude Fable 5.1
 	'Ask %s' => 'שאל את %s', // by Claude Fable 5.1
+	'Views' => 'תצוגות', // by Claude Opus 5.5
 ];

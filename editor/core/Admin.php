@@ -336,7 +336,7 @@ class Admin extends Origin
 			if (($key >= 0 && $col != "") || $val != "") {
 				$conds = [];
 
-				foreach (($col != "" ? [$col => $fields[$col]] : $fields) as $name => $field) {
+				foreach (($col != "" ? [$col => $fields[$col] ?? []] : $fields) as $name => $field) {
 					if ($col != "" || is_numeric($val) || !preg_match(number_type(), $field["type"])) {
 						$name = idf_escape($name);
 
@@ -510,21 +510,16 @@ class Admin extends Origin
 		return unconvert_field($field, $return);
 	}
 
-	public function getDumpOutputs(): array
-	{
-		return [];
-	}
-
-	public function getDumpFormats(): array
-	{
-		return ['csv' => 'CSV,', 'csv;' => 'CSV;', 'tsv' => 'TSV'];
-	}
-
 	public function sendDumpFormatHeaders(string $identifier, bool $multiTable = false): string
 	{
 		header("Content-Type: text/csv; charset=utf-8");
 
 		return "csv";
+	}
+
+	public function getDumpOutputs(): array
+	{
+		return [];
 	}
 
 	public function sendDumpOutputHeaders(string $identifier, string $extension): void

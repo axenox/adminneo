@@ -52,6 +52,7 @@ return [
 	'Session support must be enabled.' => 'Unterstüzung für PHP-Sessions muss aktiviert sein.',
 	'Session expired, please login again.' => 'Sitzungsdauer abgelaufen, bitte erneut anmelden.',
 	'%s version: %s through PHP extension %s' => 'Version %s: %s mit PHP-Erweiterung %s',
+	'%s requires at least %s.' => '%s erfordert mindestens %s.', // e.g. 'AdminNeo requires at least Elasticsearch 7.' // by Claude Fable 5.1
 
 	// Settings
 	'Language' => 'Sprache',
@@ -151,6 +152,7 @@ return [
 	'save' => 'Datei',
 	'Format' => 'Format',
 	'Data' => 'Daten',
+	'Copy as <span>%s</span>' => 'Kopieren als <span>%s</span>', // by Claude Fable 5.1
 
 	// Databases
 	'Database' => 'Datenbank',
@@ -231,7 +233,8 @@ return [
 	'Auto Increment' => 'Auto-Inkrement',
 	'Options' => 'Optionen',
 	'Comment' => 'Kommentar',
-	'Default value' => 'Vorgabewert festlegen',
+	'Default value' => 'Vorgabewert',
+	'default value' => 'Vorgabewert',
 	'Drop' => 'Entfernen',
 	'Drop %s?' => '%s entfernen?',
 	'Are you sure?' => 'Sind Sie sicher?',
@@ -333,6 +336,7 @@ return [
 	'Create type' => 'Typ erstellen',
 	'Type has been dropped.' => 'Typ wurde gelöscht.',
 	'Type has been created.' => 'Typ wurde erstellt.',
+	'Type has been altered.' => 'Typ wurde geändert.', // by Claude Opus 5
 	'Alter type' => 'Typ ändern',
 
 	// Triggers
@@ -416,6 +420,7 @@ return [
 	'Lists' => 'Listen',
 	'Network' => 'Netzwerk',
 	'Geometry' => 'Geometrie',
+	'Ranges' => 'Bereiche', // by Claude Fable 5.1
 	'Relations' => 'Relationen',
 
 	// Editor - data values
@@ -459,4 +464,5 @@ return [
 	'Data table' => 'Datentabelle',
 	'Edit form' => 'Formular bearbeiten',
 	'Ask %s' => '%s fragen',
+	'Views' => 'Views', // by Claude Opus 5.5
 ];

@@ -127,6 +127,15 @@ MS SQL servers using the native SQLSRV extension can set `connectionOptions` in 
 
 `adminneo-plugins.php` (placed next to the entry point) returns an array of `Plugin` instances.
 
+## MS SQL column types
+
+Column metadata uses upstream's base type and separate length, for example
+`type = nvarchar` and `length = max`. The fork retains explicit `varchar(max)`,
+`nvarchar(max)`, and `varbinary(max)` dropdown entries. The type editor maps canonical
+metadata to these entries for display, and SQL generation maps an explicit entry
+back to its base type and `max` length. This keeps metadata consumers compatible
+with upstream and prevents a stale length input from generating duplicate lengths.
+
 ## Runtime statistics
 
 The SQL command page offers an unchecked **Collect runtime statistics** option for supported

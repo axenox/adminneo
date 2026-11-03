@@ -125,10 +125,18 @@ function minify_js(string $file): string
 
 /**
  * Compresses string with deflate to characters from compress_alphabet().
+ *
+ * @param string $dictionary Data known to the decompressor, only its last 32 kB is used.
  */
-function compress_string(string $string): string
+function compress_string(string $string, string $dictionary = ""): string
 {
-	$binary = ($string != "" ? gzdeflate($string, 9) : "");
+	$binary = "";
+	if ($string != "") {
+		$binary = ($dictionary != ""
+			? deflate_add(deflate_init(ZLIB_ENCODING_RAW, ['level' => 9, 'dictionary' => $dictionary]), $string, ZLIB_FINISH)
+			: gzdeflate($string, 9)
+		);
+	}
 	// convert bytes to string; 2 chars from a 93-symbol alphabet hold 13 bits
 	$alphabet = compress_alphabet();
 	$return = "";
@@ -227,4 +235,30 @@ function downgrade_php(string $code): string
 	$code = preg_replace('~\bMYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT\b~', '64', $code);
 
 	return $code;
+}
+
+/**
+ * Finds PHP 7 operators ?? and <=> that were left in the code by downgrade_php().
+ *
+ * The development version requires PHP 7.1, so newer syntax can't appear in the code at all.
+ *
+ * @return string[] Code around each occurrence.
+ */
+function find_php7_operators(string $code): array
+{
+	$tokens = token_get_all($code);
+	$count = count($tokens);
+
+	$return = [];
+	foreach ($tokens as $i => $token) {
+		if (is_array($token) && ($token[0] == T_COALESCE || $token[0] == T_SPACESHIP)) {
+			$snippet = "";
+			for ($j = max(0, $i - 10); $j < min($count, $i + 6); $j++) {
+				$snippet .= is_array($tokens[$j]) ? $tokens[$j][1] : $tokens[$j];
+			}
+			$return[] = preg_replace('~\s+~', ' ', trim($snippet));
+		}
+	}
+
+	return $return;
 }

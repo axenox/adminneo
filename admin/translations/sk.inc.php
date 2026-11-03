@@ -53,6 +53,7 @@ return [
 	'Session support must be enabled.' => 'Session premenné musia byť povolené.',
 	'Session expired, please login again.' => 'Session vypršala, prihláste sa prosím znova.',
 	'%s version: %s through PHP extension %s' => 'Verzia %s: %s cez PHP rozšírenie %s',
+	'%s requires at least %s.' => '%s vyžaduje aspoň %s.', // e.g. 'AdminNeo requires at least Elasticsearch 7.'
 
 	// Settings
 	'Language' => 'Jazyk',
@@ -156,6 +157,7 @@ return [
 	'save' => 'uložiť',
 	'Format' => 'Formát',
 	'Data' => 'Dáta',
+	'Copy as <span>%s</span>' => 'Kopírovať ako <span>%s</span>',
 
 	// Databases
 	'Database' => 'Databáza',
@@ -237,6 +239,7 @@ return [
 	'Options' => 'Voľby',
 	'Comment' => 'Komentár',
 	'Default value' => 'Predvolená hodnota',
+	'default value' => 'predvolená hodnota',
 	'Drop' => 'Odstrániť',
 	'Drop %s?' => 'Odstrániť %s?',
 	'Are you sure?' => 'Naozaj?',
@@ -339,6 +342,7 @@ return [
 	'Create type' => 'Vytvoriť typ',
 	'Type has been dropped.' => 'Typ bol odstránený.',
 	'Type has been created.' => 'Typ bol vytvorený.',
+	'Type has been altered.' => 'Typ bol zmenený.',
 	'Alter type' => 'Pozmeniť typ',
 
 	// Triggers
@@ -424,6 +428,7 @@ return [
 	'Lists' => 'Zoznamy',
 	'Network' => 'Sieť',
 	'Geometry' => 'Geometria',
+	'Ranges' => 'Rozsahy',
 	'Relations' => 'Vzťahy',
 
 	// Editor - data values

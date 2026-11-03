@@ -34,6 +34,9 @@ if (isset($_GET["mssql"])) {
 			/** @var bool */
 			private $warningsReturnAsErrors = true;
 
+			/** @var bool */
+			private $transaction = false;
+
 			public function getDefaultServerName(): string
 			{
 				return "localhost:1433";
@@ -151,9 +154,17 @@ if (isset($_GET["mssql"])) {
 
 			public function nextResult(): bool
 			{
-				$return = $this->multiResult && sqlsrv_next_result($this->multiResult);
+				if (!$this->multiResult) {
+					return false;
+				}
+
+				$next = sqlsrv_next_result($this->multiResult);
 				$this->collectRuntimeStatisticsMessages();
-				return $return;
+				if ($next === false) {
+					$this->resolveError();
+				}
+
+				return $next !== null;
 			}
 
 			public function startRuntimeStatisticsCollection(): void
@@ -178,6 +189,42 @@ if (isset($_GET["mssql"])) {
 				if ($this->collectRuntimeStatistics) {
 					$this->runtimeStatisticsMessages = array_merge($this->runtimeStatisticsMessages, sqlsrv_errors(SQLSRV_ERR_ALL) ?: []);
 				}
+			}
+
+			public function begin(): bool
+			{
+				// BEGIN TRANSACTION sent as a separate query is rolled back at the end of its batch under MARS enabled by default.
+				$this->transaction = sqlsrv_begin_transaction($this->connection);
+				if (!$this->transaction) {
+					$this->resolveError();
+				}
+
+				return $this->transaction;
+			}
+
+			public function commit(): bool
+			{
+				// The API refuses to commit a transaction not started by it.
+				if ($this->transaction && !sqlsrv_commit($this->connection)) {
+					$this->resolveError();
+					return false;
+				}
+
+				$this->transaction = false;
+
+				return true;
+			}
+
+			public function rollback(): bool
+			{
+				if ($this->transaction && !sqlsrv_rollback($this->connection)) {
+					$this->resolveError();
+					return false;
+				}
+
+				$this->transaction = false;
+
+				return true;
 			}
 		}
 
@@ -370,6 +417,23 @@ if (isset($_GET["mssql"])) {
 					}
 
 					return $result;
+				}
+
+				public function begin(): bool
+				{
+					// PDO_DBLIB crashes in commit() and rollBack() if an error ended the transaction on the server, e.g. a failed SET IDENTITY_INSERT.
+					// It doesn't use MARS, so BEGIN TRANSACTION sent as a separate query is kept.
+					return (bool)$this->query("BEGIN TRANSACTION");
+				}
+
+				public function commit(): bool
+				{
+					return (bool)$this->query("COMMIT");
+				}
+
+				public function rollback(): bool
+				{
+					return (bool)$this->query("IF @@TRANCOUNT > 0 ROLLBACK");
 				}
 			}
 		}
@@ -615,9 +679,11 @@ AND i.object_id IN (
 			return $statistics;
 		}
 
-		public function begin()
-        {
-			return queries("BEGIN TRANSACTION");
+		public function begin(): bool
+		{
+			remember_query("BEGIN TRANSACTION");
+
+			return $this->connection->begin();
 		}
 
 		public function tableHelp(string $name, bool $isView = false): ?string
@@ -879,17 +945,10 @@ LEFT JOIN sys.indexes i ON ic.object_id = i.object_id AND ic.index_id = i.index_
 WHERE c.object_id = " . q($table_id)) as $row
 		) {
 			$type = $row["type"];
-			$length = "";
-			if (preg_match("~char|binary~", $type)) {
-				$maxLength = intval($row["max_length"]);
-				if ($maxLength == -1) {
-					$type .= "(max)";
-				} else {
-					$length = $maxLength / ($type[0] == 'n' ? 2 : 1);
-				}
-			} elseif ($type == "decimal") {
-				$length = "$row[precision],$row[scale]";
-			}
+			$length = (preg_match("~char|binary~", $type)
+				? ($row["max_length"] == -1 ? "max" : intval($row["max_length"]) / ($type[0] == 'n' ? 2 : 1))
+				: ($type == "decimal" ? "$row[precision],$row[scale]" : "")
+			);
 			$return[$row["name"]] = [
 				"field" => $row["name"],
 				"full_type" => $type . ($length ? "($length)" : ""),
@@ -937,7 +996,7 @@ WHERE OBJECT_NAME(i.object_id) = " . q($table)
 		// Use OBJECT_DEFINITION() instead of INFORMATION_SCHEMA.VIEWS.VIEW_DEFINITION, which is
 		// nvarchar(4000) and truncates longer view definitions. OBJECT_ID() also resolves the
 		// view in the selected schema instead of only the current default schema.
-		$sql = "SELECT OBJECT_DEFINITION(OBJECT_ID(" . q((get_schema() ? get_schema() . '.' : '') . $name) . "))";
+		$sql = "SELECT OBJECT_DEFINITION(OBJECT_ID(" . q(idf_escape(get_schema()) . "." . idf_escape($name)) . "))";
 		return ["select" => preg_replace(
 			'~^(?:[^[]|\[[^]]*])*\s+AS\s+~isU',
 			'',
@@ -1588,6 +1647,7 @@ ORDER BY CASE WHEN o.type = 'P' THEN 0 ELSE 1 END, o.name");
 
 	function support(string $feature): bool
 	{
-		return preg_match('~^(check|comment|columns|copy|database|drop_col|dump|fast_status|indexes|descidx|procedure|routine|routine_script|scheme|sql|table|trigger|view|view_trigger' . (Driver::get()->supportsStats() ? '|runtime_statistics' : '') . ')$~', $feature);
+		return preg_match('~^(check|comment|columns|copy|database|drop_col|dump|fast_status|indexes|descidx|procedure|routine|routine_script|scheme|sql|table|transaction_ddl|trigger|view|view_trigger'
+			. (Driver::get()->supportsStats() ? '|runtime_statistics' : '') . ')$~', $feature);
 	}
 }

@@ -53,6 +53,7 @@ return [
 	'Session support must be enabled.' => 'Sesijų palaikymas turi būti įjungtas.',
 	'Session expired, please login again.' => 'Sesijos galiojimas baigėsi. Prisijunkite iš naujo.',
 	'%s version: %s through PHP extension %s' => '%s versija: %s per PHP plėtinį %s',
+	'%s requires at least %s.' => '%s reikalauja bent %s.', // e.g. 'AdminNeo requires at least Elasticsearch 7.' // by Claude Fable 5.1
 
 	// Settings
 	'Language' => 'Kalba',
@@ -156,6 +157,7 @@ return [
 	'save' => 'išsaugoti',
 	'Format' => 'Formatas',
 	'Data' => 'Duomenys',
+	'Copy as <span>%s</span>' => 'Kopijuoti kaip <span>%s</span>', // by Claude Fable 5.1
 
 	// Databases
 	'Database' => 'Duomenų bazė',
@@ -237,6 +239,7 @@ return [
 	'Options' => 'Nustatymai',
 	'Comment' => 'Komentaras',
 	'Default value' => 'Numatytoji reikšmė', // by Claude Fable 5.1
+	'default value' => 'numatytoji reikšmė', // by Claude Opus 5.5
 	'Drop' => 'Pašalinti',
 	'Drop %s?' => 'Pašalinti %s?', // by Claude Fable 5.1
 	'Are you sure?' => 'Tikrai?',
@@ -339,6 +342,7 @@ return [
 	'Create type' => 'Sukurti tipą',
 	'Type has been dropped.' => 'Tipas pašalintas.',
 	'Type has been created.' => 'Tipas sukurtas.',
+	'Type has been altered.' => 'Tipas pakeistas.', // by Claude Opus 5.5
 	'Alter type' => 'Keisti tipą',
 
 	// Triggers
@@ -428,6 +432,7 @@ return [
 	'Lists' => 'Sąrašai',
 	'Network' => 'Tinklas',
 	'Geometry' => 'Geometrija',
+	'Ranges' => 'Intervalai', // by Claude Fable 5.1
 	'Relations' => 'Ryšiai',
 
 	// Editor - data values
@@ -471,4 +476,5 @@ return [
 	'Data table' => 'Duomenų lentelė', // by Claude Fable 5.1
 	'Edit form' => 'Redagavimo forma', // by Claude Fable 5.1
 	'Ask %s' => 'Paklausti %s', // by Claude Fable 5.1
+	'Views' => 'Vaizdai', // by Claude Opus 5.5
 ];

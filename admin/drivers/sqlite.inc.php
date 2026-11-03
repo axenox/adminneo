@@ -23,6 +23,9 @@ if (isset($_GET["sqlite"])) {
 			public function open(string $server, string $username, string $password): bool
 			{
 				$this->sqlite = new SQLite3($server);
+				if (method_exists($this->sqlite, "setAuthorizer")) { // PHP 8.0+
+					$this->sqlite->setAuthorizer([$this, "authorize"]);
+				}
 
 				$this->version = $this->sqlite->version()["versionString"];
 
@@ -111,7 +114,15 @@ if (isset($_GET["sqlite"])) {
 		{
 			public function open(string $server, string $username, string $password): bool
 			{
-				return $this->dsn(DRIVER . ":$server", "", "");
+				if (!$this->dsn(DRIVER . ":$server", "", "", [], class_exists('Pdo\Sqlite') ? 'Pdo\Sqlite' : 'PDO')) {
+					return false;
+				}
+
+				if (method_exists($this->pdo, "setAuthorizer")) { // PHP 8.5+
+					$this->pdo->setAuthorizer([$this, "authorize"]);
+				}
+
+				return true;
 			}
 
 			public function quote(string $string): string
@@ -129,6 +140,9 @@ if (isset($_GET["sqlite"])) {
 	if (class_exists('AdminNeo\SqLiteConnectionBase')) {
 		class SqLiteConnection extends SqLiteConnectionBase
 		{
+			/** @var bool */
+			private $attaching = false;
+
 			protected function __construct()
 			{
 				parent::__construct();
@@ -155,12 +169,25 @@ if (isset($_GET["sqlite"])) {
 
 			public function selectDatabase(string $name): bool
 			{
+				$this->attaching = true;
 				// is_readable - SQLite 3
-				if (is_readable($name) && $this->query("ATTACH " . $this->quote(preg_match("~(^[/\\\\]|:)~", $name) ? $name : dirname($_SERVER["SCRIPT_FILENAME"]) . "/$name") . " AS a")) {
+				$attached = is_readable($name) && $this->query("ATTACH " . $this->quote(preg_match("~(^[/\\\\]|:)~", $name) ? $name : dirname($_SERVER["SCRIPT_FILENAME"]) . "/$name") . " AS a");
+				$this->attaching = false;
+
+				if ($attached) {
 					return self::open($name, "", "");
 				}
 
 				return false;
+			}
+
+			/**
+			 * Denies attaching a file, also used by VACUUM INTO.
+			 */
+			public function authorize(int $action, ?string $arg1): int
+			{
+				// 24 - SQLITE_ATTACH, "" is a temporary database used also by VACUUM.
+				return ($action != 24 || $arg1 === "" || $this->attaching ? 0 : 1); // SQLITE_OK, SQLITE_DENY
 			}
 		}
 	}
@@ -454,6 +481,23 @@ if (isset($_GET["sqlite"])) {
 			if ($row["pk"] && preg_match('~\bAUTOINCREMENT\b~i', $sql)) {
 				$return[$name]["auto_increment"] = true;
 			}
+
+			// Column hidden flag from table_xinfo: 2 - virtual generated column, 3 - stored generated column.
+			$hidden = $row["hidden"] ?? 0;
+			$generated = ($hidden == 2 ? "VIRTUAL" : ($hidden == 3 ? "STORED" : ""));
+			$return[$name]["generated"] = $generated;
+			if ($generated) {
+				$quoted_name = implode("|", [
+					preg_quote($name, '~'),
+					'"' . preg_quote(str_replace('"', '""', $name), '~') . '"',
+					'`' . preg_quote(str_replace('`', '``', $name), '~') . '`',
+					'\[' . preg_quote($name, '~') . ']',
+				]);
+				// Expression in balanced parentheses after AS, the type can contain parentheses too, e.g. decimal(10,2).
+				if (preg_match('~[(,]\s*(?:' . $quoted_name . ')\s(?:[^,()]|\([^()]*\))*?\bAS\s*(\((?:[^()\'"]++|\'(?:[^\']|\'\')*\'|"(?:[^"]|"")*"|(?1))*\))~i', $sql, $match)) {
+					$return[$name]["default"] = substr($match[1], 1, -1);
+				}
+			}
 		}
 		$idf = '(("[^"]*+")+|[a-z0-9_]+)';
 		preg_match_all('~' . $idf . '\s+text\s+COLLATE\s+(\'[^\']+\'|\S+)~i', $sql, $matches, PREG_SET_ORDER);
@@ -462,12 +506,6 @@ if (isset($_GET["sqlite"])) {
 			if ($return[$name]) {
 				$return[$name]["collation"] = trim($match[3], "'");
 			}
-		}
-		preg_match_all('~' . $idf . '\s.*GENERATED ALWAYS AS \((.+)\) (STORED|VIRTUAL)~i', $sql, $matches, PREG_SET_ORDER);
-		foreach ($matches as $match) {
-			$name = str_replace('""', '"', preg_replace('~^"|"$~', '', $match[1]));
-			$return[$name]["default"] = $match[3];
-			$return[$name]["generated"] = strtoupper($match[4]);
 		}
 		return $return;
 	}
@@ -788,7 +826,8 @@ if (isset($_GET["sqlite"])) {
 		}
 		$temp_name = ($table != "" && $table == $name ? "adminneo_$name" : $name);
 		if (!$engine && $table != "") {
-			$engine = table_status1($table)["Engine"] ?? null;
+			$table_status = table_status1($table);
+			$engine = $table_status["Engine"] ?? null;
 		}
 		if (!queries("CREATE TABLE " . table($temp_name) . " (\n" . implode(",\n", $changes) . "\n)" . ($engine != "table" && in_array($engine, Driver::get()->engines()) ? " $engine" : ""))) {
 			// implicit ROLLBACK to not overwrite $connection->error
@@ -926,10 +965,6 @@ if (isset($_GET["sqlite"])) {
 		];
 	}
 
-	function begin() {
-		return queries("BEGIN");
-	}
-
 	function last_id($result)
 	{
 		return Connection::get()->getValue("SELECT LAST_INSERT_ROWID()");
@@ -1011,6 +1046,6 @@ if (isset($_GET["sqlite"])) {
 
 	function support(string $feature): bool
 	{
-		return preg_match('~^(check|columns|database|drop_col|dump|indexes|descidx|move_col|sql|status|table|trigger|variables|view|view_trigger)$~', $feature);
+		return preg_match('~^(check|columns|database|drop_col|dump|indexes|descidx|move_col|sql|status|table|transaction_ddl|trigger|variables|view|view_trigger)$~', $feature);
 	}
 }

@@ -52,6 +52,7 @@ return [
 	'Session support must be enabled.' => 'Sessies moeten geactiveerd zijn.',
 	'Session expired, please login again.' => 'Uw sessie is verlopen. Gelieve opnieuw aan te melden.',
 	'%s version: %s through PHP extension %s' => '%s versie: %s met PHP extensie %s',
+	'%s requires at least %s.' => '%s vereist minimaal %s.', // e.g. 'AdminNeo requires at least Elasticsearch 7.' // by Claude Fable 5.1
 
 	// Settings
 	'Language' => 'Taal',
@@ -140,8 +141,8 @@ return [
 	'File must be in UTF-8 encoding.' => 'Het bestand moet met UTF-8 encodering zijn opgeslagen.',
 	'You are offline.' => 'U bent offline.',
 	'%d row(s) have been imported.' => [
-		'%d rij werd geïmporteerd.',
-		'%d rijen werden geïmporteerd.',
+		'%d rij geïmporteerd.',
+		'%d rijen geïmporteerd.',
 	],
 
 	// Export
@@ -151,6 +152,7 @@ return [
 	'save' => 'opslaan',
 	'Format' => 'Formaat',
 	'Data' => 'Data',
+	'Copy as <span>%s</span>' => 'Kopiëren als <span>%s</span>', // by Claude Fable 5.1
 
 	// Databases
 	'Database' => 'Database',
@@ -178,11 +180,11 @@ return [
 	'Schemas' => 'Schema\'s',
 	'No schemas.' => 'Geen schema\'s.',
 	'Show schema' => 'Schema weergeven',
-	'Alter schema' => 'Schema wijzigen',
+	'Alter schema' => 'Schema aanpassen',
 	'Create schema' => 'Schema maken',
 	'Schema has been dropped.' => 'Schema verwijderd.',
 	'Schema has been created.' => 'Schema aangemaakt.',
-	'Schema has been altered.' => 'Schema gewijzigd.',
+	'Schema has been altered.' => 'Schema aangepast.',
 	'Invalid schema.' => 'Ongeldig schema.',
 
 	// Table list
@@ -202,12 +204,12 @@ return [
 	'Check' => 'Controleer',
 	'Repair' => 'Herstel',
 	'Truncate' => 'Legen',
-	'Tables have been truncated.' => 'Tabellen werden geleegd.',
+	'Tables have been truncated.' => 'Tabellen geleegd.',
 	'Move to other database' => 'Verplaats naar andere database',
 	'Move' => 'Verplaats',
-	'Tables have been moved.' => 'Tabellen werden verplaatst.',
+	'Tables have been moved.' => 'Tabellen verplaatst.',
 	'Copy' => 'Kopieren',
-	'Tables have been copied.' => 'De tabellen zijn gekopieerd.',
+	'Tables have been copied.' => 'Tabellen gekopieerd.',
 	'overwrite' => 'overschrijven',
 
 	// Tables
@@ -218,8 +220,8 @@ return [
 	'Alter table' => 'Tabel aanpassen',
 	'Create table' => 'Tabel aanmaken',
 	'Table has been dropped.' => 'Tabel verwijderd.',
-	'Tables have been dropped.' => 'Tabellen werden verwijderd.',
-	'Tables have been optimized.' => 'Tabellen zijn geoptimaliseerd.',
+	'Tables have been dropped.' => 'Tabellen verwijderd.',
+	'Tables have been optimized.' => 'Tabellen geoptimaliseerd.',
 	'Table has been altered.' => 'Tabel aangepast.',
 	'Table has been created.' => 'Tabel aangemaakt.',
 	'Table name' => 'Tabelnaam',
@@ -232,6 +234,7 @@ return [
 	'Options' => 'Opties',
 	'Comment' => 'Commentaar',
 	'Default value' => 'Standaardwaarde',
+	'default value' => 'standaardwaarde',
 	'Drop' => 'Verwijderen',
 	'Drop %s?' => 'Verwijder %s?',
 	'Are you sure?' => 'Weet u het zeker?',
@@ -308,9 +311,9 @@ return [
 	// Events
 	'Events' => 'Events',
 	'Event' => 'Event',
-	'Event has been dropped.' => 'Event werd verwijderd.',
-	'Event has been altered.' => 'Event werd aangepast.',
-	'Event has been created.' => 'Event werd aangemaakt.',
+	'Event has been dropped.' => 'Event verwijderd.',
+	'Event has been altered.' => 'Event aangepast.',
+	'Event has been created.' => 'Event aangemaakt.',
 	'Alter event' => 'Event aanpassen',
 	'Create event' => 'Event aanmaken',
 	'At given time' => 'Op aangegeven tijd',
@@ -325,15 +328,16 @@ return [
 	'Create sequence' => 'Sequence maken',
 	'Sequence has been dropped.' => 'Sequence verwijderd.',
 	'Sequence has been created.' => 'Sequence aangemaakt.',
-	'Sequence has been altered.' => 'Sequence gewijzigd.',
-	'Alter sequence' => 'Sequence wijzigen',
+	'Sequence has been altered.' => 'Sequence aangepast.',
+	'Alter sequence' => 'Sequence aanpassen',
 
 	// User-defined types (PostgreSQL)
 	'User types' => 'Gebruikersgedefiniëerde types',
 	'Create type' => 'Type maken',
 	'Type has been dropped.' => 'Type verwijderd.',
 	'Type has been created.' => 'Type aangemaakt.',
-	'Alter type' => 'Type wijzigen',
+	'Type has been altered.' => 'Type aangepast.', // by Claude Opus 5
+	'Alter type' => 'Type aanpassen',
 
 	// Triggers
 	'Triggers' => 'Triggers',
@@ -419,6 +423,7 @@ return [
 	'Lists' => 'Lijsten',
 	'Network' => 'Netwerk',
 	'Geometry' => 'Geometrie',
+	'Ranges' => 'Bereiken', // by Claude Fable 5.1
 	'Relations' => 'Relaties',
 
 	// Editor - data values
@@ -462,4 +467,5 @@ return [
 	'Data table' => 'Gegevenstabel',
 	'Edit form' => 'Formulier bewerken',
 	'Ask %s' => 'Vraag het aan %s',
+	'Views' => 'Views', // by Claude Opus 5.5
 ];

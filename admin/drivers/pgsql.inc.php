@@ -112,7 +112,15 @@ if (isset($_GET["pgsql"])) {
 					return false;
 				}
 
-				$result = @pg_query($this->connection, $query);
+				if ($this->untrusted) {
+					// The extended protocol doesn't allow multiple commands, the transaction doesn't allow modifying data.
+					$result = (@pg_query($this->connection, "BEGIN READ ONLY")
+						? @pg_query_params($this->connection, $query, [])
+						: false
+					);
+				} else {
+					$result = @pg_query($this->connection, $query);
+				}
 				$this->error = "";
 
 				if (!$result) {
@@ -123,6 +131,10 @@ if (isset($_GET["pgsql"])) {
 					$return = true;
 				} else {
 					$return = new PgSqlResult($result);
+				}
+
+				if ($this->untrusted) {
+					@pg_query($this->connection, "COMMIT"); // Rollbacks the transaction if the query failed.
 				}
 
 				if ($this->timeout) {
@@ -177,6 +189,14 @@ if (isset($_GET["pgsql"])) {
 				restore_error_handler();
 
 				return $result;
+			}
+
+			public function inTransaction(): bool
+			{
+				$status = pg_transaction_status($this->connection);
+
+				// Not PGSQL_TRANSACTION_UNKNOWN, the connection is bad.
+				return $status == PGSQL_TRANSACTION_INTRANS || $status == PGSQL_TRANSACTION_INERROR;
 			}
 		}
 
@@ -280,12 +300,40 @@ if (isset($_GET["pgsql"])) {
 
 			public function query(string $query, bool $unbuffered = false)
 			{
-				$return = parent::query($query, $unbuffered);
+				$return = ($this->untrusted ? $this->readOnlyQuery($query) : parent::query($query, $unbuffered));
 
 				if ($this->timeout) {
 					$this->timeout = 0;
 					parent::query("RESET statement_timeout");
 				}
+
+				return $return;
+			}
+
+			/**
+			 * Sends a query which can't modify data.
+			 *
+			 * @return PdoResult|false
+			 */
+			private function readOnlyQuery(string $query)
+			{
+				$this->error = "";
+				if (!$this->pdo->query("BEGIN READ ONLY")) {
+					$this->storeErrorInfo($this->pdo->errorInfo());
+					return false;
+				}
+
+				$statement = $this->pdo->prepare($query); // A prepared statement doesn't allow multiple commands.
+				$return = false;
+				if ($statement && $statement->execute()) {
+					$return = new PdoResult($statement);
+					$this->storeResult($return);
+				} else {
+					// prepare() succeeds even for an invalid query, the error is reported by execute().
+					$this->storeErrorInfo($statement ? $statement->errorInfo() : $this->pdo->errorInfo());
+				}
+
+				$this->pdo->query("COMMIT"); // Rollbacks the transaction if the query failed.
 
 				return $return;
 			}
@@ -388,6 +436,11 @@ if (isset($_GET["pgsql"])) {
 
 			if ($connection->isMinVersion("9.2")) {
 				$this->types[lang('Strings')]["json"] = 4294967295;
+				// TODO multiranges since 14
+				$this->types[lang('Ranges')] = [
+					"int4range" => 0, "int8range" => 0, "numrange" => 0,
+					"daterange" => 0, "tsrange" => 0, "tstzrange" => 0,
+				];
 
 				if ($connection->isMinVersion("9.4")) {
 					$this->types[lang('Strings')]["jsonb"] = 4294967295;
@@ -556,12 +609,138 @@ AND NOT a.attisdropped";
 
 		public function convertSearch(string $idf, array $where, array $field): string
 		{
+			// Compare arrays as arrays only with an array literal, e.g. {1,5}. Other values would cause an error, search them in the text.
+			if (preg_match('~\[~', $field["full_type"])) {
+				return ($this->isArrayComparison($where) ? $idf : "CAST($idf AS text)");
+			}
+
+			// Compare ranges as ranges only with a range literal, so that [1,2] finds [1,3). Other values would cause an error
+			// on searching in all columns, search them in the text.
+			if (preg_match('~range$~', $field["type"])) {
+				return (preg_match('~^([<>]=?|!?=)$~', $where["op"]) && preg_match('~^\s*(empty|[[(].*,.*[])])\s*$~i', $where["val"])
+					? $idf
+					: "CAST($idf AS text)"
+				);
+			}
+
+			// LIKE and regexp operators (~, ~*, !~, !~*) work only with text.
 			$textTypes = "char|text";
-			if (strpos($where["op"], "LIKE") === false) {
+			if (strpos($where["op"], "LIKE") === false && strpos($where["op"], "~") === false) {
 				$textTypes .= "|date|time(stamp)?|boolean|uuid|inet|cidr|macaddr|" . number_type();
 			}
 
 			return (preg_match("~$textTypes~", $field["type"]) ? $idf : "CAST($idf AS text)");
+		}
+
+		public function isSearchable(array $where, array $field): bool
+		{
+			// LIKE and regexp operators search in the text, see convertSearch().
+			if (strpos($where["op"], "LIKE") !== false || strpos($where["op"], "~") !== false) {
+				return true;
+			}
+
+			if (preg_match('~\[~', $field["full_type"])) {
+				if (!$this->isArrayComparison($where)) {
+					return true;
+				}
+
+				// Check the elements of the array literal, multidimensional arrays and quoted elements are not supported.
+				if (!preg_match('~^\s*\{([^{}"]*)\}\s*$~', $where["val"], $match)) {
+					return false;
+				}
+				foreach (($match[1] != "" ? explode(",", $match[1]) : []) as $element) {
+					if (!preg_match('~^\s*null\s*$~i', $element) && !$this->isValidValue($field["type"], trim($element))) {
+						return false;
+					}
+				}
+
+				return true;
+			}
+
+			$values = [$where["val"]];
+			if (preg_match('~IN$~', $where["op"])) {
+				// The list as it is searched, e.g. (1,0) or ('t','f').
+				preg_match_all("~" . self::EnumLengthPattern . "|[^,()]+~", process_length($where["val"]), $matches);
+				$values = array_map(function ($value) {
+					return str_replace("''", "'", preg_replace("~^'(.*)'$~s", '\\1', $value));
+				}, $matches[0]);
+			}
+
+			foreach ($values as $value) {
+				if (!$this->isValidValue($field["type"], $value)) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		/**
+		 * Checks whether the array column is compared with an array literal, e.g. {1,5}, not with its text.
+		 */
+		private function isArrayComparison(array $where): bool
+		{
+			return preg_match('~^([<>]=?|!?=)$~', $where["op"]) && preg_match('~^\s*\{.*\}\s*$~s', $where["val"]);
+		}
+
+		/**
+		 * Checks whether the value is accepted by the column type, so that comparing them does not fail.
+		 */
+		private function isValidValue(string $type, string $value): bool
+		{
+			if (preg_match('~^' . int_type() . '$~', $type)) {
+				return (bool) preg_match('~^\s*[-+]?\d+\s*$~', $value);
+			}
+			if (preg_match(number_type(), $type)) {
+				return is_numeric(trim($value));
+			}
+
+			switch ($type) {
+				case "boolean":
+					// Including unique prefixes, e.g. t, yes, off.
+					return (bool) preg_match('~^\s*(t(r(ue?)?)?|f(a(l(se?)?)?)?|y(es?)?|no?|on|off?|1|0)\s*$~i', $value);
+				case "uuid":
+					// Optionally in braces and with a hyphen after any group of four digits.
+					return (bool) preg_match('~^(\{[0-9a-f]{4}(-?[0-9a-f]{4}){7}\}|[0-9a-f]{4}(-?[0-9a-f]{4}){7})$~i', $value);
+				case "inet":
+				case "cidr":
+					// IPv4 or IPv6 address with an optional netmask. Abbreviated cidr like 10.1/16 is not supported.
+					if (!preg_match('~^([^/]+)(/(\d+))?$~', $value, $match) || !filter_var($match[1], FILTER_VALIDATE_IP)) {
+						return false;
+					}
+					$address = inet_pton($match[1]);
+					$length = strlen($address) * 8;
+					$mask = isset($match[3]) ? (int) $match[3] : $length;
+					if ($mask > $length) {
+						return false;
+					}
+
+					// Bits to the right of the netmask must not be set in cidr.
+					$bits = implode("", array_map(function ($byte) {
+						return str_pad(decbin(ord($byte)), 8, "0", STR_PAD_LEFT);
+					}, str_split($address)));
+
+					return $type != "cidr" || strpos(substr($bits, $mask), "1") === false;
+				case "macaddr":
+					// E.g. 08:00:2b:01:02:03, 08-00-2b-01-02-03, 08002b:010203, 0800.2b01.0203, 08002b010203.
+					return (bool) preg_match('~^\s*([0-9a-f]{1,2}(:[0-9a-f]{1,2}){5}|[0-9a-f]{1,2}(-[0-9a-f]{1,2}){5}|[0-9a-f]{6}[:-][0-9a-f]{6}|' .
+						'[0-9a-f]{4}([.-])[0-9a-f]{4}\4[0-9a-f]{4}|[0-9a-f]{12})\s*$~i', $value);
+				case "macaddr8":
+					// 6 or 8 bytes, optionally with the same separator after any byte, e.g. 08:00:2b:01:02:03:04:05 or 0800.2b01.0203.0405.
+					$separators = preg_replace('~[\s0-9a-f]~i', '', $value);
+
+					return preg_match('~^\s*[0-9a-f]{2}([:.-]?[0-9a-f]{2})+\s*$~i', $value)
+						&& strlen(count_chars($separators, 3)) <= 1
+						&& in_array(strlen(preg_replace('~[^0-9a-f]~i', '', $value)), [12, 16]);
+				case "time":
+				case "time without time zone":
+				case "time with time zone":
+					// E.g. 12:30, 12:30:45.5, 123045, 24:00, 1:30 PM, optionally with a numeric time zone. Zone names are not supported.
+					return (bool) preg_match('~^\s*(([01]?\d|2[0-3]):[0-5]\d(:[0-5]\d(\.\d+)?)?|([01]\d|2[0-3])[0-5]\d([0-5]\d(\.\d+)?)?|24:00(:00)?|' .
+						'(0?[1-9]|1[0-2]):[0-5]\d(:[0-5]\d(\.\d+)?)?\s*[ap]m)(\s*(z|utc|[+-](0?\d|1[0-5])(:?[0-5]\d)?))?\s*$~i', $value);
+			}
+
+			return true;
 		}
 
 		public function quoteBinary(string $string): string
@@ -1016,7 +1195,7 @@ ORDER BY a.attnum"
 			$options = ["s" => "STORED", "v" => "VIRTUAL"];
 			$row["generated"] = ($options[$row["attgenerated"]] ?? "");
 			$row["null"] = !$row["attnotnull"];
-			$row["auto_increment"] = $row['attidentity'] || preg_match('~^nextval\(~i', $row["default"])
+			$row["auto_increment"] = preg_match('~^nextval\(~i', $row["default"])
 				|| preg_match('~^unique_rowid\(~', $row["default"]); // CockroachDB
 			$row["privileges"] = ["insert" => 1, "select" => 1, "update" => 1, "where" => 1, "order" => 1];
 			// The s modifier - a multiline default value contains newlines.
@@ -1460,8 +1639,8 @@ ORDER BY ordinal_position");
 		return get_rows('SELECT specific_name AS "SPECIFIC_NAME", routine_name AS "ROUTINE_NAME", routine_type AS "ROUTINE_TYPE", type_udt_name AS "DTD_IDENTIFIER", null AS ROUTINE_COMMENT
 FROM information_schema.routines
 WHERE routine_schema = current_schema()' . (Connection::get()->isCockroachDB() ? '' : "
-AND substring(specific_name, '[0-9]+\$')::oid NOT IN (SELECT objid FROM pg_catalog.pg_depend WHERE classid = 'pg_proc'::regclass AND deptype = 'e')") . '
-ORDER BY SPECIFIC_NAME'); // 'e' - functions created by extensions
+AND substring(specific_name, '[0-9]+\$')::oid NOT IN (SELECT objid FROM pg_catalog.pg_depend WHERE classid = 'pg_proc'::regclass AND deptype IN ('e', 'i'))") . '
+ORDER BY SPECIFIC_NAME'); // 'e' - functions created by extensions, 'i' - constructors created by CREATE TYPE AS RANGE
 	}
 
 	function routine_languages(): array
@@ -1513,12 +1692,22 @@ ORDER BY SPECIFIC_NAME'); // 'e' - functions created by extensions
 	 */
 	function types(bool $extensions = false): array
 	{
-		return get_key_vals("SELECT oid, typname
-FROM pg_type
-WHERE typnamespace = " . Driver::get()->getNsOidSql() . "
-AND typtype IN ('b','d','e')
-AND typelem = 0" . ($extensions || Connection::get()->isCockroachDB() ? '' : "
-AND oid NOT IN (SELECT objid FROM pg_catalog.pg_depend WHERE classid = 'pg_type'::regclass AND deptype = 'e')") // 'e' - types created by extensions
+		$cockroach = Connection::get()->isCockroachDB();
+		// 'b' - base, 'c' - composite, 'd' - domain, 'e' - enum, 'r' - range; 'p' pseudo-types and 'm' multiranges are not created on their own
+		$kinds = ($cockroach ? "'e'" : "'b','c','d','e'" . (Connection::get()->isMinVersion("9.2") ? ",'r'" : ""));
+
+		return get_key_vals("SELECT t.oid, t.typname
+FROM pg_type t
+WHERE t.typnamespace = " . Driver::get()->getNsOidSql() . "
+AND t.typtype IN ($kinds)" . ($cockroach ? "
+AND t.typelem = 0" : "
+AND (t.typrelid = 0 OR (SELECT c.relkind FROM pg_class c WHERE c.oid = t.typrelid) = 'c')" // pg_type contains also the row type of every table, view and sequence
+			. "
+AND NOT EXISTS (SELECT 1 FROM pg_type e WHERE e.typarray = t.oid)" // types created automatically for arrays
+			. ($extensions ? '' : "
+AND t.oid NOT IN (SELECT objid FROM pg_catalog.pg_depend WHERE classid = 'pg_type'::regclass AND deptype = 'e')")) // 'e' - types created by extensions
+			. "
+ORDER BY t.typname"
 		);
 	}
 
@@ -1530,7 +1719,94 @@ AND oid NOT IN (SELECT objid FROM pg_catalog.pg_depend WHERE classid = 'pg_type'
 			return "";
 		}
 
-		return "'" . implode("', '", array_map('addslashes', $enums)) . "'";
+		// Escaped the same way as the length of MySQL enum, enum_input() unescapes doubled quotes and backslashes.
+		$values = [];
+		foreach ($enums as $enum) {
+			$values[] = "'" . str_replace("'", "''", addcslashes($enum, "\\")) . "'";
+		}
+
+		return implode(", ", $values);
+	}
+
+	/**
+	 * Returns SQL expression returning the name of a collation if it's not the one defined by the type.
+	 *
+	 * @param string $oid SQL expression with the collation OID.
+	 */
+	function collation_name(string $oid): string
+	{
+		return (Connection::get()->isMinVersion("9.1") ? "(SELECT collname FROM pg_collation WHERE oid = $oid AND collname != 'default')" : "NULL");
+	}
+
+	/**
+	 * Returns definition of user defined type.
+	 *
+	 * @return array{kind: string, definition: string} The kind is 'b' - base, 'c' - composite, 'd' - domain, 'e' - enum, 'r' - range.
+	 *     The definition is the part of CREATE TYPE or CREATE DOMAIN after the name, empty if the type can't be expressed.
+	 */
+	function type_definition(int $id): array
+	{
+		$type = first(get_rows("SELECT typtype, typisdefined::int AS defined, typrelid FROM pg_type WHERE oid = $id"));
+		$return = ["kind" => ($type ? $type["typtype"] : ""), "definition" => ""];
+		if (!$type || !$type["defined"]) { // shell type created by CREATE TYPE without options
+			return $return;
+		}
+
+		switch ($return["kind"]) {
+			case 'e':
+				$values = get_vals("SELECT enumlabel FROM pg_enum WHERE enumtypid = $id ORDER BY enumsortorder");
+				$return["definition"] = "AS ENUM (" . implode(", ", array_map('AdminNeo\q', $values)) . ")";
+				break;
+
+			case 'c':
+				$columns = [];
+				$rows = get_rows("SELECT attname, format_type(atttypid, atttypmod) AS full_type, " . collation_name("attcollation") . " AS collation
+FROM pg_attribute
+WHERE attrelid = $type[typrelid] AND attnum > 0 AND NOT attisdropped
+ORDER BY attnum");
+				foreach ($rows as $row) {
+					$columns[] = idf_escape($row["attname"]) . " $row[full_type]" . ($row["collation"] ? " COLLATE " . idf_escape($row["collation"]) : "");
+				}
+				$return["definition"] = "AS (\n\t" . implode(",\n\t", $columns) . "\n)";
+				break;
+
+			case 'd':
+				$domain = first(get_rows("SELECT format_type(typbasetype, typtypmod) AS base, typnotnull::int AS notnull, typdefault, " . collation_name("typcollation") . " AS collation
+FROM pg_type
+WHERE oid = $id"));
+				$return["definition"] = "AS $domain[base]"
+					. ($domain["collation"] ? " COLLATE " . idf_escape($domain["collation"]) : "")
+					. ($domain["typdefault"] != "" ? " DEFAULT $domain[typdefault]" : "") // typdefault is an SQL expression
+					. ($domain["notnull"] ? " NOT NULL" : "");
+
+				// 'n' - NOT NULL constraint created since PostgreSQL 17, it's already covered by typnotnull
+				$rows = get_rows("SELECT conname, pg_get_constraintdef(oid) AS definition FROM pg_constraint WHERE contypid = $id AND contype != 'n' ORDER BY conname");
+				foreach ($rows as $row) {
+					$return["definition"] .= " CONSTRAINT " . idf_escape($row["conname"]) . " $row[definition]"; // definition is CHECK (...)
+				}
+				break;
+
+			case 'r':
+				$range = first(get_rows("SELECT format_type(rngsubtype, NULL) AS subtype,
+	(SELECT opcname FROM pg_opclass WHERE oid = rngsubopc) AS subtype_opclass,
+	" . collation_name("rngcollation") . " AS collation,
+	NULLIF(rngcanonical, 0)::regproc::text AS canonical,
+	NULLIF(rngsubdiff, 0)::regproc::text AS subtype_diff" . (Connection::get()->isMinVersion("14") ? ",
+	(SELECT typname FROM pg_type WHERE oid = rngmultitypid) AS multirange_type_name" : "") . "
+FROM pg_range
+WHERE rngtypid = $id"));
+				$options = [];
+				foreach (["subtype" => 0, "subtype_opclass" => 1, "collation" => 1, "canonical" => 0, "subtype_diff" => 0, "multirange_type_name" => 1] as $key => $escape) {
+					if (($range[$key] ?? "") != "") {
+						$options[] = strtoupper($key) . " = " . ($escape ? idf_escape($range[$key]) : $range[$key]);
+					}
+				}
+				$return["definition"] = "AS RANGE (" . implode(", ", $options) . ")";
+				break;
+		}
+
+		// TODO 'b' - base types, they are created only by a superuser so they are usually a part of an extension
+		return $return;
 	}
 
 	function schemas(): array
@@ -1540,7 +1816,7 @@ AND oid NOT IN (SELECT objid FROM pg_catalog.pg_depend WHERE classid = 'pg_type'
 
 	function get_schema(): string
 	{
-		return Connection::get()->getValue("SELECT current_schema()");
+		return (string)Connection::get()->getValue("SELECT current_schema()"); // NULL if no schema in search_path exists or is visible.
 	}
 
 	function set_schema(string $schema, ?Connection $connection = null): bool
@@ -1777,7 +2053,7 @@ AND oid NOT IN (SELECT objid FROM pg_catalog.pg_depend WHERE classid = 'pg_type'
 		}
 
 		return preg_match(
-			'~^(check|columns|comment|copy|database|drop_col|dump|descidx|fast_status|indexes|kill|partial_indexes|routine|routine_fields|scheme|sequence|sql|table|trigger|type|variables|view'
+			'~^(check|columns|comment|copy|database|drop_col|dump|descidx|fast_status|indexes|kill|partial_indexes|routine|routine_fields|scheme|sequence|sql|table|transaction_ddl|trigger|type|variables|view'
 			. (Driver::get()->supportsStats() ? '|runtime_statistics' : '')
 			. ')$~',
 			$feature

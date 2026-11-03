@@ -387,7 +387,7 @@ class Admin extends Origin
 
 		echo "<thead><tr>";
 		echo "<th>", lang('Column'), "</th>";
-		echo "<td>", lang('Type'), "</td>";
+		echo "<td>", lang('Type'), " <span class='note'>[" . lang('default value') . "]</span></td>";
 		echo "<td>", lang('Collation'), "</td>";
 		if (support("comment")) {
 			echo "<td>", lang('Comment'), "</td>";
@@ -415,11 +415,13 @@ class Admin extends Origin
 				echo " <i>" . lang('Auto Increment') . "</i>";
 			}
 
-			$default = h($field["default"]);
 			if (isset($field["default"])) {
-				echo " <span title='" . lang('Default value') . "'>[<b>";
-				echo $field["generated"] ? "<code class='jush-" . DIALECT . "'>$default</code>" : $default;
-				echo "</b>]</span>";
+				if ($field["generated"]) {
+					echo " <i>AS</i> <code class='jush-" . DIALECT . "'>" . h(parenthesize_expression($field["default"])) . "</code>";
+					echo " <i>" . h($field["generated"]) . "</i>";
+				} else {
+					echo " [<strong>" . h($field["default"]) . "</strong>]";
+				}
 			}
 
 			echo "</td>";
@@ -508,7 +510,7 @@ class Admin extends Origin
 		echo "<table>\n";
 		echo "<thead><tr>";
 		echo "<th>", lang('Type'), "</th>";
-		echo "<td>", lang('Columns'), " (", lang('length'), ")</td>";
+		echo "<td>", lang('Columns'), " <span class='note'>(", lang('length'), ")</span></td>";
 		if ($partial) {
 			echo "<td>", lang('Condition'), "</td>";
 		}
@@ -678,7 +680,8 @@ class Admin extends Origin
 	public function printSelectionLimit(int $limit): void
 	{
 		echo "<fieldset><legend>" . lang('Limit') . "</legend><div class='fieldset-content'>";
-		echo "<input type='number' name='limit' class='input size' value='$limit'>";
+		// 0 is printed as an empty value, both mean no limit.
+		echo "<input type='number' name='limit' class='input size' value='" . h($limit ?: "") . "'>";
 		echo script("qsl('input').oninput = selectFieldChange;", "");
 		echo "</div></fieldset>\n";
 	}
@@ -773,17 +776,37 @@ class Admin extends Origin
 			$val = $where["val"];
 
 			if ("$col$val" != "" && in_array($op, $this->getOperators())) {
+				if ($op == "SQL" && (!$_POST || !verify_token())) {
+					Connection::get()->setUntrusted(true); // The condition can be sent by GET which is not protected by the CSRF token.
+				}
+
 				$conditions = [];
 
-				foreach (($col != "" ? [$col => $fields[$col]] : $fields) as $name => $field) {
+				// Numeric value, or a list of them for IN, e.g. -1.5,2
+				$integer = '-?\d+';
+				$number = '-?(\d+(\.\d*)?|\.\d+)';
+				$isList = preg_match('~IN$~', $op);
+				$integerPattern = "~^$integer" . ($isList ? "(,$integer)*" : "") . "$~";
+				$numberPattern = "~^$number" . ($isList ? "(,$number)*" : "") . "$~";
+
+				// Date with an optional time and time zone, e.g. 2026-01-15 12:30:45+02
+				$datePattern = '~^(\d+)-(\d+)-(\d+)([ T]([01]?\d|2[0-3]):[0-5]\d(:[0-5]\d(\.\d+)?)?(\s*(z|utc|[+-](0?\d|1[0-5])(:?[0-5]\d)?))?)?$~i';
+
+				foreach (($col != "" ? [$col => $fields[$col] ?? []] : $fields) as $name => $field) {
 					$prefix = "";
 					$cond = " $op";
+					// Arrays are not numbers even if their elements are, e.g. integer[]. PostgreSQL compares bit columns as text.
+					$isNumber = preg_match('~' . number_type() . (DIALECT == "pgsql" ? "" : '|bit') . '~', $field["type"]) && !preg_match('~\[~', $field["full_type"]);
 
 					$oidColumn = DIALECT == "pgsql" && $op == "=" && $field["type"] == "oid";
 					if ($oidColumn) {
 						$cond .= " " . $this->admin->processFieldInput($field, $val) . "::regproc";
 					} elseif (preg_match('~IN$~', $op)) {
 						$in = process_length($val);
+						// Compare non-numeric columns with strings, e.g. text = integer is an error in PostgreSQL. So is money = integer.
+						if ((!$isNumber || (DIALECT == "pgsql" && $field["type"] == "money")) && preg_match('~^\([-+.\d,]+\)$~', $in)) {
+							$in = "(" . implode(",", array_map('AdminNeo\q', explode(",", substr($in, 1, -1)))) . ")";
+						}
 						$cond .= " " . ($in != "" ? $in : "(NULL)");
 					} elseif ($op == "SQL") {
 						$cond = " $val"; // SQL injection
@@ -799,13 +822,16 @@ class Admin extends Origin
 					if ($col != "" || (
 						// find anywhere
 						isset($field["privileges"]["where"])
-						&& (preg_match('~^[-\d.' . (preg_match('~IN$~', $op) ? ',' : '') . ']+$~', $val) || !preg_match('~' . number_type() . '|bit~', $field["type"]))
-						&& (!preg_match("~[\x80-\xFF]~", $val) || preg_match('~char|text|enum|set~', $field["type"]))
-						&& (!preg_match('~date|timestamp~', $field["type"]) || preg_match('~^\d+-\d+-\d+~', $val))
+						&& (preg_match(preg_match('~^' . int_type() . '$~', $field["type"]) ? $integerPattern : $numberPattern, $val) || !$isNumber)
+						&& (!preg_match("~[\x80-\xFF]~", $val) || preg_match('~char|text|enum|set|keyword~', $field["type"])) // keyword - Elasticsearch
+						&& (!preg_match('~date|timestamp~', $field["type"]) || (preg_match($datePattern, $val, $match) && checkdate((int) $match[2], (int) $match[3], (int) $match[1])))
+						&& Driver::get()->isSearchable($where, $field)
 						// Elasticsearch needs boolean value properly formatted.
 						&& (!preg_match('~^elastic~', DRIVER) || $field["type"] != "boolean" || preg_match('~true|false~', $val))
 						// Elasticsearch can use regexp only on text and keyword fields.
 						&& (!preg_match('~^elastic~', DRIVER) || strpos($op, "regexp") === false || preg_match('~text|keyword~', $field["type"]))
+						// Elasticsearch has integer types not covered by number_type().
+						&& (!preg_match('~^elastic~', DRIVER) || !preg_match('~^((unsigned_)?long|short|byte)$~', $field["type"]) || preg_match('~^-?\d+$~', $val))
 					)) {
 						if ($oidColumn) {
 							$conditions[] = $prefix . idf_escape($name) . $cond;
@@ -924,10 +950,6 @@ class Admin extends Origin
 			return $value; // TODO SQL injection
 		}
 
-		if (isset($field["full_type"])) {
-			$this->admin->detectJson($field["full_type"], $value, false);
-		}
-
 		$name = $field["field"];
 		$return = q($value);
 		if (preg_match('~^(now|getdate|uuid)$~', $function)) {
@@ -949,14 +971,9 @@ class Admin extends Origin
 		return unconvert_field($field, $return);
 	}
 
-	/**
-	 * Returns export format options.
-	 *
-	 * @return string[] Empty to disable export.
-	 */
 	public function getDumpFormats(): array
 	{
-		return (support("dump") ? ['sql' => 'SQL'] : []) + ['csv' => 'CSV,', 'csv;' => 'CSV;', 'tsv' => 'TSV'];
+		return (support("dump") ? ['sql' => 'SQL'] : []) + parent::getDumpFormats();
 	}
 
 	/**
@@ -1010,10 +1027,20 @@ class Admin extends Origin
 			// Applies to all formats including the ones added by plugins.
 			header("Content-Type: application/x-gzip");
 
-			ob_start(function (string $string): string {
-				// ob_start() callback receives an optional parameter $phase but gzencode() accepts optional parameter $level
-				return gzencode($string);
-			}, 1e6);
+			if (function_exists('deflate_init')) {
+				// A single gzip stream is readable also by decoders that read only the first member, e.g. gzdecode().
+				$context = deflate_init(ZLIB_ENCODING_GZIP);
+
+				ob_start(function (string $string, int $phase) use ($context): string {
+					return deflate_add($context, $string, ($phase & PHP_OUTPUT_HANDLER_END ? ZLIB_FINISH : ZLIB_NO_FLUSH));
+				}, 1e6);
+			} else {
+				// Each chunk is compressed into a separate gzip member, PHP < 7.0.
+				ob_start(function (string $string): string {
+					// ob_start() callback receives an optional parameter $phase but gzencode() accepts optional parameter $level
+					return gzencode($string);
+				}, 1e6);
+			}
 		}
 	}
 

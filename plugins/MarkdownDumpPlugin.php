@@ -81,14 +81,17 @@ class MarkdownDumpPlugin extends Plugin
 		}
 
 		echo "## " . lang('User types') . "\n\n";
-		echo "| " . lang('Name') . " | " . lang('Values') . " |\n";
-		echo "| --- | --- |\n";
 
 		foreach ($types as $id => $type) {
-			echo "| " . $this->escape($type) . " | " . $this->escape(type_values($id)) . " |\n";
-		}
+			echo "### " . lang('Type') . " `$type`\n\n";
 
-		echo "\n";
+			// The definition is not read for base types and shell types have none.
+			$definition = type_definition($id);
+			if ($definition["definition"]) {
+				$object = ($definition["kind"] == 'd' ? "DOMAIN" : "TYPE");
+				$this->printCode("CREATE $object " . idf_escape($type) . " $definition[definition]");
+			}
+		}
 	}
 
 	private function dumpRoutines(): void
@@ -169,6 +172,10 @@ class MarkdownDumpPlugin extends Plugin
 			$this->printCode(view($table)["select"]);
 		}
 
+		if (!$isView && Driver::get()->getPartitionBy() && str_contains($tableStatus["Create_options"] ?? "", "partitioned")) {
+			$this->printPartitions(Driver::get()->getPartitionsInfo($table));
+		}
+
 		if (support("indexes") && Driver::get()->supportsIndex($tableStatus)) {
 			$this->printIndexes(indexes($table), $tableStatus);
 		}
@@ -238,7 +245,8 @@ class MarkdownDumpPlugin extends Plugin
 	}
 
 	/**
-	 * Prints table heading together with the heading of its group if not printed yet.
+	 * Prints table heading together with the heading of its group if not printed yet. The group headings are printed
+	 * only under the database heading.
 	 */
 	private function printTableHeading(string $table, bool $isView): void
 	{
@@ -246,12 +254,14 @@ class MarkdownDumpPlugin extends Plugin
 			return;
 		}
 
-		if ($isView && !$this->viewsHeading) {
-			echo "## " . lang('Views') . "\n\n";
-			$this->viewsHeading = true;
-		} elseif (!$isView && !$this->tablesHeading) {
-			echo "## " . lang('Tables') . "\n\n";
-			$this->tablesHeading = true;
+		if ($_POST["db_style"]) {
+			if ($isView && !$this->viewsHeading) {
+				echo "## " . lang('Views') . "\n\n";
+				$this->viewsHeading = true;
+			} elseif (!$isView && !$this->tablesHeading) {
+				echo "## " . lang('Tables') . "\n\n";
+				$this->tablesHeading = true;
+			}
 		}
 
 		echo "### " . ($isView ? lang('View') : lang('Table')) . " `$table`\n\n";
@@ -265,7 +275,7 @@ class MarkdownDumpPlugin extends Plugin
 	{
 		$comments = support("comment");
 
-		$header = [lang('Column'), lang('Type'), lang('Collation')];
+		$header = [lang('Column'), lang('Type') . " [" . lang('default value') . "]", lang('Collation')];
 		if ($comments) {
 			$header[] = lang('Comment');
 		}
@@ -280,8 +290,11 @@ class MarkdownDumpPlugin extends Plugin
 				$type .= " *" . lang('Auto Increment') . "*";
 			}
 			if (isset($field["default"])) {
-				$default = ($field["generated"] ? $this->code($field["default"]) : $this->bold($field["default"]));
-				$type .= " [$default]";
+				if ($field["generated"]) {
+					$type .= " *AS* " . $this->code(parenthesize_expression($field["default"])) . " *" . $this->escape($field["generated"]) . "*";
+				} else {
+					$type .= " [" . $this->bold($field["default"]) . "]";
+				}
 			}
 
 			$cells = [$this->escape($field["field"]), $type, $this->escape($field["collation"])];
@@ -293,6 +306,36 @@ class MarkdownDumpPlugin extends Plugin
 		}
 
 		echo "\n";
+	}
+
+	/**
+	 * @param array $partitionInfo Result of Driver::getPartitionsInfo().
+	 */
+	private function printPartitions(array $partitionInfo): void
+	{
+		if (!$partitionInfo) {
+			return;
+		}
+
+		echo "#### " . lang('Partitions') . "\n\n";
+
+		$showList = isset($partitionInfo["partition_names"]);
+
+		echo $this->code("BY $partitionInfo[partition_by] ($partitionInfo[partition])");
+		if (!$showList && isset($partitionInfo["partitions"])) {
+			echo " " . lang('Partitions') . ": " . $this->escape($partitionInfo["partitions"]);
+		}
+		echo "\n\n";
+
+		if ($showList) {
+			$this->printTableHeader([lang('Partition'), lang('Values')]);
+
+			foreach ($partitionInfo["partition_names"] as $key => $name) {
+				echo "| " . $this->escape($name) . " | " . $this->escape($partitionInfo["partition_values"][$key]) . " |\n";
+			}
+
+			echo "\n";
+		}
 	}
 
 	/**

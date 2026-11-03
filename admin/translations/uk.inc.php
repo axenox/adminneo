@@ -53,6 +53,7 @@ return [
 	'Session support must be enabled.' => 'Сесії повинні бути дозволені.',
 	'Session expired, please login again.' => 'Сесія закінчилась, будь ласка, увійдіть в систему знову.',
 	'%s version: %s through PHP extension %s' => 'Версія %s: %s з PHP-розширенням %s',
+	'%s requires at least %s.' => '%s вимагає принаймні %s.', // e.g. 'AdminNeo requires at least Elasticsearch 7.' // by Claude Fable 5.1
 
 	// Settings
 	'Language' => 'Мова',
@@ -156,6 +157,7 @@ return [
 	'save' => 'зберегти',
 	'Format' => 'Формат',
 	'Data' => 'Дані',
+	'Copy as <span>%s</span>' => 'Копіювати як <span>%s</span>', // by Claude Fable 5.1
 
 	// Databases
 	'Database' => 'База даних',
@@ -237,6 +239,7 @@ return [
 	'Options' => 'Опції',
 	'Comment' => 'Коментарі',
 	'Default value' => 'Значення за замовчуванням',
+	'default value' => 'значення за замовчуванням',
 	'Drop' => 'Видалити',
 	'Drop %s?' => 'Вилучити %s?',
 	'Are you sure?' => 'Ви впевнені?',
@@ -339,6 +342,7 @@ return [
 	'Create type' => 'Створити тип',
 	'Type has been dropped.' => 'Тип було видалено.',
 	'Type has been created.' => 'Тип було створено.',
+	'Type has been altered.' => 'Тип було змінено.', // by Claude Opus 5
 	'Alter type' => 'Змінити тип',
 
 	// Triggers
@@ -428,6 +432,7 @@ return [
 	'Lists' => 'Списки',
 	'Network' => 'Мережа',
 	'Geometry' => 'Геометрія',
+	'Ranges' => 'Діапазони', // by Claude Fable 5.1
 	'Relations' => 'Зв\'язки',
 
 	// Editor - data values
@@ -471,4 +476,5 @@ return [
 	'Data table' => 'Таблиця даних', // by Claude Fable 5.1
 	'Edit form' => 'Форма редагування', // by Claude Fable 5.1
 	'Ask %s' => 'Запитати %s', // by Claude Fable 5.1
+	'Views' => 'Вигляди', // by Claude Opus 5.5
 ];

@@ -45,24 +45,56 @@ if ($comment != "") {
 	echo "<p class='keep-lines'>", lang('Comment'), ": ", Admin::get()->formatComment($comment), "</p>\n";
 }
 
+$copyForm = "";
+$copyLink = "";
 if (!is_view($table_status)) {
-	$editLink = '<p class="links"><a href="' . h(ME) . 'create=' . urlencode($TABLE) . '">' . icon("edit") . lang('Alter table') . "</a>\n";
-	$copyForm = "";
+	$editLink = '<a href="' . h(ME) . 'create=' . urlencode($TABLE) . '">' . icon("edit") . lang('Alter table') . "</a>";
 	if (support("copy")) {
 		$target = (support("scheme") ? get_schema() : DB);
 		$copyForm = '<form id="copy-table-form" action="' . h(ME) . '" method="post">' . input_hidden("tables[]", $TABLE) . input_hidden("target", $target) . input_token() . '<input type="hidden" name="copy" value="1"></form>';
-		$editLink .= '<a id="copy-table-link" href="">' . icon("table-add") . lang('Copy') . "</a>" . script("gid('copy-table-link').onclick = function () { gid('copy-table-form').submit(); return false; };", "\n");
+		$copyLink = '<a id="copy-table-link" href="">' . icon("table-add") . lang('Copy') . "</a>" . script("gid('copy-table-link').onclick = function () { gid('copy-table-form').submit(); return false; };", "\n");
 	}
 } elseif (support("view")) {
-	$editLink = '<p class="links"><a href="' . h(ME) . 'view=' . urlencode($TABLE) . '">' . icon("edit") . lang('Alter view') . "</a>\n";
-	$copyForm = "";
+	$editLink = '<a href="' . h(ME) . 'view=' . urlencode($TABLE) . '">' . icon("edit") . lang('Alter view') . "</a>";
 } else {
 	$editLink = "";
-	$copyForm = "";
 }
 
-if ($info || $fields || $comment != "") {
-	echo $copyForm, $editLink;
+if ($editLink && ($info || $fields || $comment != "")) {
+	echo $copyForm;
+	echo "<p id='table-links' class='links'>";
+	echo $editLink, $copyLink;
+
+	$structure_formats = Admin::get()->getStructureDumpFormats();
+	if ($structure_formats) {
+		// Use the last used format if it is still supported, the first one otherwise.
+		$copy_format = Admin::get()->getSettings()->getParameter("copyFormat");
+		if (!isset($structure_formats[$copy_format])) {
+			$copy_format = key($structure_formats);
+		}
+
+		echo "<span>";
+		echo "<a id='copy-table-structure' href='" . h(ME) . "dump=" . urlencode($TABLE) . "&format=" . urlencode($copy_format) . "' class='jsonly'>" .
+			icon("copy") . lang('Copy as <span>%s</span>', h($structure_formats[$copy_format])) . "</a>";
+
+		$select_format = count($structure_formats) > 1;
+		if ($select_format) {
+			echo "<a href='#format-list' class='toggle jsonly' title='" . lang('Format') . "'>" . icon_chevron_down() . "</a>";
+		}
+		echo "</span></p>\n";
+
+		if ($select_format) {
+			echo "<ul id='format-list' class='select-menu hidden'>";
+			foreach ($structure_formats as $format => $name) {
+				echo "<li><a href='" . h(ME) . "dump=" . urlencode($TABLE) . "&format=" . urlencode($format) . "'>" . h($name) . "</a></li>";
+			}
+			echo "</ul>";
+			echo script("initToggles(gid('table-links'));");
+		}
+		echo script("initCopyTableStructure();");
+	} else {
+		echo "</p>\n";
+	}
 }
 
 $parent_tables = Driver::get()->getParentTables($TABLE);
@@ -78,8 +110,8 @@ if (Driver::get()->getPartitionBy() && str_contains($table_status["Create_option
 		echo "<h2 id='partitions'>" . lang('Partitions') . "</h2>\n";
 		Admin::get()->printTablePartitions($partitions_info);
 
-		if (DIALECT != "pgsql") {
-			echo $editLink;
+		if (DIALECT != "pgsql" && $editLink) {
+			echo "<p class='links'>$editLink</p>\n";
 		}
 	}
 }
@@ -96,7 +128,9 @@ if (support("indexes") && Driver::get()->supportsIndex($table_status)) {
 	if ($indexes) {
 		Admin::get()->printTableIndexes($indexes, $table_status);
 	}
-	echo '<p class="links"><a href="' . h(ME) . 'indexes=' . urlencode($TABLE) . '">' . icon("edit") . lang('Alter indexes') . "</a>\n";
+	if (Driver::get()->supportsAlterIndex($table_status)) {
+		echo '<p class="links"><a href="' . h(ME) . 'indexes=' . urlencode($TABLE) . '">' . icon("edit") . lang('Alter indexes') . "</a>\n";
+	}
 }
 
 if (!is_view($table_status)) {

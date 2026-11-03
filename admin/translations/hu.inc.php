@@ -49,6 +49,7 @@ return [
 	'Session support must be enabled.' => 'A munkameneteknek (session) engedélyezve kell lennie.',
 	'Session expired, please login again.' => 'Munkamenet lejárt, jelentkezz be újra.',
 	'%s version: %s through PHP extension %s' => '%s verzió: %s, PHP: %s',
+	'%s requires at least %s.' => 'A(z) %s legalább %s verziót igényel.', // e.g. 'AdminNeo requires at least Elasticsearch 7.' // by Claude Fable 5.1
 
 	// Settings
 	'Language' => 'Nyelv',
@@ -136,6 +137,7 @@ return [
 	'save' => 'ment',
 	'Format' => 'Formátum',
 	'Data' => 'Adat',
+	'Copy as <span>%s</span>' => 'Másolás <span>%s</span> formátumban', // by Claude Fable 5.1
 
 	// Databases
 	'Database' => 'Adatbázis',
@@ -217,6 +219,7 @@ return [
 	'Options' => 'Opciók',
 	'Comment' => 'Megjegyzés',
 	'Default value' => 'Alapértelmezett érték', // by Claude Fable 5.1
+	'default value' => 'alapértelmezett érték', // by Claude Opus 5.5
 	'Drop' => 'Eldob',
 	'Drop %s?' => 'Eldobja: %s?', // by Claude Fable 5.1
 	'Are you sure?' => 'Biztos benne?',
@@ -315,6 +318,7 @@ return [
 	'Create type' => 'Típus létrehozása',
 	'Type has been dropped.' => 'Típus eldobva.',
 	'Type has been created.' => 'Típus létrehozva.',
+	'Type has been altered.' => 'Típus módosult.', // by Claude Opus 5
 	'Alter type' => 'Típus módosítása',
 
 	// Triggers
@@ -392,6 +396,7 @@ return [
 	'Lists' => 'Lista',
 	'Network' => 'Hálózat',
 	'Geometry' => 'Geometria',
+	'Ranges' => 'Tartományok', // by Claude Fable 5.1
 	'Relations' => 'Reláció',
 
 	// Editor - data values
@@ -435,4 +440,5 @@ return [
 	'Data table' => 'Adattábla', // by Claude Fable 5.1
 	'Edit form' => 'Szerkesztő űrlap', // by Claude Fable 5.1
 	'Ask %s' => '%s megkérdezése', // by Claude Fable 5.1
+	'Views' => 'Nézetek', // by Claude Opus 5.5
 ];

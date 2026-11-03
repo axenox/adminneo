@@ -129,7 +129,16 @@ function put_translations(): string
 
 	$cases = "";
 	$blobs = "";
+
 	$plurals_map = [];
+	foreach (include __DIR__ . "/../admin/translations/en.inc.php" as $key => $val) {
+		if (is_array($val)) {
+			$plurals_map[$key] = $lang_ids[$key];
+		}
+	}
+
+	// Other languages are compressed against English, it saves 5% of their size in AdminNeo and 15% in EditorNeo.
+	$dictionary = get_translations_json("en");
 
 	foreach ($languages as $language) {
 		// Include only selected language and "en" into single language compilation.
@@ -138,34 +147,24 @@ function put_translations(): string
 			continue;
 		}
 
-		// Assign $translations
-		$translations = include __DIR__ . "/../admin/translations/$language.inc.php";
-
-		$translation_ids = array_flip($lang_ids); // default translation
-		foreach ($translations as $key => $val) {
-			if ($val !== null) {
-				$translation_ids[$lang_ids[$key]] = $val;
-
-				if ($language == "en" && is_array($val)) {
-					$plurals_map[$key] = $lang_ids[$key];
-				}
-			}
-		}
-
-		$blob = compress_string(json_encode($translation_ids, JSON_UNESCAPED_UNICODE));
+		$blob = compress_string(get_translations_json($language), $language != "en" ? $dictionary : "");
 		$blobs .= "$language:$blob";
 
-		$cases .= "case '$language': \$compressed = '" . protect_blob($blob) . "'; break;";
+		$cases .= "case '$language': return '" . protect_blob($blob) . "';";
 	}
 
 	// Compute the version from the real data, the placeholders in $cases are the same for any content.
 	$translations_version = crc32($blobs);
 
 	return '
-		function get_translations($lang) {
+		function get_compressed_translations($lang) {
 			switch ($lang) {' . $cases . '}
+		}
 
-			return json_decode(decompress_string($compressed), true);
+		function get_translations($lang) {
+			$dictionary = $lang != "en" ? decompress_string(get_compressed_translations("en")) : "";
+
+			return json_decode(decompress_string(get_compressed_translations($lang), $dictionary), true);
 		}
 
 		function get_plural_translation_id($key) {
@@ -191,6 +190,25 @@ function put_translations(): string
 			$_SESSION["translations"] = $translations;
 		}
 	';
+}
+
+/**
+ * Returns translations of a language indexed by $lang_ids, encoded to JSON.
+ */
+function get_translations_json(string $language): string
+{
+	global $lang_ids;
+
+	$translations = include __DIR__ . "/../admin/translations/$language.inc.php";
+
+	$translation_ids = array_flip($lang_ids); // default translation
+	foreach ($translations as $key => $val) {
+		if ($val !== null) {
+			$translation_ids[$lang_ids[$key]] = $val;
+		}
+	}
+
+	return json_encode($translation_ids, JSON_UNESCAPED_UNICODE);
 }
 
 function get_absolute_path($file_path): string
@@ -645,6 +663,7 @@ $file = preg_replace("~<\\?php\\s*\\?>\n?|\\?>\n?<\\?php~", '', $file);
 
 // PHP 5.6 compatibility.
 $file = downgrade_php($file);
+$php7_operators = find_php7_operators($file);
 
 // Shrink final file.
 $file = phpShrink($file);
@@ -692,6 +711,9 @@ foreach (glob(__DIR__ . "/../plugins/*") as $file_path) {
 	$file = file_get_contents($file_path);
 
 	$file = downgrade_php($file);
+	foreach (find_php7_operators($file) as $snippet) {
+		$php7_operators[] = basename($file_path) . ": $snippet";
+	}
 
 	// Print version.
 	$commit_hash = exec("git rev-list HEAD -1 -- $file_path 2> /dev/null");
@@ -706,4 +728,12 @@ foreach (glob(__DIR__ . "/../plugins/*") as $file_path) {
 
 	$filename = "$output_dir/" . basename($file_path);
 	file_put_contents($filename, $file);
+}
+
+if ($php7_operators) {
+	echo "\n⚠️ PHP 7 operators were left in the compiled code, it can't be parsed in PHP 5:\n";
+	foreach ($php7_operators as $snippet) {
+		echo "  $snippet\n";
+	}
+	exit(1);
 }
