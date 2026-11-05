@@ -1,6 +1,13 @@
 Changelog
 =========
 
+AdminNeo 5.10
+-------------------------
+
+### Fork modifications
+
+- PostgreSQL: Qualify generated object names with the selected schema, including view commands and export data
+
 AdminNeo 5.9 (2026-11-01)
 -------------------------
 

@@ -399,6 +399,9 @@ if (isset($_GET["pgsql"])) {
 
 	class PgSqlDriver extends Driver
 	{
+		/** @var string Schema selected for SQL generated on the primary connection. */
+		private $currentSchema = "";
+
 		protected function __construct(Connection $connection, $admin)
 		{
 			parent::__construct($connection, $admin);
@@ -494,6 +497,22 @@ if (isset($_GET["pgsql"])) {
 
 			$this->systemDatabases = ["template1"];
 			$this->systemSchemas = ["information_schema", "pg_catalog", "pg_toast", "pg_temp_*", "pg_toast_temp_*"];
+		}
+
+		/**
+		 * Returns the selected primary-connection schema, or an empty string before selection.
+		 */
+		public function getCurrentSchema(): string
+		{
+			return $this->currentSchema;
+		}
+
+		/**
+		 * Remembers a successful primary-connection schema selection for SQL qualification.
+		 */
+		public function setCurrentSchema(string $schema): void
+		{
+			$this->currentSchema = $schema;
 		}
 
 		public function getNsOidSql(): string
@@ -1013,9 +1032,14 @@ WHERE inhparent = " . $this->tableOid($table) . " ORDER BY 1");
 		return '"' . str_replace('"', '""', $idf) . '"';
 	}
 
+	/**
+	 * Quotes an object name in the schema selected on the primary connection.
+	 */
 	function table(string $idf): string
 	{
-		return idf_escape($idf);
+		$schema = Driver::get()->getCurrentSchema();
+
+		return ($schema != "" ? idf_escape($schema) . "." : "") . idf_escape($idf);
 	}
 
 	function connect(bool $primary = false, ?string &$error = null): ?Connection
@@ -1347,7 +1371,7 @@ ORDER BY s.ordinal_position";
 		$alter = [];
 		$queries = [];
 		if ($table != "" && $table != $name) {
-			$queries[] = "ALTER TABLE " . table($table) . " RENAME TO " . table($name);
+			$queries[] = "ALTER TABLE " . table($table) . " RENAME TO " . idf_escape($name);
 		}
 		$sequence = "";
 		foreach ($fields as $field) {
@@ -1819,6 +1843,9 @@ WHERE rngtypid = $id"));
 		return (string)Connection::get()->getValue("SELECT current_schema()"); // NULL if no schema in search_path exists or is visible.
 	}
 
+	/**
+	 * Selects a connection's schema and updates SQL qualification only for the primary connection.
+	 */
 	function set_schema(string $schema, ?Connection $connection = null): bool
 	{
 		if (!$connection) {
@@ -1826,6 +1853,9 @@ WHERE rngtypid = $id"));
 		}
 
 		$result = (bool)$connection->query("SET search_path TO " . idf_escape($schema));
+		if ($result && $connection === Connection::get()) {
+			Driver::get()->setCurrentSchema($schema);
+		}
 
 		// TODO get types from current_schemas('t')
 		Driver::get()->setUserTypes(types(true));
