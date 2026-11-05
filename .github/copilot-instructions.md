@@ -48,7 +48,8 @@ This usage context results in a couple of common requirements for the DB adminis
 
 ## Development rules
 
-- Do not compile AdminNeo into a single file - the result is not committed anyway. The compile process does not produce any useful output.
+- Do not compile AdminNeo into a single file - the result is not committed anyway. The compile process does not produce any useful output for debugging.
+- Let AdminNeo generate well-escaped SQL statements: always use `idf_escape()`, `table()`, `schema()` and similar functions when building SQL queries.
 
 ## Documentation
 

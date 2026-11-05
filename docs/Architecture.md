@@ -52,48 +52,20 @@ Common hooks (methods a plugin can override) and their purpose are [described he
 
 ## Database drivers
 
+Database drivers adapt connection handling, metadata access and SQL generation
+to each database system. Shared AdminNeo and EditorNeo features use their
+contracts instead of implementing database-specific logic in each page. See [Database driver contracts](Drivers.md) for more details.
+
 Each driver lives in `admin/drivers/<name>.inc.php`. Drivers:
 1. Register themselves with `Drivers::add(name, label, extensions)`.
 2. Define constants `DRIVER` and `DIALECT` when active (`isset($_GET[$driver_name])`).
-3. Implement a `Connection` subclass and a `Driver` subclass.
-4. The abstract `Driver` class defines the interface; methods like `support($feature)` control which UI features are shown for that driver.
+3. Implement `Connection` and `Driver` subclasses for the class-based API.
+4. Provide separate helper functions in the `AdminNeo` namespace, such as
+   `table()`, `fields()` and `support()`. These are not methods of the base class.
 
-Not all drivers support all features of AdminNeo. Each driver "knows", what features it supports. Below is a list of available keys for the `support($feature)` method.
-
-When adding new features, that potentially make sense for multiple drivers, make sure to add new support keys. 
-
-| Key | Description |
-| --- | --- |
-| `check` | Check table integrity. |
-| `columns` | Create and alter table columns. |
-| `comment` | Read and edit table and column comments. |
-| `copy` | Copy tables between databases or schemas; the implementation helper is `copy_tables()`. |
-| `database` | Create, alter, and drop databases. |
-| `descidx` | Define descending index columns. |
-| `drop_col` | Drop existing columns while editing a table. |
-| `dump` | Export databases, tables, and supported database objects. |
-| `event` | Create and alter scheduled database events. |
-| `fast_status` | Use the driver's fast table-status query. |
-| `indexes` | Create, alter, and drop table indexes. |
-| `kill` | Terminate a running database process. |
-| `partial_indexes` | Define partial or filtered indexes. |
-| `privileges` | View and manage database privileges. |
-| `move_col` | Reorder columns while editing a table. |
-| `procedure` | Create procedures in addition to functions. |
-| `processlist` | View currently running database processes and queries. |
-| `routine` | List and edit stored routines. |
-| `scheme` | Work with database schemas instead of databases as the main namespace. |
-| `sequence` | Create and alter sequences. |
-| `sql` | Execute SQL commands. |
-| `status` | Display database or server status information. |
-| `table` | Create and alter tables, and expose table-specific operations. |
-| `trigger` | Create and alter table triggers. |
-| `type` | Create and alter user-defined types. |
-| `variables` | Display server variables. |
-| `view` | Create and alter views. |
-| `view_trigger` | Create and alter triggers on views. |
-| `runtime_statistics` | Collect actual execution and I/O statistics for read-only SQL statements. |
-| `materializedview` | Support materialized views. |
+The [driver guide](Drivers.md) lists available drivers, their main capabilities
+and the feature keys shared code uses to check support. Database-specific
+behavior and configuration are documented in the linked database guides.
 
 ## Directory structure
 
@@ -125,8 +97,6 @@ The settings route also returns through the main router after rendering instead 
 
 In embedded mode, connection initialization returns after rendering the database list or an invalid database/schema page. It sets `$connection_page_finished` so the source router returns without rendering a second page or footer. In compiled builds the return ends the inlined router directly. Standalone mode keeps its existing process termination.
 
-MS SQL servers using the native SQLSRV extension can set `connectionOptions` in their `config` array. These values are passed to `sqlsrv_connect()` before AdminNeo adds the selected database, UTF-8 character set, non-empty credentials, and first-class `sslEncrypt` or `sslTrustServerCertificate` settings. This supports authentication modes such as `ActiveDirectoryMsi` without changing standalone defaults.
-
 `adminneo-plugins.php` (placed next to the entry point) returns an array of `Plugin` instances.
 
 ### Host error handling
@@ -143,24 +113,16 @@ throws. Core's logger handles native fatal errors at shutdown. See
 [IDE error logging](../../ide/Docs/Development/AdminNeo/SQL_admin_errors.md) for logging levels,
 streaming limitations and test coverage.
 
-## MS SQL column types
-
-Column metadata uses upstream's base type and separate length, for example
-`type = nvarchar` and `length = max`. The fork retains explicit `varchar(max)`,
-`nvarchar(max)`, and `varbinary(max)` dropdown entries. The type editor maps canonical
-metadata to these entries for display, and SQL generation maps an explicit entry
-back to its base type and `max` length. This keeps metadata consumers compatible
-with upstream and prevents a stale length input from generating duplicate lengths.
-
 ## Runtime statistics
 
 The SQL command page offers an unchecked **Collect runtime statistics** option for supported
 connections. It is restricted to statements beginning with `SELECT`; `WITH` is deliberately not
-accepted because it can conceal a data-modifying CTE. PostgreSQL, MySQL 8.0.18+ and MariaDB 10.1+ run an
-instrumented copy (`EXPLAIN ANALYZE`/`ANALYZE`), so the UI explicitly warns about the second
-execution and its overhead. The native SQLSRV driver instruments the original MS SQL execution
-with `SET STATISTICS IO/TIME` and always restores both session settings. Statistics are normalized
-as category, object, metric, value, unit and driver-specific details.
+accepted because it can conceal a data-modifying CTE. Collection may require a second,
+instrumented execution, which the UI warns about. Statistics are normalized as category,
+object, metric, value, unit and driver-specific details.
+
+Supported versions and collection methods are described in the
+[database-specific driver guides](Drivers.md#available-drivers).
 
 ## Namespace
 
