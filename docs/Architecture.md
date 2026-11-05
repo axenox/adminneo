@@ -12,7 +12,7 @@ The plugin architecture is the primary extension mechanism:
 - `Origin` (extends `Plugin`) — the base class with all overridable methods. `admin/core/Admin.php` and `editor/core/Admin.php` each independently define their own `class Admin extends Origin` (there is no separate `Editor` class — EditorNeo's customization classes also extend `Admin`).
 - `Pluginer` — wraps an `Origin` instance; intercepts every public method call and dispatches to registered plugins first. For "append" methods (e.g., `getErrors`, `getFieldFunctions`), results from all plugins are merged. For others, the first plugin that returns a non-null value wins; the `Origin` instance is the fallback.
 
-Custom instances are created via `Admin::create($config, $plugins)` (inherited from `Origin::create()`, using late static binding). The entry point for customization is a PHP file that defines `adminneo_instance
+Custom instances are created via `Admin::create($config, $plugins)` (inherited from `Origin::create()`, using late static binding). A customization entry point supplies this instance through `adminneo_instance()`.
 
 Common hooks (methods a plugin can override) and their purpose are [described here](Hooks.md).
 
@@ -66,6 +66,22 @@ Each driver lives in `admin/drivers/<name>.inc.php`. Drivers:
 The [driver guide](Drivers.md) lists available drivers, their main capabilities
 and the feature keys shared code uses to check support. Database-specific
 behavior and configuration are documented in the linked database guides.
+
+## Exports and table copying
+
+The table structure page provides two distinct operations:
+
+- **Copy** duplicates a database table through the fork's copy implementation when
+   the driver supports it. It is not a clipboard operation.
+- **Copy as ...** copies an object's structure to the clipboard in a supported
+   export format. Its format selector remembers the last choice while that format
+   remains available. It does not create another database object.
+
+Export formats declare whether they support structure, data, or both. The export
+page disables unsupported options, and clipboard structure exports offer only
+structure-capable formats. Enabling the bundled `MarkdownDumpPlugin` adds Markdown
+structure and data exports. See [export hooks](Hooks.md#export-and-import) for
+format registration, the split format/output header hooks, and gzip handling.
 
 ## Directory structure
 

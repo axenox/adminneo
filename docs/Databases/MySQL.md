@@ -5,6 +5,21 @@ Feature availability varies by server version and flavor. See the
 [driver overview and contracts](../Drivers.md) for shared capabilities and
 helper functions.
 
+## SQL command results and warnings
+
+The SQL command page consumes multiple results with both MySQLi and PDO_MySQL and
+reports errors from later statements in a batch. With MySQLi, while further results
+are pending it displays the warning count instead of querying `SHOW WARNINGS`, which
+cannot run until those results have been consumed. Full warning details are shown
+when they can be retrieved without interrupting the batch.
+
+## Searching bit columns
+
+All-columns searches validate values before comparing them with bit columns.
+Ordinary comparisons use binary digits; incompatible text values are skipped for
+these columns rather than failing the entire search. Operators with their own
+handling, such as `IN`, null checks and SQL conditions, follow their existing paths.
+
 ## Runtime statistics
 
 Runtime statistics are available for MySQL 8.0.18 and later, and MariaDB 10.1

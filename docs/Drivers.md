@@ -25,8 +25,8 @@ as a guarantee. MySQL/MariaDB and PostgreSQL/CockroachDB each share one driver.
 | Database | Driver ID | Main supported features |
 | --- | --- | --- |
 | [MySQL / MariaDB](Databases/MySQL.md) | `mysql` | SQL, tables and indexes, views, routines, triggers, events, privileges, copying, exports and runtime statistics. |
-| [PostgreSQL / CockroachDB](Databases/PostgreSQL.md) | `pgsql` | Schemas, SQL, tables and indexes, views, routines, triggers, user-defined types, copying and exports; runtime statistics for PostgreSQL. |
-| [Microsoft SQL Server](Databases/MS_SQL.md) | `mssql` | Schemas, SQL, tables and indexes, views, routines, triggers, copying and exports; runtime statistics with SQLSRV. |
+| [PostgreSQL / CockroachDB](Databases/PostgreSQL.md) | `pgsql` | Schemas, SQL, tables and indexes, views, routines, triggers, user-defined types, copying, exports and transactional DDL; runtime statistics for PostgreSQL. |
+| [Microsoft SQL Server](Databases/MS_SQL.md) | `mssql` | Schemas, SQL, tables and indexes, views, routines, triggers, copying, exports and transactional DDL; runtime statistics with SQLSRV. |
 | SQLite | `sqlite` | SQL, tables and indexes, views, table/view triggers, exports and transactional DDL. |
 | Oracle (beta) | `oracle` | Schemas, SQL, tables and columns, indexes, views and process lists. |
 | MongoDB (alpha) | `mongo` | Database and collection browsing, document insertion/editing/deletion and indexes. |
@@ -76,6 +76,59 @@ shared code can check for it. The available keys are listed below.
 | `view_trigger` | Create and alter triggers on views. |
 | `runtime_statistics` | Collect actual execution and I/O statistics for read-only SQL statements. |
 | `materializedview` | Support materialized views. |
+
+## Driver and connection contracts
+
+### Transactions and DDL
+
+`Driver::begin()`, `commit()` and `rollback()` return `bool`, record the statement
+for display, and delegate to the active connection. Connection implementations
+use their native transaction API where required; do not replace these calls with
+raw SQL without checking the extension's behavior. `Connection::inTransaction()`
+reports transaction state where available; `false` can also mean the extension
+cannot determine it. A connection's `rollback()` may be called without an active
+transaction and must handle that case appropriately.
+
+The `transaction_ddl` support key is separate from transaction availability.
+PostgreSQL, SQLite and MS SQL advertise it so the shared `drop_create()` path
+can replace an object within a transaction instead of first creating a temporary
+test object. A failed replacement is rolled back. Drivers without this capability
+retain the temporary-object or create-before-drop paths.
+
+### Batch results and warnings
+
+After `multiQuery()`, consume each result using `storeResult()` and advance with
+`nextResult()`. A `true` return from `nextResult()` can indicate a failed next
+statement, not just a successful result: inspect `getError()` for each result.
+This lets the SQL command page report errors from later statements in a batch.
+
+`hasMoreResults()` reports pending results where the extension can detect them.
+`getWarningsCount()` returns the most recent query's warning count where supported.
+The MySQL SQL command page uses the count while further results are pending rather
+than executing `SHOW WARNINGS` on a connection that is still processing the batch.
+
+### Search validation and SQL fragments
+
+`Driver::isSearchable(array $where, array $field): bool` checks whether a condition
+is valid for one column during an all-columns search. Shared code handles numeric
+and date validation; drivers handle database-specific cases such as MySQL bit
+values and PostgreSQL UUID, array, range, network and time values. Invalid column
+comparisons are omitted so one incompatible type does not fail the whole search.
+
+`Connection::setUntrusted(true)` marks queries containing user-supplied SQL filter
+fragments. Drivers must restrict modifying statements and multiple statements
+appropriately; secondary connections inherit the flag. This is not a general
+read-only connection guarantee. See [security restrictions](security.md#sql-filter-fragments).
+
+### Types, indexes and SQL parsing
+
+- `setUserTypes($types)` accepts IDs mapped to names. `getUserTypes()` returns names
+  and `getUserTypeId($name)` resolves a name back to its ID. Do not recover type IDs
+  from `getTypes()`: that collection describes maximum lengths instead.
+- `supportsIndex($tableStatus)` controls index display;
+  `supportsAlterIndex($tableStatus)` separately controls index editing.
+- `lineComment()` returns a regular expression matching the beginning of a line
+  comment for SQL command parsing. It must not match an empty string.
 
 ## Important helper methods
 

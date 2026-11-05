@@ -57,6 +57,28 @@ This usage context results in a couple of common requirements for the DB adminis
 
 The `docs` folder contains documentation for AdminNeo in its current state (including changes done in this fork). Update the docs files every time you make significant changes to AdminNeo.
 
+### Upstream merges
+
+Documentation maintenance is part of every upstream merge, even when Git reports
+no documentation conflicts. Most pages in `docs/` are maintained only in this
+fork, so a clean merge does not mean they are current.
+
+- Identify the actual merged upstream revision and release from Git history and
+    `CHANGELOG.md`. Compare the incoming changes with the pre-merge fork revision.
+- Review all Markdown pages under `docs/`, including database guides, against the
+    incoming changes. Check documented APIs, hook signatures and dispatch behavior,
+    driver capabilities and version/extension limits, configuration, UI workflows,
+    exports, transactions, security restrictions, and host integration.
+- Verify affected guidance against the final merged implementation, not just the
+    upstream changelog or either side of a conflict. Update affected pages and their
+    navigation in the same change; preserve unrelated fork documentation.
+- Update `docs/Changes_in_this_fork.md`: move accepted fixes out of the active fork
+    list, describe any retained extensions, record the upstream revision and conflict
+    decisions, and replace committed `TDB`/`TBD` placeholders with verified hashes.
+- Review documentation links, examples and the final diff. Report what was updated
+    and any remaining validation limits. Documentation review does not justify a
+    single-file compilation or substitute for behavior tests required by code changes.
+
 ### Fork specific features
 
-The `docs/Changes_in_this_fork.md` file contains a log of all changes made in this fork of AdminNeo compared to the original. Update this file every time you make a change or fix to the fork. Maintain a feature-oriented log. Since you cannot know the next commit hash, describe your changes and write `TDB` as placeholder instead of the hash. Every time you read the file and see `TBD`, look through the last commits and replace the placeholder with a real commit hash. This ensures that the change history remains accurate and traceable.
+The `docs/Changes_in_this_fork.md` file contains a log of all changes made in this fork of AdminNeo compared to the original. Update this file every time you make a change or fix to the fork. Maintain a feature-oriented log. Since you cannot know the next commit hash, describe your changes and write `TDB` as placeholder instead of the hash. Every time you read the file and see `TDB` or `TBD`, look through the last commits and replace committed placeholders with verified commit hashes. Leave placeholders only for changes that have not been committed. This ensures that the change history remains accurate and traceable.

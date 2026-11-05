@@ -153,6 +153,12 @@ The `printSelection*()` and matching `processSelection*()` hooks form pairs. A p
 | `processFieldInput(array $field, string $value, string $function = "")` | Converts submitted field input into the SQL expression or value used for writing. |
 | `detectJson(string $fieldType, &$value, ?bool $pretty = null): bool` | Detects JSON and optionally reformats `$value` in place. Return whether the field or value is JSON. |
 
+With `jsonValuesAutoFormat` enabled, valid JSON can be pretty-printed or compacted.
+Invalid JSON in a JSON-typed field is preserved rather than silently replaced with
+`null`; this does not bypass database validation. Search condition values are not
+automatically reformatted. Plugins replacing this behavior should preserve these
+distinctions.
+
 ## Server information
 
 | Hook | Purpose |
@@ -165,12 +171,46 @@ The `printSelection*()` and matching `processSelection*()` hooks form pairs. A p
 | Hook | Purpose |
 | --- | --- |
 | `getDumpOutputs(): array` | Adds keyed export destinations or compression outputs. This is an additive hook. |
-| `getDumpFormats(): array` | Adds keyed export formats. This is an additive hook. |
-| `sendDumpHeaders(string $identifier, bool $multiTable = false): string` | Sends export response headers and returns the generated filename. |
+| `getDumpFormats(): array` | Adds keyed export formats, including their structure/data capabilities. This is an additive hook. |
+| `getStructureDumpFormats(): array` | Returns format IDs and labels supporting structure export, including the table structure clipboard command. |
+| `getDataDumpFormats(): array` | Returns format IDs and labels supporting data export, including SQL result exports. |
+| `sendDumpFormatHeaders(string $identifier, bool $multiTable = false): string` | Sends format-specific headers and returns the file extension, such as `sql` or `md`. A plugin may use `?string` and return `null` for other formats. |
+| `sendDumpOutputHeaders(string $identifier, string $extension): void` | Sends output-specific headers and initializes compression where needed. Receives the extension returned by the format hook. |
+| `sendDumpHeaders(string $identifier, bool $multiTable = false): ?string` | Deprecated compatibility hook. Returns a file extension, or `null` to fall back to `sendDumpFormatHeaders()`. |
 | `dumpDatabase(string $database): void` | Prints additional database-level structure during an export. |
 | `dumpTable(string $table, string $style, int $viewType = 0): void` | Prints additional output before the standard table or view structure export. |
 | `dumpData(string $table, string $style, string $query): void` | Prints additional output before the standard table-data export. |
 | `getImportFilePath(): string` | Returns the server-side file path used as the import source. |
+
+### Export format capabilities
+
+Each `getDumpFormats()` entry is keyed by its format ID. A string label declares
+support for both structure and data. An array definition has an optional `name` label and
+optional `structure` and `data` booleans; both flags default to `false`.
+The label defaults to the format ID when `name` is omitted.
+For example, `['csv' => ['name' => 'CSV', 'data' => true]]` declares a data-only
+format. Declare capabilities explicitly when a format cannot export both.
+
+The standard `getStructureDumpFormats()` and `getDataDumpFormats()` implementations
+filter the combined format definitions and return format IDs mapped to labels.
+Unlike `getDumpFormats()`, these two hooks are replacements, not additive hooks.
+Register additional formats through `getDumpFormats()` unless replacing a filtered
+list is intentional. The export page disables unsupported options, and the table
+structure page offers only structure-capable formats for **Copy as ...**.
+
+### Export headers and compression
+
+New format plugins should implement `sendDumpFormatHeaders()` instead of the
+deprecated `sendDumpHeaders()`. The shared `dump_headers()` helper first tries
+the compatibility hook, falls back to the format hook when it returns `null`,
+and then calls `sendDumpOutputHeaders()`. The format hook returns an extension,
+not a complete filename; the shared helper adds the download filename and headers.
+
+The output hook is a `void` augmentation hook. Plugins adding output destinations
+through `getDumpOutputs()` can initialize their output there. It runs after the
+format headers, so gzip applies to plugin-provided formats as well as native ones.
+With `deflate_init()` available, the built-in gzip output uses a single compression
+stream for the complete export. Older PHP runtimes use concatenated gzip members.
 
 ## Custom schema renderer
 

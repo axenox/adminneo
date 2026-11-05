@@ -21,6 +21,34 @@ when the existing object's name includes a schema.
 This qualifies generated object references, not SQL text inside view definitions
 or user-entered commands. PostgreSQL still resolves those through `search_path`.
 
+## User-defined types
+
+The type list includes enums, composite types, domains and base types, plus range
+types on PostgreSQL 9.2 and later. Automatically generated array types and table
+row types are excluded. Extension-owned types are excluded by default. CockroachDB
+uses the enum-only listing path; do not assume PostgreSQL's full type support there.
+
+The type editor reads SQL definitions for enums, composites, domains and ranges.
+Domains use `CREATE DOMAIN` and `ALTER DOMAIN` rather than `CREATE TYPE` and
+`ALTER TYPE`. Definitions of base types cannot currently be reconstructed.
+SQL exports include reconstructable user-defined type definitions, not only enums.
+
+Renaming a type and adding enum values while retaining the existing values in
+their original order do not recreate it. Enum additions use `ALTER TYPE ... ADD
+VALUE`, with `BEFORE` when needed. These statements run outside an explicit
+transaction for compatibility with PostgreSQL versions before 12.
+
+Other definition changes use a transactional drop-and-create operation because
+PostgreSQL has no general `CREATE OR REPLACE TYPE`. Existing dependencies can
+prevent dropping a type; the editor does not silently remove them with `CASCADE`.
+
+## Transactional object changes
+
+The driver advertises `transaction_ddl`. View, routine and type replacements
+handled by the shared `drop_create()` helper run in a transaction instead of
+validating a temporary object first. Failed replacements roll back rather than
+leaving the original object dropped. See the [transaction contract](../Drivers.md#transactions-and-ddl).
+
 ## Runtime statistics
 
 The PostgreSQL driver runs an instrumented copy of the query using
