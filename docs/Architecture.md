@@ -129,6 +129,25 @@ throws. Core's logger handles native fatal errors at shutdown. See
 [IDE error logging](../../ide/Docs/Development/AdminNeo/SQL_admin_errors.md) for logging levels,
 streaming limitations and test coverage.
 
+## Code editor keyboard navigation
+
+In JUSH-enhanced code fields (including the SQL query editor), **TAB** inserts a
+literal tab at the caret or indents every selected line. A selection ending at
+the beginning of the next line does not indent that next line. **Shift+TAB**
+outdents the current or selected lines by one tab or up to four leading spaces.
+Indentation is recorded as a separate undo step and updates the underlying form
+field as well as the highlighted editor.
+
+When autocomplete is open and no text is selected, TAB still accepts the selected
+suggestion. Press Escape to dismiss it before indenting. To leave the editor using
+the keyboard, press **Escape, then TAB** (or **Escape, then Shift+TAB** to move
+backwards). The next TAB after Escape is reserved for focus navigation; subsequent
+TAB presses indent again. Other form fields keep normal browser TAB navigation.
+
+The implementation lives in the bundled `vendor/vrana/jush/modules/jush-textarea.js`
+module. Browser regression checks are in `tests/unit/editor-tab.html`; no build or
+database connection is needed to open that test page.
+
 ## Runtime statistics
 
 The SQL command page offers an unchecked **Collect runtime statistics** option for supported

@@ -43,6 +43,9 @@ jush.textarea = (function () {
 	}
 
 	function findOffset(el, pos) {
+		if (pos === 0 && !el.firstChild) {
+			return { container: el, offset: 0 };
+		}
 		return findOffsetRecurse(el, { pos: pos });
 	}
 
@@ -73,7 +76,7 @@ jush.textarea = (function () {
 	}
 
 	function setSelPos(pre, pos) {
-		if (pos) {
+		if (pos !== undefined) {
 			const start = findOffset(pre, pos);
 			if (start) {
 				const range = document.createRange();
@@ -108,8 +111,76 @@ jush.textarea = (function () {
 		setSelPos(pre, pos);
 	}
 
+	function indent(pre, outdent) {
+		// Finish a pending input highlight before reading text and selection offsets.
+		highlight(pre);
+		const sel = getSelection();
+		if (!sel.rangeCount) {
+			return;
+		}
+		const range = sel.getRangeAt(0);
+		if (!pre.contains(range.startContainer) || !pre.contains(range.endContainer)) {
+			return;
+		}
+		const text = pre.jushTextarea.value;
+		const start = findPosition(pre, range.startContainer, range.startOffset);
+		const end = findPosition(pre, range.endContainer, range.endOffset);
+		let newStart = start;
+		let newEnd = end;
+		let result;
+		if (!outdent && start === end) {
+			result = text.substring(0, start) + '\t' + text.substring(end);
+			newStart = newEnd = start + 1;
+		} else {
+			const lineStart = text.substring(0, start).lastIndexOf('\n') + 1;
+			// A selection ending at the start of a line does not include that line.
+			const lastPosition = (end > start && text[end - 1] === '\n' ? end - 1 : end);
+			const nextLine = text.indexOf('\n', lastPosition);
+			const blockEnd = (nextLine < 0 ? text.length : nextLine);
+			let offset = lineStart;
+			const block = text.substring(lineStart, blockEnd).split('\n').map(line => {
+				const removed = (outdent ? (line.match(/^(\t| {1,4})/) || [''])[0].length : 0);
+				const delta = (outdent ? -removed : 1);
+				if (offset <= start) {
+					newStart += (outdent ? -Math.min(removed, start - offset) : delta);
+				}
+				newEnd += (outdent ? -Math.min(removed, Math.max(0, end - offset)) : delta);
+				offset += line.length + 1;
+				return (outdent ? line.substring(removed) : '\t' + line);
+			}).join('\n');
+			result = text.substring(0, lineStart) + block + text.substring(blockEnd);
+		}
+		closeAutocomplete();
+		openAc = false;
+		if (result === text) {
+			return;
+		}
+		setText(pre, result, newEnd);
+		const from = findOffset(pre, newStart);
+		const to = findOffset(pre, newEnd);
+		if (from && to) {
+			const selection = document.createRange();
+			selection.setStart(from.container, from.offset);
+			selection.setEnd(to.container, to.offset);
+			sel.removeAllRanges();
+			sel.addRange(selection);
+		}
+		// Keep each indentation separate from adjacent typing in JUSH's undo history.
+		pre.jushUndo.length = pre.jushUndoPos + 1;
+		pre.jushUndo.push({ text: result, start: start, end: newEnd });
+		pre.jushUndoPos++;
+		pre.lastPos = undefined;
+		forceNewUndo = true;
+	}
+
 	function keydown(event) {
 		const ctrl = (event.ctrlKey || event.metaKey);
+		const tabEscape = this.jushTabEscape;
+		this.jushTabEscape = (event.key === 'Escape');
+		// Escape followed by Tab (or Shift+Tab) retains keyboard-only focus navigation.
+		if (event.key === 'Tab' && tabEscape) {
+			return;
+		}
 		if (!event.altKey) {
 			if (!ctrl && acEl.options.length) {
 				const select =
@@ -123,10 +194,15 @@ jush.textarea = (function () {
 					acEl.selectedIndex = select;
 					return false;
 				}
-				if (/^(Enter|Tab)$/.test(event.key) && !event.shiftKey) {
+				if (/^(Enter|Tab)$/.test(event.key) && !event.shiftKey && (event.key !== 'Tab' || getSelection().isCollapsed)) {
 					insertAutocomplete(this);
 					return false;
 				}
+			}
+
+			if (!ctrl && event.key === 'Tab' && !event.isComposing) {
+				indent(this, event.shiftKey);
+				return false;
 			}
 
 			if (!event.shiftKey && /^(Delete|Backspace)$/.test(event.key) && getSelection().toString().length >= this.innerText.replace(/\n$/, '').length) { // native delete of long text is slow in Chrome 150
@@ -362,6 +438,7 @@ jush.textarea = (function () {
 		pre.jushUndo = [ ];
 		pre.jushUndoPos = -1;
 		pre.onkeydown = keydown;
+		pre.onblur = function () { this.jushTabEscape = false; };
 		pre.oninput = input;
 		pre.onpaste = paste;
 		pre.onclick = click;
